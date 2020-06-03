@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="jxh"/>
+
+  
+  <meta name="description" content="一、IO 1. IO流的分类 按照流的流向分，可以分为输入流和输出流； 按照操作单元划分，可以划分为字节流和字符流； 按照流的角色划分为节点流和处理流。 处理流的功能：1、消除不同节点流的实现差异，提供更方便的方法"/>
+  
+
+  
+  
+  <meta name="keywords" content="Hugo, theme, zozo"/>
+  
+
+  
+  <link rel="canonical" href="https://jixinhe111.github.io/posts/io_nio/"/>
+
+  
+
+  <title>IO_NIO &middot; 两只老虎 --from jxh</title>
+
+  <link rel="shortcut icon" href="https://jixinhe111.github.io/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/zozo.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://jixinhe111.github.io/">
+          <span>两只老虎 --from jxh</span>
+          <img src="https://jixinhe111.github.io/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title">一只没有眼睛，一只没有耳朵</p>
+      <div class="my_socials">
+        
+        
+        <a href="%20" title="facebook" target="_blank"><i class="remixicon-facebook-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="instagram" target="_blank"><i class="remixicon-instagram-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="twitter" target="_blank"><i class="remixicon-twitter-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="weibo" target="_blank"><i class="remixicon-weibo-fill"></i></a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/io_nio/'>IO_NIO</a></h2>
+          <span class="date">2020.06.01</span>
+        </div>
+        <div class="post_content markdown">
+
+<h2 id="一-io">一、IO</h2>
+
+<h3 id="1-io流的分类">1. IO流的分类</h3>
+
+<ul>
+<li><p>按照流的流向分，可以分为输入流和输出流；</p></li>
+
+<li><p>按照操作单元划分，可以划分为字节流和字符流；</p></li>
+
+<li><p>按照流的角色划分为节点流和处理流。</p></li>
+</ul>
+
+<p>处理流的功能：1、消除不同节点流的实现差异，提供更方便的方法来完成输入输出。</p>
+
+<p>​                        2、性能的提高:主要以增加缓冲的方式来提高输入输出的效率。</p>
+
+<p>​                        3、操作的便捷:处理流可能提供了一系列便捷的方法来一次输入输出大批量的内容。</p>
+
+<p>Java Io流的40多个类都是从如下4个抽象类基类中派生出来的。</p>
+
+<p><strong>InputStream/Reader</strong>: 所有的输入流的基类，前者是字节输入流，后者是字符输入流。</p>
+
+<p><strong>OutputStream/Writer</strong>: 所有输出流的基类，前者是字节输出流，后者是字符输出流。</p>
+
+<p>按操作方式分类结构图：</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdKymF.jpg" alt="按操作方式分类结构图" style="zoom: 67%;" /></p>
+
+<p>按操作对象分类结构图：</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdKrOU.jpg" alt="按操作对象分类结构图" style="zoom: 80%;" /></p>
+
+<h3 id="2-常用io流实战">2. 常用IO流实战</h3>
+
+<h4 id="节点流">节点流：</h4>
+
+<h5 id="1-文件操作">1）文件操作</h5>
+
+<p><strong>FileInputStream、FileOutputStream</strong></p>
+
+<p>​       FileInputStream从文件系统中的某个文件中获得输入字节。FileInputStream 用于读取诸如图像数据之类的原始字节流。</p>
+
+<p>​       FileOutputStream文件输出流是用于将数据写入 File 或 FileDescriptor 的输出流。文件是否可用或能否可以被创建取决于基础平台。特别是某些平台一次只允许一个 FileOutputStream（或其他文件写入对象）打开文件进行写入。在这种情况下，如果所涉及的文件已经打开，则此类中的构造方法将失败。</p>
+
+<p><strong>FileInputStream</strong></p>
+
+<p>构造方法：</p>
+
+<pre><code class="language-java">public FileInputStream(File file);
+public FileInputStream(String name);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">int read();	//一次读取一个字节,如果已到达文件末尾，则返回-1
+int read(byte[] b);	//一次读取一个字节数组,如果已经达文件末尾而没有更多的数据，则返回-1
+</code></pre>
+
+<p><strong>FileOutputStream</strong></p>
+
+<p>构造方法：</p>
+
+<pre><code class="language-java">public FileOutputStream(File file);
+public FileOutputStream(File file,boolean append);
+public FileOutputStream(String name);
+public FileOutputStream(String name, boolean append);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">void write(int b);	//一次写一个字节
+void write(byte[] b);	//一次写一个字节数组
+void write(byte[] b, int off,int len);	//一次写一部分字节数组
+</code></pre>
+
+<p>练习：</p>
+
+<pre><code class="language-java">FileInputStream fis = new FileInputStream(&quot;jxh.7z&quot;);
+FileOutputStream fos = new FileOutputStream(&quot;jxh_backup.7z&quot;);
+byte[] b = new byte[1024];
+int len;
+while((len = fis.read(b)) != -1){
+   	//public void write(byte[] b,int off,int len);
+	fos.write(b, 0, len);
+}
+fis.close();
+fos.close();
+</code></pre>
+
+<p><strong>FileReader、FileWriter</strong></p>
+
+<p>与FileInputStream、FileOutputStream类似，基于字符流，用于处理纯文本的数据。</p>
+
+<p><strong>FileReader</strong></p>
+
+<p>构造方法：</p>
+
+<pre><code class="language-java">public FileReader(String fileName);
+public FileReader(File file);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">int read();	//一次读取一个字符,如果已到达文件末尾，则返回-1
+int read(char[] cbuf);	//一次读取一个字符数组,如果已经达文件末尾而没有更多的数据，则返回-1
+</code></pre>
+
+<p><strong>FileWriter</strong></p>
+
+<p>构造方法：</p>
+
+<pre><code class="language-java">public FileWriter(String fileName);
+//append参数为true时，数据从文件尾部写入；append参数为false时，数据覆盖原文件。
+public FileWriter(String fileName, boolean append);	
+public FileWriter(File file);
+public FileWriter(File file, boolean append);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">void write(int c);	//写单个字符
+void write(char[] cbuf);	 //写字符数组
+void write(char[] cbuf, int off,  int len);	//写字符数组的一部分
+void write(String str);	//写字符串
+void write(String str,int off, int len);	  //写字符串的某一部分
+void flush();	//刷新该流的缓冲，字符流在与数据交互之前要经过一个缓冲区，当缓冲区写满后才将缓冲区的内容输出到文件中。但是当主机完成输出流的输出后，有可能缓冲区这个时候还没有被填满，这样的话，就会一直等待主机发送内容，这时候，就可以使用flush将缓冲区的内容强制输出到文件中，清空缓冲区。所以，一般在关闭输出流之前，要先调用flush方法强制缓冲区中的内容输出，并清空缓冲区。
+</code></pre>
+
+<p>练习：</p>
+
+<pre><code class="language-java">FileReader fr = new FileReader(&quot;jxh.txt&quot;);
+FileWriter fw = new FileWriter(&quot;jxh_backup.txt&quot;);
+char[] arr = new char[1024];
+int len;
+while((len = fr.read(arr)) != -1) {
+	fw.write(arr, 0, len);
+}
+fr.close();
+fw.close();
+</code></pre>
+
+<h5 id="2-管道操作">2）管道操作</h5>
+
+<p><strong>PipedInputStream、PipedOutputStream</strong></p>
+
+<p>​       管道输入流PipedInputStream与管道输出流PipedOutputStream实现了类似管道的功能，用于<strong>不同线程</strong>之间的相互通信。</p>
+
+<p>​       Java的管道输入与输出实际上使用的是一个循环缓冲数组来实现，这个数组默认大小为1024字节。输入流PipedInputStream从这个循环缓冲数组中读数据，输出流PipedOutputStream往这个循环缓冲数组中写入数据。当这个缓冲数组已满的时候，输出流PipedOutputStream所在的线程将阻塞；当这个缓冲数组首次为空的时候，输入流PipedInputStream所在的线程将阻塞。</p>
+
+<p>​       Java在它的jdk文档中提到<strong>不要在一个线程</strong>中<strong>同时</strong>使用PipeInpuStream和PipeOutputStream，这会造成<strong>死锁</strong>。</p>
+
+<p><strong>PipedInputStream</strong></p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public PipedInputStream();
+public PipedInputStream(int pipeSize);
+public PipedInputStream(PipedOutputStream src);
+public PipedInputStream(PipedOutputStream src, int pipeSize);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">int read();
+int read(byte b[], int off, int len);
+</code></pre>
+
+<p><strong>PipedOutputStream</strong></p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public PipedOutputStream();;
+public PipedOutputStream(PipedInputStream snk);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">void write(byte b[]);
+void write(byte b[], int off, int len);
+</code></pre>
+
+<p>main函数：</p>
+
+<pre><code class="language-java">public class PipedStreamTest {
+    public static void main(String[] args) {
+        PipedOutputStream pos = new PipedOutputStream();
+        PipedInputStream pis = new PipedInputStream();
+        try {
+            pos.connect(pis);// 连接管道
+
+            new Producer(pos).start();// 启动线程
+
+            new Consumer(pis).start();// 启动线程
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+
+<p>PipedOutputStream线程：</p>
+
+<pre><code class="language-java">public class Producer extends Thread {
+    private PipedOutputStream pos;
+
+    public Producer(PipedOutputStream pos) {
+        this.pos = pos;
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        try {
+            pos.write(&quot;Hello&quot;.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+
+<p>PipedInputStream线程：</p>
+
+<pre><code class="language-java">public class Consumer extends Thread {
+    private PipedInputStream pis;
+
+    public Consumer(PipedInputStream pis) {
+        this.pis = pis;
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        byte[] b = new byte[1000]; // 将数据保存在byte数组中
+        try {
+            int len = pis.read(b); // 从数组中得到实际大小。
+            System.out.println(new String(b, 0, len));
+            pis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+
+<p><strong>PipedReader、PipedWriter</strong></p>
+
+<p>基于字符流的管道输入输出流。思路与PipedInputStream、PipedOutputStream类似。</p>
+
+<h5 id="3-数组操作">3）数组操作</h5>
+
+<p><strong>ByteArrayInputStream、ByteArrayOutputStream</strong></p>
+
+<p>​       ByteArrayOutputStream类是在创建它的实例时，程序内部创建一个<strong>byte型数组的缓冲区</strong>，用来<strong>缓存数据</strong>，然后利用ByteArrayOutputStream和ByteArrayInputStream的实例向数组中写入或读出byte型数据。在<strong>网络传输</strong>中我们往往要传输很多变量，我们可以利用ByteArrayOutputStream把所有的变量收集到一起，然后一次性把数据发送出去。</p>
+
+<p><strong>ByteArrayInputStream</strong>可以将字节数组转化为输入流 。</p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public ByteArrayInputStream(byte buf[]);
+public ByteArrayInputStream(byte buf[], int offset, int length);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">String  getEncoding(); //返回此流使用的字符编码的名称。
+int  read();  //读取单个字符。
+int  read(char[] cbuf, int offset, int length); //将字符读入数组中的某一部分。
+boolean  ready(); //判断此流是否已经准备好用于读取。
+</code></pre>
+
+<p><strong>ByteArrayOutputStream</strong>可以捕获内存缓冲区的数据，转换成字节数组。</p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public ByteArrayOutputStream();
+public ByteArrayOutputStream(int size);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">void write(int b);
+void write(byte b[], int off, int len);
+void writeTo(OutputStream out);
+byte toByteArray();
+void close();
+</code></pre>
+
+<p>练习：</p>
+
+<pre><code class="language-java">int a=0;
+int b=1;
+int c=2;
+ByteArrayOutputStream bout = new ByteArrayOutputStream();
+bout.write(a);
+bout.write(b);
+bout.write(c);
+byte[] buff = bout.toByteArray();
+for(int i=0; i&lt;buff.length; i++) {
+    System.out.println(buff[i]);
+}
+ByteArrayInputStream bin = new ByteArrayInputStream(buff);
+while((b=bin.read())!=-1) {
+   System.out.println(b);
+}
+</code></pre>
+
+<p><strong>CharArrayReader、CharArrayWriter</strong></p>
+
+<p>基于字符流的数组输入输出流。思路与ByteArrayInputStream、ByteArrayOutputStream类似。</p>
+
+<h4 id="处理流">处理流：</h4>
+
+<h5 id="1-缓冲操作">1）缓冲操作</h5>
+
+<p><strong>BufferedInputStream、BufferedOutputStream</strong></p>
+
+<p>​       BufferedInputStream和BufferedOutputStream这两个类分别是FilterInputStream和FilterOutputStream的子类，作为装饰器子类，使用它们可以防止每次读取/发送数据时进行实际的写操作，代表着使用缓冲区。</p>
+
+<p>​       不带缓冲的操作，每读一个字节就要写入一个字节，由于涉及磁盘的IO操作相比内存的操作要慢很多，所以不带缓冲的流效率很低。BufferedOutputStream是带缓冲的输出流，可以一次读很多字节，但不向磁盘中写入，只是先放到内存里。等凑够了缓冲区大小的时候一次性写入磁盘，这种方式可以减少磁盘操作次数，速度就会提高很多。</p>
+
+<p>​       BufferedInputStream 是通过一个内部缓冲区数组实现的。例如，在新建某输入流对应的BufferedInputStream后，当我们通过read()读取输入流的数据时，BufferedInputStream会将该输入流的数据分批的填入到缓冲区中。每当缓冲区中的数据被读完之后，输入流会再次填充数据缓冲区；如此反复，直到我们读完输入流数据位置。</p>
+
+<p>​       同时正因为它们实现了缓冲功能，所以要注意在使用BufferedOutputStream写完数据后，要调用flush()方法或close()方法，强行将缓冲区中的数据写出。否则可能无法写出数据。</p>
+
+<p><strong>BufferedInputStream</strong></p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">//使用默认buf大小、底层字节输入流构建bis 
+public BufferedInputStream(InputStream in);
+//使用指定buf大小、底层字节输入流构建bis
+public BufferedInputStream(InputStream in, int size);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">int available();  //返回底层流对应的源中有效可供读取的字节数 
+void close();  //关闭此流、释放与此流有关的所有资源  
+boolean markSupport();  //查看此流是否支持mark
+void mark(int readLimit); //标记当前buf中读取下一个字节的下标
+int read();  //读取buf中下一个字节  
+int read(byte[] b, int off, int len);  //读取buf中下一个字节
+void reset();   //重置最后一次调用mark标记的buf中的位子  
+long skip(long n);  //跳过n个字节、 不仅仅是buf中的有效字节、也包括in的源中的字节 
+</code></pre>
+
+<p><strong>BufferedOutputStream</strong></p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">//使用默认大小、底层字节输出流构造bos。默认缓冲大小是 8192 字节
+public BufferedOutputStream(OutputStream out);
+//使用指定大小、底层字节输出流构造bos
+BufferedOutputStream(OutputStream out, int size);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">//将写入bos中的数据flush到out指定的***目的地***中、注意这里不是flush到out中、因为其内部又调用了out.flush()
+void  flush();    
+//将一个字节写入到buf中
+write(byte b);
+//将b的一部分写入buf中 
+write(byte[] b, int off, int len);      
+</code></pre>
+
+<p>练习（123.png 图片复制成 abc.png）：</p>
+
+<pre><code class="language-java">String filePath = &quot;123.png&quot;;
+String filePath2 = &quot;abc.png&quot;;
+File oldFile = new File(filePath);
+File newFile = new File(filePath2);
+
+InputStream inputStream = null ;
+BufferedInputStream bufferedInputStream = null ;
+OutputStream outputStream = null ;
+BufferedOutputStream bufferedOutputStream = null ;
+
+try {
+	inputStream = new FileInputStream(oldFile);
+	bufferedInputStream = new BufferedInputStream(inputStream);
+
+	outputStream = new FileOutputStream(newFile);
+	bufferedOutputStream = new BufferedOutputStream(outputStream);
+
+    byte[] b=new byte[1024];   //代表一次最多读取1KB的内容
+
+	int length = 0 ; //代表实际读取的字节数
+	while((length = bufferedInputStream.read( b ))!= -1 ){
+		//length 代表实际读取的字节数
+		bufferedOutputStream.write(b, 0, length);
+	}
+	//缓冲区的内容写入到文件
+	bufferedOutputStream.flush();
+} catch (FileNotFoundException e) {
+	e.printStackTrace();
+} catch (IOException e) {
+	e.printStackTrace();
+} finally {
+	if(bufferedOutputStream != null){	//可以只调用外层流的close方法关闭其装饰的内层流
+		try {
+			bufferedOutputStream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	if( bufferedInputStream != null){
+		try {
+			bufferedInputStream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+}
+</code></pre>
+
+<p><strong>BufferedReader、BufferedWriter</strong></p>
+
+<p>基于字符流的Buffer输入输出流。思路与BufferedInputStream、BufferedOutputStream类似，还有readLine()、newLine()等方法。</p>
+
+<h5 id="2-基本数据类型操作">2）基本数据类型操作</h5>
+
+<p><strong>DataInputStream、DataOutputStream</strong></p>
+
+<p>​       DataInputStream和DataOutputStream 继承了各自的FilterInputStream以及FilterOutputStream使用装饰器模式对InputStream和OutputStream进行功能增强。</p>
+
+<p>​       DataInputStream用于从二进制流中读取字节，并根据所有 Java 基本类型数据进行重构。</p>
+
+<p>​       DataOutputStream用于将数据从任意 Java 基本类型转换为一系列字节，并将这些字节写入二进制流。</p>
+
+<p><strong>DataInputStream</strong></p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public DataInputStream(InputStream in);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">int read(byte[] b);
+int read(byte[] b, int off, int len);
+boolean readBoolean();
+byte readByte();
+char readChar();
+double readDouble();
+float readFloat();
+void readFully(byte[] b);
+void readFully(byte[] b, int off, int len);
+int readInt(); 
+long readLong();
+short readShort();
+int readUnsignedByte();
+int readUnsignedShort();
+String readUTF();
+static String readUTF(DataInput in) 
+</code></pre>
+
+<p><strong>DataOutputStream</strong></p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public DataOutputStream(OutputStream out)
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">void write(byte[] b, int off, int len) 
+void write(int b) 
+void writeBoolean(boolean v)   
+void writeByte(int v)   
+void writeBytes(String s) 
+void writeChar(int v) 
+void writeChars(String s)   
+void writeDouble(double v)  
+void writeFloat(float v)   
+void writeInt(int v) 
+void writeLong(long v) 
+void writeShort(int v)   
+void writeUTF(String str) 
+</code></pre>
+
+<p>练习：</p>
+
+<pre><code class="language-java">try{
+    DataOutputStream dos = new DataOutputStream(new FileOutputStream(&quot;dos.txt&quot;)) ;
+    //给流中写入数据
+    dos.writeInt(10);
+    dos.writeShort(100);
+    dos.writeByte(120);
+    dos.writeDouble(13.34);
+    dos.writeFloat(12.56F);
+    dos.writeBoolean(true);
+    dos.writeChar('a');
+    DataInputStream dis = new DataInputStream(new FileInputStream(&quot;dos.txt&quot;)) ;
+
+    //读
+    int i = dis.readInt() ;
+    short s = dis.readShort() ;
+    byte b = dis.readByte() ;
+    double d = dis.readDouble() ;
+    float f = dis.readFloat();
+    boolean flag = dis.readBoolean() ;
+    char ch = dis.readChar() ;
+
+    dos.close();
+    dis.close();
+
+    System.out.println(i);
+    System.out.println(s);
+    System.out.println(b);
+    System.out.println(d);
+    System.out.println(f);
+    System.out.println(flag);
+    System.out.println(ch);
+} catch (IOException e) {
+	e.printStackTrace();
+}
+</code></pre>
+
+<h5 id="3-对象序列化操作">3）对象序列化操作</h5>
+
+<p><strong>ObjectInputStream、ObjectOutputStream</strong></p>
+
+<p>​       对象的输入输出流，主要的作用是用于写对象与读取对象的信息。对信息一旦写到文件上那么对象的信息就可以持久化。</p>
+
+<p>​       ObjectInputStream用来读取文件中的对象，ObjectOutputStream用来向文件中写入对象。</p>
+
+<p>​       只能将支持 java.io.Serializable 接口的对象写入流中（因此上述示例一种的person类需要实现Serializable接口）。每个 serializable 对象的类都被编码，编码内容包括类名和类签名、对象的字段值和数组值，以及从初始对象中引用的其他所有对象的闭包。</p>
+
+<p>​       writeObject 方法用于将对象写入流中。所有对象（包括 String 和数组）都可以通过 writeObject 写入。可将多个对象或基元写入流中。必须使用与写入对象时相同的类型和顺序从相应 ObjectInputstream 中读回对象。</p>
+
+<p><strong>ObjectInputStream</strong></p>
+
+<p>构造方法：</p>
+
+<pre><code class="language-java">public ObjectInputStream(InputStream in);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">int read() 
+//读取一个字节的数据。  
+int read(byte[] buf, int off, int len) 
+//读入一个字节数组。  
+boolean readBoolean() 
+//读取布尔值。
+byte readByte() 
+//读取一个8位字节。  
+char readChar() 
+//读一个16位字符。  
+protected ObjectStreamClass readClassDescriptor() 
+//从序列化流读取类描述符。  
+double readDouble() 
+//读64位双倍。  
+ObjectInputStream.GetField readFields() 
+//从流中读取持久性字段，并通过名称获取它们。  
+float readFloat() 
+//读32位浮点数。  
+void readFully(byte[] buf) 
+//读取字节，阻塞直到读取所有字节。  
+void readFully(byte[] buf, int off, int len) 
+//读取字节，阻塞直到读取所有字节。  
+int readInt() 
+//读取一个32位int。  
+String readLine() 
+//已弃用 
+//此方法无法将字节正确转换为字符。 有关详细信息和替代方案，请参阅DataInputStream。  
+long readLong() 
+//读64位长。  
+Object readObject() 
+//从ObjectInputStream读取一个对象。  
+protected Object readObjectOverride() 
+//此方法由ObjectOutputStream的受信任子类调用，该子类使用受保护的无参构造函数构造ObjectOutputStream。 
+short readShort() 
+//读取16位短。  
+protected void readStreamHeader() 
+//提供了readStreamHeader方法来允许子类读取和验证自己的流标题。  
+Object readUnshared() 
+//从ObjectInputStream读取一个“非共享”对象。  
+int readUnsignedByte() 
+//读取一个无符号的8位字节。  
+int readUnsignedShort() 
+//读取无符号16位短。  
+String readUTF() 
+//以 modified UTF-8格式读取字符串。  
+</code></pre>
+
+<p><strong>ObjectOutputStream</strong></p>
+
+<p>构造方法：</p>
+
+<pre><code class="language-java">public ObjectOutputStream(OutputStream out);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">void write(byte[] buf) 
+//写入一个字节数组。  
+void write(byte[] buf, int off, int len) 
+//写入一个子字节数组。  
+void write(int val) 
+//写一个字节。  
+void writeBoolean(boolean val) 
+//写一个布尔值。  
+void writeByte(int val) 
+//写入一个8位字节。  
+void writeBytes(String str) 
+//写一个字符串作为字节序列。  
+void writeChar(int val) 
+//写一个16位的字符。  
+void writeChars(String str) 
+//写一个字符串作为一系列的字符。  
+protected void writeClassDescriptor(ObjectStreamClass desc) 
+//将指定的类描述符写入ObjectOutputStream。  
+void writeDouble(double val) 
+//写一个64位的双倍。  
+void writeFields() 
+//将缓冲的字段写入流。  
+void writeFloat(float val) 
+//写一个32位浮点数。  
+void writeInt(int val) 
+//写一个32位int。  
+void writeLong(long val) 
+//写一个64位长  
+void writeObject(Object obj) 
+//将指定的对象写入ObjectOutputStream。  
+protected void writeObjectOverride(Object obj) 
+//子类使用的方法来覆盖默认的writeObject方法。  
+void writeShort(int val) 
+//写一个16位短。  
+protected void writeStreamHeader() 
+//提供了writeStreamHeader方法，因此子类可以在流中附加或预先添加自己的头。  
+void writeUnshared(Object obj) 
+//将“非共享”对象写入ObjectOutputStream。  
+void writeUTF(String str) 
+//此字符串的原始数据写入格式为 modified UTF-8。
+</code></pre>
+
+<p>练习：</p>
+
+<p>Person类</p>
+
+<pre><code class="language-java">public class Person implements Serializable {
+    private String name;   //姓名
+    private int age;   //年龄
+    private boolean sex;  //性别
+    
+    public Person(){ //构造方法
+    }
+
+   //一系列get、set方法
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public int getAge() {
+        return age;
+    }
+    public void setAge(int age) {
+        this.age = age;
+    }
+    public boolean isSex() {
+        return sex;
+    }
+
+    @Override
+    public String toString() {   //重写toString方法对对象进行打印
+        return &quot;Person{&quot; +
+                &quot;name='&quot; + name + '\'' +
+                &quot;, age=&quot; + age +
+                &quot;, sex=&quot; + sex +
+                '}';
+    }
+
+    public void setSex(boolean sex) {
+        this.sex = sex;
+    }
+}
+</code></pre>
+
+<p>具体使用方法：</p>
+
+<pre><code class="language-java">public class ObjectInputStream {
+    //读文件中的对象
+    public static void read() throws IOException, ClassNotFoundException {
+        String path = &quot;tt.txt&quot;;
+        FileInputStream fileInputStream = new FileInputStream(path);  //文件输入流
+        ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+
+        Person p = (Person) objectInputStream.readObject();   //读出Person对象
+        System.out.println(p);  //打印读到的对象
+        
+        objectInputStream.close(); //关闭流
+    }
+
+    //向文件中写入对象
+    public static void write() throws IOException{
+        String path = &quot;tt.txt&quot;;  //给一个路径
+        //创建对象并设置对象属性
+        Person person = new Person();
+        person.setAge(12);
+        person.setName(&quot;zhangsan&quot;);
+        person.setSex(false);
+        
+        FileOutputStream fileOutputStream = new FileOutputStream(path); //文件输出流
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+
+        objectOutputStream.writeObject(person);  //将person实例写入
+
+        objectOutputStream.close();  //关闭流
+    }
+    
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        write();  //写入对象
+        read();  //读取
+    }
+}
+</code></pre>
+
+<h5 id="4-转化控制">4）转化控制</h5>
+
+<p><strong>InputStreamReader、OutputStreamWriter</strong></p>
+
+<p>​       若想对InputStream和OutputStream进行字符处理，可以使用InputStreamReader和OuputStreamWriter为其加上字符处理的功能，它们分别为Writer和Reader类的子类。比如当我们要显示纯文本文件的内容时，不用再费心地自行判断字符编码（比如我们前面的例子里需要自行的判断是ASCII英文字母还是BIG5中文字），只要将InputStream、OutputStream的实例作为构建InputStreamReader、OutputStreamReader时的变量，就可以操作InputStreamReader和OutputStreamWriter来进行文本文件的读取，让它们帮我们做字符判断与转换的动作。</p>
+
+<p><strong>InputStreamReader</strong></p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public InputStreamReader(InputStream in);
+public InputStreamReader(InputStream in, Charset cs);
+public InputStreamReader(InputStream in, CharsetDecoder dec);
+public InputStreamReader(InputStream in, String charsetName);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">String getEncoding() 
+//返回此流使用的字符编码的名称。  
+int read() 
+//读一个字符  
+int read(char[] cbuf, int offset, int length) 
+//将字符读入数组的一部分。 
+</code></pre>
+
+<p>OutputStreamWriter</p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public OutputStreamWriter(OutputStream out);
+public OutputStreamWriter(OutputStream out, Charset cs);
+public OutputStreamWriter(OutputStream out, CharsetEncoder enc);
+public OutputStreamWriter(OutputStream out, String charsetName);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">String getEncoding() 
+//返回此流使用的字符编码的名称。  
+void write(char[] cbuf, int off, int len) 
+//写入字符数组的一部分。  
+void write(int c) 
+//写一个字符。 
+void write(String str, int off, int len) 
+//写一个字符串的一部分。  
+</code></pre>
+
+<p>练习：</p>
+
+<pre><code class="language-java">try {  
+	File file = new File(&quot;a.txt&quot;);  
+	FileInputStream fileInputStream = new FileInputStream(file);
+	InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);  
+  
+	FileOutputStream  fileOutputStream = new FileOutputStream(&quot;a_backup.txt&quot;); 
+	OutputStreamWriter outputStreamWriter= new OutputStreamWriter(fileOutputStream);  
+  
+	int ch = 0;  
+	//以字符方式显示文件内容  
+	while((ch = inputStreamReader.read()) != -1)  
+	{  
+		System.out.print((char) ch);  
+		outputStreamWriter.write(ch);  
+	}  
+	
+    System.out.println();  
+	inputStreamReader.close();  
+	outputStreamWriter.close();  
+} catch(IOException e) {  
+	e.printStackTrace();  
+  }  
+}  
+</code></pre>
+
+<h5 id="5-打印控制">5）打印控制</h5>
+
+<p><strong>PrintStream、PrintWriter</strong></p>
+
+<p>​       PrintStream是打印输出流，继承与FilterOutputStream，用来装饰其他流，为其他流添加功能使他们能够打印各种数据值表示形式。与其他流不同，PrintStream永远不会抛出IOException;它产生的IOException会被自身的函数所捕获并设置错误标记，用户可以通过checkError()返回错误标记，从而查看内容是否产生了IOException。PrintSteam提供了自动刷新Flush和字符集设置。所谓的自动flush，就是往PrintStream写入的数据会立刻调用flush函数。
+​       PrintStream能做的PrintWriter也都能实现，并且PrintWriter的功能更为强大。但是由于PrintWriter出现的比较晚，较早的System.out使用的是PrintStream来实现的，所以为了兼容就没有废弃PrintStream。
+​       两者区别主要在于PrintStream主要操作byte流，而PrintWriter用来操作字符流。读取文本文件时一般用后者。</p>
+
+<p>​       PrintStream和PrintWriter的auto flushing机制有点不同，前者在输出byte数组、调用println方法、输出换行符或者byte值10（即\n）时自动调用flush方法，后者仅在调用println方法时发生auto flushing。</p>
+
+<p><strong>PrintStream</strong></p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public PrintStream(File file);
+public PrintStream(File file, String csn);
+public PrintStream(OutputStream out);
+public PrintStream(OutputStream out, boolean autoFlush);
+public PrintStream(OutputStream out, boolean autoFlush, String encoding);
+public PrintStream(String fileName);
+public PrintStream(String fileName, String csn);
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">PrintStream append(char c) 
+//将指定的字符附加到此输出流。  
+PrintStream append(CharSequence csq) 
+//将指定的字符序列附加到此输出流。  
+PrintStream append(CharSequence csq, int start, int end)  
+void print(boolean b) 
+//打印布尔值。  
+void print(char c) 
+//打印一个字符  
+void print(char[] s) 
+//打印字符数组。  
+void print(double d) 
+//打印双精度浮点数。  
+void print(float f) 
+//打印浮点数。  
+void print(int i) 
+//打印一个整数。  
+void print(long l) 
+//打印一个长整数。  
+void print(Object obj) 
+//打印一个对象。  
+void print(String s) 
+//打印字符串。  
+void println() 
+//通过写入行分隔符字符串来终止当前行。  
+void println(boolean x) 
+//打印一个布尔值，然后终止该行。  
+void println(char x) 
+//打印一个字符，然后终止该行。  
+void println(char[] x) 
+//打印一个字符数组，然后终止该行。  
+void println(double x) 
+//打印一次，然后终止行。  
+void println(float x) 
+//打印一个浮点数，然后终止该行。  
+void println(int x) 
+//打印一个整数，然后终止行。  
+void println(long x) 
+//打印一个长整数，然后终止行。  
+void println(Object x) 
+//打印一个对象，然后终止该行。
+void println(String x) 
+//打印一个字符串，然后终止行。  
+void write(byte[] buf, int off, int len) 
+//从指定的字节数组写入len个字节，从偏移off开始到此流。  
+void write(int b) 
+//将指定的字节写入此流。  
+</code></pre>
+
+<p><strong>PrintWriter</strong></p>
+
+<p>构造函数：</p>
+
+<pre><code class="language-java">public PrintWriter(File file);
+public PrintWriter(File file, String csn);
+public PrintWriter(OutputStream out);
+public PrintWriter(OutputStream out, boolean autoFlush);  
+public PrintWriter(String fileName);
+public PrintWriter(String fileName, String csn); 
+public PrintWriter(Writer out);   
+public PrintWriter(Writer out, boolean autoFlush); 
+</code></pre>
+
+<p>常用方法：</p>
+
+<pre><code class="language-java">PrintWriter append(char c) 
+//将指定的字符附加到此作者。  
+PrintWriter append(CharSequence csq) 
+//将指定的字符序列附加到此作者。  
+PrintWriter append(CharSequence csq, int start, int end) 
+//将指定字符序列的子序列附加到此作者。   
+void print(boolean b) 
+//打印布尔值。  
+void print(char c) 
+//打印一个字符  
+void print(char[] s) 
+//打印字符数组。  
+void print(double d) 
+//打印双精度浮点数。  
+void print(float f) 
+//打印浮点数。  
+void print(int i) 
+//打印一个整数。  
+void print(long l) 
+//打印一个长整数。  
+void print(Object obj) 
+//打印一个对象。  
+void print(String s) 
+//打印字符串。  
+void println() 
+//通过写入行分隔符字符串来终止当前行。  
+void println(boolean x) 
+//打印一个布尔值，然后终止该行。  
+void println(char x) 
+//打印一个字符，然后终止该行。  
+void println(char[] x) 
+//打印字符数组，然后终止行。  
+void println(double x) 
+//打印双精度浮点数，然后终止行。  
+void println(float x) 
+//打印一个浮点数，然后终止该行。  
+void println(int x) 
+//打印一个整数，然后终止该行。  
+void println(long x) 
+//打印一个长整型，然后终止行。  
+void println(Object x) 
+//打印一个对象，然后终止该行。  
+void println(String x) 
+//打印一个字符串，然后终止行。
+void write(char[] buf) 
+//写入一个字符数组。  
+void write(char[] buf, int off, int len) 
+//写一个字符数组的一部分。  
+void write(int c) 
+//写一个字符  
+void write(String s) 
+//写一个字符串  
+void write(String s, int off, int len) 
+//写一个字符串的一部分。  
+</code></pre>
+
+<p>练习：</p>
+
+<p>Person类</p>
+
+<pre><code class="language-java">public class Person implements Serializable {
+    private String name;   //姓名
+    private int age;   //年龄
+    private boolean sex;  //性别
+    
+    public Person(){ //构造方法
+    }
+    
+    public Person(String name, int age, boolean sex){ //构造方法
+        this.name = name;
+        this.age = age;
+        this.sex = sex;
+    }
+
+   //一系列get、set方法
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public int getAge() {
+        return age;
+    }
+    public void setAge(int age) {
+        this.age = age;
+    }
+    public boolean isSex() {
+        return sex;
+    }
+
+    @Override
+    public String toString() {   //重写toString方法对对象进行打印
+        return &quot;Person{&quot; +
+                &quot;name='&quot; + name + '\'' +
+                &quot;, age=&quot; + age +
+                &quot;, sex=&quot; + sex +
+                '}';
+    }
+
+    public void setSex(boolean sex) {
+        this.sex = sex;
+    }
+} 
+</code></pre>
+
+<p>具体使用方法：</p>
+
+<pre><code class="language-java">try {  
+    //构建一个字节输出流  
+    OutputStream fos= new FileOutputStream(&quot;test_1.txt&quot;);  
+    //构建缓冲流  
+    BufferedOutputStream bos= new BufferedOutputStream(fos);  
+    //构建字节打印流  
+    PrintStream ps= new PrintStream(bos);  
+    //数据输出  
+    //println会换行输出，print不会换行  
+    ps.println(false);//写入boolean型  
+    ps.println(&quot;好好学习,天天向上&quot;);//写入字符串  
+    ps.println(3.1415926);//写入double类型
+    ps.println(new person(&quot;小明&quot;, 20, false));//写入person类型  
+    //关闭流  
+    ps.close();  
+    bos.close();  
+    os.close(); 
+
+    Writer fw = new FileWriter(&quot;test_2.txt&quot;);
+    //构建缓冲流  
+    BufferedWriter bw = new BufferedWriter(fw);  
+    //构建字符打印流  
+    PrintWriter pw = new PrintWriter(bw);  
+    //println会换行输出，print不会换行  
+    pw.println(false);//写入boolean型  
+    pw.println(&quot;好好学习,天天向上&quot;);//写入字符串  
+    pw.println(3);//写入int类型
+    pw.println(new person(&quot;小明明&quot;, 20, true));//写入person类型  
+    //关闭流  
+    pw.close();  
+    bw.close();  
+    fw.close();  
+
+} catch (FileNotFoundException e) {  
+    e.printStackTrace();  
+} catch (IOException e) {  
+    e.printStackTrace();  
+}  
+</code></pre>
+
+<h2 id="二-nio">二、NIO</h2>
+
+<h3 id="1-java的io模型">1. JAVA的IO模型</h3>
+
+<p><strong>BIO</strong>：同步并阻塞，面向数据流，服务器的实现模式是一个连接一个线程，这样的模式很明显的一个缺陷是：由于客户端连接数与服务器线程数成正比关系，可能造成不必要的线程开销，严重的还将导致服务器内存溢出。当然，这种情况可以通过线程池机制改善，但并不能从本质上消除这个弊端。
+<strong>NIO</strong>：同步非阻塞，面向buffer缓冲，基于Selector，buffer和channel，服务器的实现模式是多个请求一个线程，通过selector轮询来处理channel，即请求会注册到多路复用器Selector上，多路复用器轮询到连接有IO请求时才启动一个线程处理。
+<strong>AIO</strong>：异步非阻塞，服务器的实现模式为多个有效请求一个线程，通过回调函数通知。</p>
+
+<h3 id="2-nio">2. NIO</h3>
+
+<p>​       Non-Blocking IO，Java NIO使我们可以进行非阻塞IO操作。比如说，单线程中从通道读取数据到buffer，同时可以继续做别的事情，当数据读取到buffer中后，线程再继续处理数据。写数据也是一样的。另外，非阻塞写也是如此。一个线程请求写入一些数据到某通道，但不需要等待它完全写入，这个线程同时可以去做别的事情。</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdKYwQ.png" alt="NIO_1" /></p>
+
+<h4 id="1-buffer"><strong>1）Buffer</strong></h4>
+
+<p>​       Buffer是一个对象，它包含一些要写入或者要读出的数据。在NIO类库中加入Buffer对象，体现了新库与原I/O的一个重要区别。在面向流的I/O中可以将数据直接写入或者将数据直接读到 Stream 对象中。虽然 Stream 中也有 Buffer 开头的扩展类，但只是流的包装类，还是从流读到缓冲区，而 NIO 却是直接读到 Buffer 中进行操作。</p>
+
+<p>​       在NIO厍中，所有数据都是用缓冲区处理的。在读取数据时，它是直接读到缓冲区中的; 在写入数据时，写入到缓冲区中。任何时候访问NIO中的数据，都是通过缓冲区进行操作。</p>
+
+<p>​       最常用的缓冲区是 ByteBuffer,一个 ByteBuffer 提供了一组功能用于操作 byte 数组。除了ByteBuffer,还有其他的一些缓冲区，事实上，每一种Java基本类型（除了Boolean类型）都对应有一种缓冲区。</p>
+
+<p>​       为了理解Buffer的工作原理，需要熟悉它的三个属性：capacity、position和limit。</p>
+
+<p>​       position和limit的含义取决于Buffer处在读模式还是写模式。不管Buffer处在什么模式，capacity的含义总是一样的。见下图：</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdKUFs.png" alt="NIO_2" /></p>
+
+<p><strong>capacity</strong>：作为一个内存块，Buffer有固定的大小值，也叫作“capacity”，只能往其中写入capacity个byte、long、char等类型。一旦Buffer满了，需要将其清空（通过读数据或者清除数据）才能继续写数据。</p>
+
+<p><strong>position</strong>：当你写数据到Buffer中时，position表示当前的位置。出事的position值为0，当写入一个字节数据到Buffer中后，position会向前移动到下一个可插入数据的Buffer单元。position最大可为capacity-1。当读取数据时，也是从某个特定位置读，将Buffer从写模式切换到读模式，position会被重置为0。当从Buffer的position处读取一个字节数据后，position向前移动到下一个可读的位置。</p>
+
+<p><strong>limit</strong>：在写模式下，Buffer的limit表示你最多能往Buffer里写多少数据。 写模式下，limit等于Buffer的capacity。当切换Buffer到读模式时， limit表示你最多能读到多少数据。因此，当切换Buffer到读模式时，limit会被设置成写模式下的position值。换句话说，你能读到之前写入的所有数据（limit被设置成已写数据的数量，这个值在写模式下就是position）</p>
+
+<p><strong>flip()</strong>：将Buffer从写模式切换到读模式，调用flip()方法会将position设置为0，并将limit设置为之前的position的值。</p>
+
+<p><strong>clear()</strong>：position将被设回0，limit设置成capacity，换句话说，Buffer被清空了，其实Buffer中的数据并未被清除，只是这些标记告诉我们可以从哪里开始往Buffer里写数据。如果Buffer中有一些未读的数据，调用clear()方法，数据将“被遗忘”，意味着不再有任何标记会告诉你哪些数据被读过，哪些还没有。</p>
+
+<p><strong>compact()</strong>：如果Buffer中仍有未读的数据，且后续还需要这些数据，但是此时想要先写些数据，那么使用compact()方法。compact()方法将所有未读的数据拷贝到Buffer起始处。然后将position设到最后一个未读元素正后面。limit属性依然像clear()方法一样，设置成capacity。现在Buffer准备好写数据了，但是不会覆盖未读的数据。</p>
+
+<p><strong>mark()</strong>：通过调用Buffer.mark()方法，可以标记Buffer中的一个特定的position，之后可以通过调用Buffer.reset()方法恢复到这个position。</p>
+
+<p><strong>rewind()</strong>：Buffer.rewind()方法将position设回0，所以可以重读Buffer中的所有数据。limit保持不变，仍然表示能从Buffer中读取多少个元素。</p>
+
+<h4 id="2-channel-通道"><strong>2）Channel (通道)</strong></h4>
+
+<p>​       NIO 通过Channel（通道） 进行读写。</p>
+
+<p>​       通道是双向的，可读也可写，而流的读写是单向的。无论读写，通道只能和Buffer交互。因为 Buffer，通道可以异步地读写。</p>
+
+<p>​       以下是常用的几种通道：</p>
+
+<ul>
+<li>FileChannel</li>
+<li>SocketChanel</li>
+<li>ServerSocketChannel</li>
+<li>DatagramChannel</li>
+</ul>
+
+<p>​        通过使用FileChannel可以从文件读或者向文件写入数据；通过SocketChannel，以TCP来向网络连接的两端读写数据；通过ServerSocketChannel能够监听客户端发起的TCP连接，并为每个TCP连接创建一个新的SocketChannel来进行数据读写；通过DatagramChannel，以UDP协议来向网络连接的两端读写数据。</p>
+
+<h4 id="3-selectors-选择器"><strong>3）Selectors(选择器)</strong></h4>
+
+<p>​       NIO有选择器，而IO没有。</p>
+
+<p>​       选择器用于使用单个线程处理多个通道。因此，它需要较少的线程来处理这些通道。线程之间的切换对于操作系统来说是昂贵的。 因此，为了提高系统效率选择器是有用的。</p>
+
+<p>​       <strong>I/O多路复用</strong>：多路复用可以在一个连接selector线程上同时处理多个请求响应，selector将接收到的请求指定对应的线程处理，这样可以大大的减少连接的数量，并提高了网络的处理能力。由于是共享连接不同请求响应数据包可以合并到一个IO上处理，这样可以大大降低IO的处理量，<a href="http://mp.weixin.qq.com/s?__biz=MzU5NTAzNjM0Mw==&amp;mid=2247485089&amp;idx=3&amp;sn=9bcee6a51212107d88985e9afcb46a41&amp;chksm=fe795779c90ede6faf177bdd23666da24c73bfd0fa809b44371cab20d461433c1960741aa248&amp;scene=21#wechat_redirect">让性能</a>表现得更出色。 （如果网络连接很多，为每一个连接创建一个线程，这样系统开销太大。）</p>
+
+<p>​       Selector与Channel是相互配合使用的，将Channel注册在Selector上之后，才可以正确的使用Selector，但此时Channel必须为非阻塞模式。Selector可以监听Channel的四种状态（Connect、Accept、Read、Write），当监听到某一Channel的某个状态时，才允许对Channel进行相应的操作。</p>
+
+<ul>
+<li>Connect：某一个客户端连接成功后</li>
+<li>Accept：准备好进行连接</li>
+<li>Read:可读</li>
+<li>Write:可写</li>
+</ul>
+
+<h4 id="4-练习">4）练习</h4>
+
+<p>client端：</p>
+
+<pre><code class="language-java">import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+import java.util.concurrent.TimeUnit;
+
+public class client {
+
+    public static void client(){
+        //分配空间
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        SocketChannel socketChannel = null;
+        try
+        {
+            //打开SocketChannel
+            socketChannel = SocketChannel.open();
+            ////实现非阻塞式的信道
+            socketChannel.configureBlocking(false);
+            //连接服务端
+            socketChannel.connect(new InetSocketAddress(&quot;127.0.0.1&quot;,8080));
+            if(socketChannel.finishConnect())
+            {
+                int i=0;
+                while(true)
+                {
+                    //写数据
+                    TimeUnit.SECONDS.sleep(1);
+                    String info = &quot;I'm &quot;+i+++&quot;-th information from client&quot;;
+                    //position将被设回0，limit设置成capacity，Buffer被清空
+                    buffer.clear();
+                    //向buffer写数据
+                    buffer.put(info.getBytes());
+                    //将Buffer从写模式切换到读模式
+                    buffer.flip();
+                    while(buffer.hasRemaining()){
+                        System.out.println(buffer);
+                        //注意SocketChannel.write()方法的调用在一个while循环中。Write()方法无法保证能写多少字节到SocketChannel。所以，重复调用write()直到Buffer没有要写的字节为止。
+                        socketChannel.write(buffer);
+                    }
+                }
+            }
+        }
+        catch (IOException | InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        finally{
+            try{
+                if(socketChannel!=null){
+                    socketChannel.close();
+                }
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        client();
+    }
+}
+</code></pre>
+
+<p>server端：</p>
+
+<pre><code class="language-java">import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+
+public class server {
+
+    private static final int BUF_SIZE=1024;
+    private static final int PORT = 8080;
+    private static final int TIMEOUT = 3000;
+
+    //注册已Accept的Channel
+    public static void handleAccept(SelectionKey key) throws IOException{
+        //获取ServerSocketChannel
+        ServerSocketChannel ssChannel = (ServerSocketChannel)key.channel();
+        //监听新进来的连接。当 accept()方法返回的时候,返回一个包含新进来的连接SocketChannel
+        SocketChannel sc = ssChannel.accept();
+        //设置非阻塞
+        sc.configureBlocking(false);
+        //注册
+        sc.register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocateDirect(BUF_SIZE));
+    }
+    
+    //读已就绪数据
+    public static void handleRead(SelectionKey key) throws IOException{
+        //获取SocketChannel
+        SocketChannel sc = (SocketChannel)key.channel();
+        //获取ByteBuffer
+        ByteBuffer buf = (ByteBuffer)key.attachment();
+        //将数据从SocketChannel读到Buffer中。返回值表示读了多少字节进Buffer里。如果是-1，表示已读到流的末尾
+        long bytesRead = sc.read(buf);
+        while(bytesRead&gt;0){
+            //将Buffer从写模式切换到读模式
+            buf.flip();
+            while(buf.hasRemaining()){
+                //输出
+                System.out.print((char)buf.get());
+            }
+            System.out.println();
+            //position将被设回0，limit设置成capacity，相当于Buffer被清空了
+            buf.clear();
+            //再次将数据从SocketChannel读到Buffer中
+            bytesRead = sc.read(buf);
+        }
+        if(bytesRead == -1){
+            sc.close();
+        }
+    }
+    
+    //向SocketChannel写数据
+    public static void handleWrite(SelectionKey key) throws IOException{
+        //获取Buffer
+        ByteBuffer buf = (ByteBuffer)key.attachment();
+        //将Buffer从写模式切换到读模式
+        buf.flip();
+        //获取SocketChannel
+        SocketChannel sc = (SocketChannel) key.channel();
+        while(buf.hasRemaining()){
+            sc.write(buf);
+        }
+        //如果Buffer中仍有未读的数据，将数据移动到Buffer起始处。然后将position设到最后一个未读元素正后面。limit设置成capacity。现在Buffer准备好写数据了，但是不会覆盖未读的数据。
+        buf.compact();
+    }
+    
+    public static void selector() {
+        Selector selector = null;
+        ServerSocketChannel ssc = null;
+        try{
+            //创建一个Selector实例
+            selector = Selector.open();
+            //打开ServerSocketChannel
+            ssc= ServerSocketChannel.open();
+            ssc.socket().bind(new InetSocketAddress(PORT));
+            //实现非阻塞式的信道
+            ssc.configureBlocking(false);
+            /*
+               SelectionKey.OP_ACCEPT —— 接收连接进行事件，表示服务器监听到了客户连接，那么服务器可以接收这个连接了
+               SelectionKey.OP_CONNECT —— 连接就绪事件，表示客户与服务器的连接已经建立成功
+               SelectionKey.OP_READ  —— 读就绪事件，表示通道中已经有了可读的数据，可以执行读操作了（通道目前有数据，可以进行读操作了）
+               SelectionKey.OP_WRITE —— 写就绪事件，表示已经可以向通道写数据了（通道目前可以用于写操作）
+            */
+            //注册selector
+            ssc.register(selector, SelectionKey.OP_ACCEPT);
+            while(true){
+                if(selector.select(TIMEOUT) == 0){
+                    System.out.println(&quot;==&quot;);
+                    continue;
+                }
+                //访问selectedkeys set中的就绪通道
+                Iterator&lt;SelectionKey&gt; iter = selector.selectedKeys().iterator();
+                while(iter.hasNext()){
+                    SelectionKey key = iter.next();
+                    // a connection was accepted by a ServerSocketChannel
+                    if(key.isAcceptable()){
+                        handleAccept(key);
+                    }
+                    // a channel is ready for reading
+                    if(key.isReadable()){
+                        handleRead(key);
+                    }
+                    // a channel is ready for writing &amp;&amp; a channel is valid
+                    if(key.isWritable() &amp;&amp; key.isValid()){
+                        handleWrite(key);
+                    }
+                    // a connection was established with a remote server
+                    if(key.isConnectable()){
+                        System.out.println(&quot;isConnectable = true&quot;);
+                    }
+                    iter.remove();
+                }
+            }
+        }catch(IOException e){
+            e.printStackTrace();
+        }finally{
+            try{
+                if(selector!=null){
+                    selector.close();
+                }
+                if(ssc!=null){
+                    ssc.close();
+                }
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public static void main(String[] args) {
+        selector();
+    }
+
+}
+</code></pre>
+</div>
+        <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://jixinhe111.github.io/tags/%E5%AD%A6%E4%B9%A0/">学习</a>
+                
+              </span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://jixnhe111.tk">Finished by jxh,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>真奇怪</span>
+  </div>
+</footer>
+
+
+
+<script src="https://jixinhe111.github.io/js/jquery-3.3.1.min.js"></script>
+<script src="https://jixinhe111.github.io/js/zozo.js"></script>
+<script src="https://jixinhe111.github.io/js/highlight.pack.js"></script>
+<link  href="https://jixinhe111.github.io/css/fancybox.min.css" rel="stylesheet">
+<script src="https://jixinhe111.github.io/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>

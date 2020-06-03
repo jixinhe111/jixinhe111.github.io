@@ -6,10 +6,28 @@
     <description>Recent content on 两只老虎 --from jxh</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 01 Jun 2020 18:56:00 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 02 Jun 2020 18:56:00 +0800</lastBuildDate>
     
 	<atom:link href="https://jixinhe111.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>抓包_发包</title>
+      <link>https://jixinhe111.github.io/posts/%E6%8A%93%E5%8C%85_%E5%8F%91%E5%8C%85/</link>
+      <pubDate>Tue, 02 Jun 2020 18:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/posts/%E6%8A%93%E5%8C%85_%E5%8F%91%E5%8C%85/</guid>
+      <description>抓包、发包 1. 抓包 1）什么是抓包？ ​ 抓包（packet capture）就是将网络传输发送与接收的数据包进行截获、重发、编辑、转存等操作，也用来检查网络安全。抓包也经常被用来进行数据截取等。 ​ 在程序运行的</description>
+    </item>
+    
+    <item>
+      <title>IO_NIO</title>
+      <link>https://jixinhe111.github.io/posts/io_nio/</link>
+      <pubDate>Mon, 01 Jun 2020 18:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/posts/io_nio/</guid>
+      <description>一、IO 1. IO流的分类 按照流的流向分，可以分为输入流和输出流； 按照操作单元划分，可以划分为字节流和字符流； 按照流的角色划分为节点流和处理流。 处理流的功能：1、消除不同节点流的实现差异，提供更方便的方法</description>
+    </item>
     
     <item>
       <title>Java开发手册</title>
