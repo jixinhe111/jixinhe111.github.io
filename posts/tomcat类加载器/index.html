@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="jxh"/>
+
+  
+  <meta name="description" content="Tomcat类加载器 ​ 下载tomcat解压后，可以在webapps目录下看到几个文件夹（这些都是web应用），webapps对应到tomcat容器中的Host，里面的文件夹则对应到Context。to"/>
+  
+
+  
+  
+  <meta name="keywords" content="Hugo, theme, zozo"/>
+  
+
+  
+  <link rel="canonical" href="https://jixinhe111.github.io/posts/tomcat%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/"/>
+
+  
+
+  <title>Tomcat类加载器 &middot; 两只老虎 --from jxh</title>
+
+  <link rel="shortcut icon" href="https://jixinhe111.github.io/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/zozo.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://jixinhe111.github.io/">
+          <span>两只老虎 --from jxh</span>
+          <img src="https://jixinhe111.github.io/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title">一只没有眼睛，一只没有耳朵</p>
+      <div class="my_socials">
+        
+        
+        <a href="%20" title="facebook" target="_blank"><i class="remixicon-facebook-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="instagram" target="_blank"><i class="remixicon-instagram-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="twitter" target="_blank"><i class="remixicon-twitter-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="weibo" target="_blank"><i class="remixicon-weibo-fill"></i></a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/tomcat%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/'>Tomcat类加载器</a></h2>
+          <span class="date">2020.06.02</span>
+        </div>
+        <div class="post_content markdown">
+
+<h2 id="tomcat类加载器">Tomcat类加载器</h2>
+
+<p>​       下载tomcat解压后，可以在webapps目录下看到几个文件夹（这些都是web应用），webapps对应到tomcat容器中的Host，里面的文件夹则对应到Context。tomcat启动后，webapps下的所有web应用都可以提供服务。</p>
+
+<p>​       假如webapps下有两个应用app1和app2，它们有各自独立依赖的jar包，又有共同依赖的jar包，这些相同的jar包有些版本相同，有些又不相同，这种情况下，tomcat是如何加载这些jar包的呢？</p>
+
+<h3 id="一-tomcat类加载器">一、tomcat类加载器</h3>
+
+<h3 id="1-1-web容器应该具备的特性">1.1、Web容器应该具备的特性</h3>
+
+<p>​       一个功能健全的Web容器，它的类加载器必然有多个，因为它应该具备如下特性：</p>
+
+<ul>
+<li><strong>隔离性</strong>：部署在同一个Web容器上的两个Web应用程序所使用的Java类库可以实现相互隔离。设想一下，两个Web应用，一个使用了Spring2.5，另一个使用了教新的4.0，应用服务器使用一个类加载器，Web应用将会因为jar包覆盖而无法启动。</li>
+<li><strong>灵活性</strong>：Web应用之间的类加载器相互独立，那么就能针对一个Web应用进行重新部署，此时Web应用的类加载器会被重建，而且不会影响其他的Web应用。如果采用一个类加载器，类之间的依赖是杂乱复杂的，无法完全移出某个应用的类。</li>
+<li><strong>性能</strong>：部署在同一个Web容器上的两个Web应用程序所使用的Java类库可以互相共享。这个需求也很常见，例如，用户可能有10个使用Spring组织的应用程序部署在同一台服务器上，如果把10份Spring分别存放在各个应用程序的隔离目录中，将会是很大的资源浪费——这主要倒不是浪费磁盘空间的问题，而是指类库在使用时都要被加载到Web容器的内存，如果类库不能共享，虚拟机的方法区就会很容易出现过度膨胀的风险。</li>
+<li>...</li>
+</ul>
+
+<h3 id="1-2-tomcat类加载器结构">1.2、tomcat类加载器结构</h3>
+
+<p>​       首先上张图，整体看下tomcat的类加载器：</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdXcN9.png" alt="tdXcN9.png" /></p>
+
+<p>​       可以看到在原先的java类加载器基础上，tomcat新增了几个类加载器，包括3个基础类加载器和每个Web应用的类加载器，其中3个基础类加载器可在conf/catalina.properties中配置，具体介绍下：</p>
+
+<ul>
+<li><strong>Common</strong>：以应用类加载器为父类，是tomcat顶层的公用类加载器，其路径由conf/catalina.properties中的common.loader指定，默认指向${catalina.home}/lib下的包。</li>
+<li><strong>Catalina</strong>：以Common类加载器为父类，是用于加载Tomcat应用服务器的类加载器，其路径由<strong>server.loader</strong>指定，<strong>默认为空</strong>，此时tomcat使用<strong>Common</strong>类加载器加载应用服务器。</li>
+<li><strong>Shared</strong>：以Common类加载器为父类，是所有Web应用的父类加载器，其路径由<strong>shared.loader</strong>指定，<strong>默认为空</strong>，此时tomcat使用<strong>Common</strong>类加载器作为Web应用的父加载器。</li>
+<li><strong>Web应用</strong>：以Shared类加载器为父类，加载/WEB-INF/classes目录下的未压缩的Class和资源文件以及/WEB-INF/lib目录下的jar包，该类加载器<strong>只对当前Web应用可见</strong>，对其他Web应用均不可见。</li>
+</ul>
+
+<p>​       默认情况下，Common、Catalina、Shared类加载器是<strong>同一个</strong>，但可以配置3个不同的类加载器，使他们各司其职。</p>
+
+<p>​       首先，Common类加载器复杂加载Tomcat应用服务器内部和Web应用均可见的类，如Servlet规范相关包和一些通用工具包。</p>
+
+<p>​       其次，Catalina类加载器负责只有Tomcat应用服务器内部可见的类，这些类对Web应用不可见。比如，想实现自己的会话存储方案，而且该方案依赖了一些第三方包，当然是不希望这些包对Web应用可见，这时可以配置server.load，创建独立的Catalina类加载器。</p>
+
+<p>​       再次，Shared类复杂加载Web应用共享类，这些类tomcat服务器不会依赖。</p>
+
+<p>​       那还有一个问题，如果有10个Web应用程序都是用Spring来进行组织和管理的话，可以把Spring放到Common或Shared目录下让这些程序共享。Spring要对用户程序的类进行管理，自然要能访问到用户程序的类，而用户的程序显然是放在/WebApp/WEB-INF目录中的，那么被CommonClassLoader或SharedClassLoader加载的Spring如何访问并不在其加载范围内的用户程序呢？</p>
+
+<p>​       如果按主流的双亲委派机制，显然无法做到让父类加载器加载的类去访问子类加载器加载的类，但使用<strong>线程上下文加载器</strong>，可以让父类加载器请求子类加载器去完成类加载的动作。</p>
+
+<p>​       <strong>spring</strong>加载类所用的Classloader是通过<strong>Thread.currentThread().getContextClassLoader()</strong>来获取的，而当线程创建时会默认setContextClassLoader(AppClassLoader)，即线程上下文类加载器被设置为<strong>AppClassLoader</strong>，spring中始终可以获取到这个AppClassLoader(在Tomcat里就是WebAppClassLoader)子类加载器来加载bean，以后任何一个线程都可以通过getContextClassLoader()获取到WebAppClassLoader来getbean了。</p>
+
+<h3 id="1-3-tomcat类加载器源码分析">1.3、tomcat类加载器源码分析</h3>
+
+<p>1.Common/Catalina/Shared ClassLoader的创建</p>
+
+<p>​       tomcat的类加载器继承结构：</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdjhPs.png" alt="tdjhPs.png" /></p>
+
+<p>​       这和上面介绍的tomcat类加载器结构不一样。双亲委派模型本不是通过继承实现的，而是组合，所以AppClassLoader没有继承自ExtClassLoader，WebappClassLoader也没有继承自AppClassLoader。至于Common ClassLoader，Shared ClassLoader，Catalina ClassLoader则是在启动时初始化的三个不同名字的URLClassLoader。</p>
+
+<p>​       看一下main函数：</p>
+
+<pre><code class="language-java">public static void main(String args[]) {
+    if (daemon == null) {
+        // Don't set daemon until init() has completed
+        Bootstrap bootstrap = new Bootstrap();
+        try {
+            bootstrap.init();
+        } catch (Throwable t) {
+            handleThrowable(t);
+            t.printStackTrace();
+            return;
+        }
+        daemon = bootstrap;
+    } else {
+        // When running as a service the call to stop will be on a new
+        // thread so make sure the correct class loader is used to prevent
+        // a range of class not found exceptions.
+        Thread.currentThread().setContextClassLoader(daemon.catalinaLoader);
+    }
+    
+    ...
+}
+</code></pre>
+
+<p>​       先判断Bootstrap是否为null，不为null，直接将Catalina ClassLoader设置到当前线程，用于加载服务器相关类，为null则进入bootstrap的init方法。</p>
+
+<pre><code class="language-java">public void init() throws Exception {
+    initClassLoaders();
+    Thread.currentThread().setContextClassLoader(catalinaLoader);
+    SecurityClassLoad.securityClassLoad(catalinaLoader);
+    ...
+}
+</code></pre>
+
+<p>​       init方法会调用initClassLoaders，同样也会将Catalina ClassLoader设置到当前线程设置到当前线程，进入initClassLoaders来看看。</p>
+
+<pre><code class="language-java">private void initClassLoaders() {
+    try {
+        commonLoader = createClassLoader(&quot;common&quot;, null);
+        if( commonLoader == null ) {
+            // no config file, default to this loader - we might be in a 'single' env.
+            commonLoader=this.getClass().getClassLoader();
+        }
+        catalinaLoader = createClassLoader(&quot;server&quot;, commonLoader);
+        sharedLoader = createClassLoader(&quot;shared&quot;, commonLoader);
+    } catch (Throwable t) {
+        handleThrowable(t);
+        log.error(&quot;Class loader creation threw exception&quot;, t);
+        System.exit(1);
+    }
+}
+</code></pre>
+
+<p>​       创建三个ClassLoader，CommClassLoader，Catalina ClassLoader，SharedClassLoader，正好对应前面介绍的三个基础类加载器。</p>
+
+<p>​       再进入createClassLoader可以看到这三个基础类加载器所加载的资源刚好对应conf/catalina.properties中的common.loader，server.loader，shared.loader：</p>
+
+<pre><code class="language-java">private ClassLoader createClassLoader(String name, ClassLoader parent)
+        throws Exception {
+    String value = CatalinaProperties.getProperty(name + &quot;.loader&quot;);
+    if ((value == null) || (value.equals(&quot;&quot;)))
+        return parent;
+    value = replace(value);
+    List&lt;Repository&gt; repositories = new ArrayList&lt;&gt;();
+    String[] repositoryPaths = getPaths(value);
+    for (String repository : repositoryPaths) {
+        // Check for a JAR URL repository
+        try {
+            @SuppressWarnings(&quot;unused&quot;)
+            URL url = new URL(repository);
+            repositories.add(
+                    new Repository(repository, RepositoryType.URL));
+            continue;
+        } catch (MalformedURLException e) {
+            // Ignore
+        }
+        // Local repository
+        if (repository.endsWith(&quot;*.jar&quot;)) {
+            repository = repository.substring
+                (0, repository.length() - &quot;*.jar&quot;.length());
+            repositories.add(
+                    new Repository(repository, RepositoryType.GLOB));
+        } else if (repository.endsWith(&quot;.jar&quot;)) {
+            repositories.add(
+                    new Repository(repository, RepositoryType.JAR));
+        } else {
+            repositories.add(
+                    new Repository(repository, RepositoryType.DIR));
+        }
+    }
+    return ClassLoaderFactory.createClassLoader(repositories, parent);
+}
+</code></pre>
+
+<p>2.Common/Catalina/Shared ClassLoader的层次构建</p>
+
+<p>​       Common/Catalina/Shared ClassLoader的创建好了，肯定是要被使用的，是在哪里使用的呢？它们之间同Webapp ClassLoader又是怎么联系起来的？</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdx0jP.png" alt="tdx0jP.png" /></p>
+
+<p>​       既然sharedClassLoader被传入到Catalina中，就来看它的getParentClassLoader调用栈。</p>
+
+<p>​       经过层层调用，来带StandardContext的startInternal方法，这个方法很长很复杂，就不全贴出来，里面有这样一段：</p>
+
+<pre><code class="language-java"> if (getLoader() == null) {
+    WebappLoader webappLoader = new WebappLoader(getParentClassLoader());
+    webappLoader.setDelegate(getDelegate());
+    setLoader(webappLoader);
+}
+</code></pre>
+
+<p>​       它会创建WebappLoader对象，并通过setLoader(webappLoader)赋值到一个实例变量中，然后会调用WebappLoader的start方法:</p>
+
+<pre><code class="language-java">...
+if (ok) {
+    // Start our subordinate components, if any
+    Loader loader = getLoader();
+    if (loader instanceof Lifecycle) {
+        ((Lifecycle) loader).start();
+    }
+    ...
+}
+...
+</code></pre>
+
+<p>​       这里关系到tomcat的生命周期机制，先不纠结，直接找到start方法，start方法是在父类中，最后要调回到WebappLoader中的startInternal方法。</p>
+
+<p>​       该方法中有这样一段：</p>
+
+<pre><code class="language-java">...
+classLoader = createClassLoader();
+classLoader.setResources(context.getResources());
+classLoader.setDelegate(this.delegate);
+...
+</code></pre>
+
+<p>​       进入createClassLoader方法：</p>
+
+<pre><code class="language-java">private WebappClassLoaderBase createClassLoader()
+        throws Exception {
+    // private String loaderClass = ParallelWebappClassLoader.class.getName();
+    Class&lt;?&gt; clazz = Class.forName(loaderClass);
+    WebappClassLoaderBase classLoader = null;
+
+    if (parentClassLoader == null) {
+        parentClassLoader = context.getParentClassLoader();
+    }
+    Class&lt;?&gt;[] argTypes = { ClassLoader.class };
+    Object[] args = { parentClassLoader };
+    Constructor&lt;?&gt; constr = clazz.getConstructor(argTypes);
+    classLoader = (WebappClassLoaderBase) constr.newInstance(args);
+    return classLoader;
+}
+</code></pre>
+
+<p>​       该方法会实例化一个ParallelWebappClassLoader实例，并且传递了sharedLoader作为其父亲加载器。</p>
+
+<p>​       代码阅读到这里，已经基本清楚了Tomcat中ClassLoader的总体结构，总结如下：</p>
+
+<p>​       在Tomcat存在common、cataina、shared三个公共的classloader，默认情况下，这三个classloader其实是同一个，都是common classloader，而针对每个webapp，也就是context（对应代码中的StandardContext类），都有自己的WebappClassLoader实例来加载每个应用自己的类，该类加载实例的parent即是Shared ClassLoader。</p>
+
+<p>3.tomcat类加载器的加载过程</p>
+
+<p>​       重点看ParallelWebappClassLoader，ParallelWebappClassLoader的loadClass是在其父类WebappClassLoaderBase中实现的：</p>
+
+<p><strong>第一步：</strong></p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdz5RA.png" alt="tdz5RA.png" /></p>
+
+<p>​       首先调用findLoaderClass0() 方法检查WebappClassLoader中是否加载过此类。</p>
+
+<p>​       <img src="https://s1.ax1x.com/2020/06/03/tdzIxI.png" alt="tdzIxI.png" /></p>
+
+<p>​       WebappClassLoader 加载过的类都存放在 resourceEntries 缓存中。protected final Map<String, ResourceEntry> resourceEntries = new ConcurrentHashMap&lt;&gt;();</p>
+
+<p><strong>第二步：</strong></p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdzhPH.png" alt="tdzhPH.png" /></p>
+
+<p>​       如果第一步没有找到，则继续检查JVM虚拟机中是否加载过该类。
+调用ClassLoader的findLoadedClass()方法检查。</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdzyKx.png" alt="tdzyKx.png" /></p>
+
+<p><strong>第三步：</strong></p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdzcqK.png" alt="tdzcqK.png" /></p>
+
+<p>​       如果前两步都没有找到，则使用系统类加载该类（也就是当前JVM的ClassPath）。为了防止覆盖基础类实现，这里会判断class是不是JVMSE中的基础类库中类。</p>
+
+<pre><code class="language-java">protected ClassLoader getJavaseClassLoader() {
+    return javaseClassLoader;
+}
+</code></pre>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdz4Gd.png" alt="tdz4Gd.png" /></p>
+
+<p><strong>第四步：</strong></p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdzWIe.png" alt="tdzWIe.png" /></p>
+
+<p>​       先判断是否设置了delegate属性，设置为true，那么就会完全按照JVM的&quot;双亲委托&quot;机制流程加载类。</p>
+
+<p>​       若是默认的话，是先使用WebappClassLoader自己处理加载类的。当然，若是委托了，使用双亲委托亦没有加载到class实例，那还是最后使用WebappClassLoader加载。</p>
+
+<p><strong>第五步：</strong></p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdzhPH.png" alt="tdzhPH.png" /></p>
+
+<p>​       若是没有委托，则默认会首次使用WebappClassLoader来加载类。通过自定义findClass定义处理类加载规则。</p>
+
+<p>​       findClass()会去Web-INF/classes 目录下查找类。</p>
+
+<p><strong>第六步：</strong></p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdz6r6.png" alt="tdz6r6.png" /></p>
+
+<p>​       若是WebappClassLoader在/WEB-INF/classes、/WEB-INF/lib下还是查找不到class，那么无条件强制委托给System、Common类加载器去查找该类。</p>
+
+<p>​       最后借tomcat官网上的话总结一下：</p>
+
+<p>​       Web应用类加载器默认的加载顺序是：</p>
+
+<p>​       (1).先从缓存中加载；
+​       (2).如果没有，则从JVM的Bootstrap类加载器加载；
+​       (3).如果没有，则从当前类加载器加载（按照WEB-INF/classes、WEB-INF/lib的顺序）；
+​       (4).如果没有，则从父类加载器加载，由于父类加载器采用默认的委派模式，所以加载顺序是AppClassLoader、Common、Shared。</p>
+
+<p>​       tomcat提供了delegate属性用于控制是否启用java委派模式，默认false（不启用），当设置为true时，tomcat将使用java的默认委派模式，这时加载顺序如下：</p>
+
+<p>​       (1).先从缓存中加载；
+​       (2).如果没有，则从JVM的Bootstrap类加载器加载；
+​       (3).如果没有，则从父类加载器加载，加载顺序是AppClassLoader、Common、Shared；
+​       (4).如果没有，则从当前类加载器加载（按照WEB-INF/classes、WEB-INF/lib的顺序）。</p>
+</div>
+        <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://jixinhe111.github.io/tags/%E5%AD%A6%E4%B9%A0/">学习</a>
+                
+              </span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://jixnhe111.tk">Finished by jxh,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>真奇怪</span>
+  </div>
+</footer>
+
+
+
+<script src="https://jixinhe111.github.io/js/jquery-3.3.1.min.js"></script>
+<script src="https://jixinhe111.github.io/js/zozo.js"></script>
+<script src="https://jixinhe111.github.io/js/highlight.pack.js"></script>
+<link  href="https://jixinhe111.github.io/css/fancybox.min.css" rel="stylesheet">
+<script src="https://jixinhe111.github.io/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>
