@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="jxh"/>
+
+  
+  <meta name="description" content="Tomcat整体架构 一、Tomcat顶层结构 Server：服务器的意思，代表整个tomcat服务器，一个tomcat只有一个Server； Service：Server中的一个逻辑功能层， 一个Serve"/>
+  
+
+  
+  
+  <meta name="keywords" content="Hugo, theme, zozo"/>
+  
+
+  
+  <link rel="canonical" href="https://jixinhe111.github.io/posts/tomcat%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/"/>
+
+  
+
+  <title>Tomcat整体架构 &middot; 两只老虎 --from jxh</title>
+
+  <link rel="shortcut icon" href="https://jixinhe111.github.io/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/zozo.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://jixinhe111.github.io/">
+          <span>两只老虎 --from jxh</span>
+          <img src="https://jixinhe111.github.io/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title">一只没有眼睛，一只没有耳朵</p>
+      <div class="my_socials">
+        
+        
+        <a href="%20" title="facebook" target="_blank"><i class="remixicon-facebook-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="instagram" target="_blank"><i class="remixicon-instagram-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="twitter" target="_blank"><i class="remixicon-twitter-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="weibo" target="_blank"><i class="remixicon-weibo-fill"></i></a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/tomcat%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/'>Tomcat整体架构</a></h2>
+          <span class="date">2020.06.03</span>
+        </div>
+        <div class="post_content markdown">
+
+<h2 id="tomcat整体架构">Tomcat整体架构</h2>
+
+<h3 id="一-tomcat顶层结构">一、Tomcat顶层结构</h3>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdNmGD.png" alt="tdNmGD.png" /></p>
+
+<p>Server：服务器的意思，代表整个tomcat服务器，一个tomcat只有一个Server；</p>
+
+<p>Service：Server中的一个逻辑功能层， 一个Server可以包含多个Service；</p>
+
+<p>Connector：称作连接器，是Service的核心组件之一，一个Service可以有多个Connector，主要是连接客户端请求；</p>
+
+<p>Container：Service的另一个核心组件，按照层级有Engine，Host，Context，Wrapper四种，一个Service只有一个Engine，其主要作用是执行业务逻辑；</p>
+
+<p>Jasper：JSP引擎；</p>
+
+<p>Session：会话管理；</p>
+
+<p>...</p>
+
+<h3 id="二-server">二、Server</h3>
+
+<p>​       Server是Tomcat最顶层的容器，代表着整个服务器，即一个Tomcat只有一个Server，Server中包含至少一个Service组件，用于提供具体服务。</p>
+
+<h3 id="三-service">三、Service</h3>
+
+<p>​       一个Server服务器，它最基本的功能肯定是：</p>
+
+<p>​       接收客户端的请求，然后解析请求，完成相应的业务逻辑，然后把处理后的结果返回给客户端，一般会提供两个节本方法，一个start打开服务Socket连接，监听服务端口，一个stop停止服务释放网络资源。</p>
+
+<p>​       这时的服务器就是一个Server类，在一个端口上监听Socket请求，然后解析请求，返回处理结果。</p>
+
+<p>​       但如果将请求监听和请求处理放在一起，<strong>扩展性</strong>会变差，毕竟网络协议不止HTTP一种，如果想适配多种网络协议，请求处理又相同，这时就无能为力了，tomcat的设计大师将请求监听和请求处理分开为两个模块，分别是Connector和Container，Connector负责处理请求监听，Container负责处理请求处理。</p>
+
+<p>​       在conf/server.xml文件中，可以看到Service组件包含了Connector组件和Engine组件（前面有提过，Engine就是一种容器），即Service相当于Connector和Engine组件的包装器，将一个或者多个Connector和一个Engine建立关联关系。在默认的配置文件中，定义了一个叫<strong>Catalina</strong> 的服务，它将HTTP/1.1和AJP/1.3这两个Connector与一个名为Catalina的Engine关联起来。</p>
+
+<p>​       一个Server可以包含多个Service（它们相互独立，只是公用一个JVM及类库），一个Service负责维护多个Connector和一个Container。</p>
+
+<h3 id="四-connector">四、Connector</h3>
+
+<p>​       Connector是连接器，用于接受请求并将请求封装成Request和Response，然后交给Container进行处理，Container处理完之后在交给Connector返回给客户端。</p>
+
+<p>​       一个Connector会监听一个独立的端口来处理来自客户端的请求。server.xml默认配置了两个Connector：</p>
+
+<ul>
+<li>&lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot; connectionTimeout=&quot;20000&quot; redirectPort=&quot;8443&quot;/&gt;</li>
+</ul>
+
+<p>它监听端口8080,这个端口值可以修改，connectionTimeout定义了连接超时时间，单位是毫秒，redirectPort 定义了ssl的重定向接口，根据上述配置，Connector会将ssl请求转发到8443端口。</p>
+
+<ul>
+<li>&lt;Connector port=&quot;8009&quot; protocol=&quot;AJP/1.3&quot; redirectPort=&quot;8443&quot; /&gt;</li>
+</ul>
+
+<p>AJP表示Apache Jserv Protocol，它将处理Tomcat和Apache http服务器之间的交互，此连接器用于处理我们将Tomcat和Apache http服务器结合使用的情况，如在同一台物理Server上部署一个Apache http服务器和多台Tomcat服务器，通过Apache服务器来处理静态资源以及负载均衡时，针对不同的Tomcat实例需要AJP监听不同的端口。</p>
+
+<p>Connector在tomcat中的设计比较复杂：</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/td5gMj.png" alt="td5gMj.png" /></p>
+
+<p>​       Connector使用ProtocolHandler来处理请求的，不同的ProtocolHandler代表不同的连接类型，比如：Http11Protocol使用的是普通Socket来连接的（tomcat9已经删除了这个类，不再采用BIO的方式），Http11NioProtocol使用的是NioSocket来连接的。</p>
+
+<p>​       其中ProtocolHandler由包含了三个部件：Endpoint、Processor、Adapter。</p>
+
+<ol>
+<li>Endpoint用来处理底层Socket的网络连接，Processor用于将Endpoint接收到的Socket封装成Request（这个Request和ServletRequest无关），Adapter充当适配器，用于将Request转换为ServletRequest交给Container进行具体的处理。</li>
+<li>Endpoint由于是处理底层的Socket网络连接，因此Endpoint是用来实现TCP/IP协议的，而Processor用来实现HTTP协议的，Adapter将请求适配到Servlet容器进行具体的处理。</li>
+<li>Endpoint的抽象实现AbstractEndpoint里面定义的Acceptor和AsyncTimeout两个内部类和一个Handler接口。Acceptor用于监听请求，AsyncTimeout用于检查异步Request的超时，Handler用于处理接收到的Socket，在内部调用Processor进行处理。</li>
+</ol>
+
+<h3 id="五-container">五、Container</h3>
+
+<p>tomcat的container层次如下：</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdIlOs.png" alt="tdIlOs.png" /></p>
+
+<h4 id="5-1-engine">5.1、Engine</h4>
+
+<p>​       一个Service中有多个Connector和一个Engine，Engine表示整个Servlet引擎，一个Engine下面可以包含一个或者多个Host，即一个Tomcat实例可以配置多个虚拟主机，默认的情况下 conf/server.xml 配置文件中<code>&lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;</code> 定义了一个名为Catalina的Engine。</p>
+
+<h4 id="5-2-host">5.2、Host</h4>
+
+<p>​       Host，代表一个站点，也可以叫虚拟主机，一个Host可以配置多个Context，在server.xml文件中的默认配置为<code>&lt;Host name=&quot;localhost&quot; appBase=&quot;webapps&quot; unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;</code>, 其中appBase=webapps， 也就是<CATALINA_HOME>\webapps目录，unpackingWARS=true 属性指定在appBase指定的目录中的war包都<strong>自动</strong>的解压，autoDeploy=true 属性指定对加入到appBase目录的war包进行自动的部署。</p>
+
+<p>​       一个Engine包含多个Host的设计，使得一个服务器实例可以承担多个域名的服务，是很灵活的设计。</p>
+
+<h4 id="5-3-context">5.3、Context</h4>
+
+<p>​       Context，代表一个应用程序，就是日常开发中的web程序，或者一个WEB-INF目录以及下面的web.xml文件，换句话说每一个运行的webapp最终都是以Context的形式存在，每个Context都有一个根路径和请求路径；与Host的区别是Context代表一个应用，如，默认配置下webapps下的每个目录都是一个应用，其中ROOT目录中存放主应用，其他目录存放别的子应用，而整个webapps是一个站点。</p>
+
+<p>​       在Tomcat中通常采用如下方式创建一个Context：</p>
+
+<ol>
+<li><p>在<CATALINA_HOME>\webapps 目录中创建一个目录dirname，此时将自动创建一个context，默认context的访问url为<a href="https://link.jianshu.com?t=http%3A%2F%2Fhost%3Aport%2Fdirname">http://host:port/dirname</a>，也可以通过在ContextRoot\META-INF 中创建一个context.xml文件，其中包含如下内容来指定应用的访问路径：&lt;context path=&quot;/urlpath&quot;&gt;</p></li>
+
+<li><p>在server.xml文件中增加context 元素，如下：<code>&lt;Context path=&quot;/urlpath&quot; docBase=&quot;/test/xxx&quot; reloadable=true /&gt;</code>，这样就可以通过<a href="https://link.jianshu.com/?t=http%3A%2F%2Fhost%3Aport%2Furlpath">http://host:port/urlpath</a>访问上面配置的应用。</p></li>
+</ol>
+
+<p>可以打开tomcat目录对照一下：</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdoHbR.png" alt="tdoHbR.png" /></p>
+
+<h4 id="5-4-wrapper">5.4、Wrapper</h4>
+
+<p>​       一个Context可以包含多个Servlet处理不同请求，当然现在的SpringMVC，struts框架的出现导致程序中不再是大量的Servlet，但其实本质是没变的，都是由Servlet来处理或者当作入口。在tomcat中Servlet被称为wrapper。为了更加灵活，便于扩展，tomcat是用管道（pipeline）和阀(valve)的形式来处理请求，所以将Servlet丢给Wrapper。</p>
+
+<h3 id="六-tomncat启动流程">六、Tomncat启动流程</h3>
+
+<p>​       tomcat的启动流程很标准化，入口是BootStrap，统一按照生命周期管理接口Lifecycle的定义进行启动。首先，调用init()方法逐级初始化，接着调用start()方法进行启动，同时，每次调用伴随着生命周期状态变更事件的触发。</p>
+
+<p>​       每一级组件除完成自身的处理外，还有负责调用子组件的相关调用，组件和组件之间是松耦合的，可以通过配置进行修改。</p>
+
+<p>​       大致流程图如下：</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/03/tdHM40.png" alt="tdHM40.png" style="zoom:80%;" /></p>
+</div>
+        <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://jixinhe111.github.io/tags/%E5%AD%A6%E4%B9%A0/">学习</a>
+                
+              </span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://jixnhe111.tk">Finished by jxh,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>真奇怪</span>
+  </div>
+</footer>
+
+
+
+<script src="https://jixinhe111.github.io/js/jquery-3.3.1.min.js"></script>
+<script src="https://jixinhe111.github.io/js/zozo.js"></script>
+<script src="https://jixinhe111.github.io/js/highlight.pack.js"></script>
+<link  href="https://jixinhe111.github.io/css/fancybox.min.css" rel="stylesheet">
+<script src="https://jixinhe111.github.io/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>
