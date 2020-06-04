@@ -214,7 +214,7 @@ digester.addSetNext(&quot;Server/Service/Executor&quot;,
                     &quot;org.apache.catalina.Executor&quot;);
 </code></pre>
 
-<p>创建<strong>Executor</strong>实例，默认为org.apache.catalina.core.StandardThreadExecutor，并将其设置到Service实例中，默认情况下，未配置Executor。</p>
+<p>创建<strong>Executor</strong>实例，默认为org.apache.catalina.core.StandardThreadExecutor，并将其设置到Service实例中。</p>
 
 <pre><code class="language-java">digester.addRule(&quot;Server/Service/Connector&quot;,
                  new ConnectorCreateRule());
@@ -302,7 +302,7 @@ digester.addSetNext(prefix + &quot;Engine/Cluster&quot;,
                             &quot;setCluster&quot;,
 </code></pre>
 
-<p>这段是为Engine创建集群配置，如需要，应在server.xml中江将Cluster标签注释打开，还未用过Tomcat的集群配置，相关内容就不详细介绍了。</p>
+<p>这段是为Engine创建集群配置，如需要，应在server.xml中江将Cluster标签注释打开。</p>
 
 <h4 id="2-3-为engine添加生命周期监听器">2.3、为Engine添加生命周期监听器</h4>
 
@@ -358,7 +358,7 @@ digester.addCallMethod(prefix + &quot;Host/Alias&quot;,
 
 <p><br /></p>
 
-<p>同Engine一样，在创建Host时，默认会添加一个生命周期监听器HostConfig，该生命周期监听器比EngineConfig复杂得多，和web应用的加载有关，将在下一篇介绍。</p>
+<p>同Engine一样，在创建Host时，默认会添加一个生命周期监听器HostConfig，该生命周期监听器比EngineConfig复杂得多，和web应用的加载有关。</p>
 
 <p><br /></p>
 
@@ -404,7 +404,7 @@ digester.addSetNext(prefix + &quot;Host/Valve&quot;,
                     &quot;org.apache.catalina.Valve&quot;);
 </code></pre>
 
-<p>从配置文件中可以看到默认的Valve为AccessLogValve，用于在处理请求时记录访问日志。</p>
+<p>默认的Valve为AccessLogValve，用于在处理请求时记录访问日志。</p>
 
 <pre><code class="language-java">&lt;Host name=&quot;localhost&quot; appBase=&quot;webapps&quot;
       unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;
@@ -424,7 +424,7 @@ digester.addSetNext(prefix + &quot;Host/Valve&quot;,
 
 <p><br /></p>
 
-<p>多数情况并不需要在server.xml中配置Context，更多是由HostConfig自动扫描部署目录，以Context.xml文件为基础进行Context的创建，具体将在下篇介绍。</p>
+<p>多数情况并不需要在server.xml中配置Context，更多是由HostConfig自动扫描部署目录，以Context.xml文件为基础进行Context的创建。</p>
 
 <p><br /></p>
 

@@ -6,7 +6,7 @@
     <description>Recent content in Tags on 两只老虎 --from jxh</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 03 Jun 2020 18:56:00 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 04 Jun 2020 12:56:00 +0800</lastBuildDate>
     
 	<atom:link href="https://jixinhe111.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,7 +14,7 @@
     <item>
       <title>Tomcat</title>
       <link>https://jixinhe111.github.io/tags/tomcat/</link>
-      <pubDate>Wed, 03 Jun 2020 18:56:00 +0800</pubDate>
+      <pubDate>Thu, 04 Jun 2020 12:56:00 +0800</pubDate>
       
       <guid>https://jixinhe111.github.io/tags/tomcat/</guid>
       <description></description>
@@ -26,6 +26,24 @@
       <pubDate>Tue, 02 Jun 2020 15:56:00 +0800</pubDate>
       
       <guid>https://jixinhe111.github.io/tags/%E5%AD%A6%E4%B9%A0/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>网络</title>
+      <link>https://jixinhe111.github.io/tags/%E7%BD%91%E7%BB%9C/</link>
+      <pubDate>Tue, 02 Jun 2020 12:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/tags/%E7%BD%91%E7%BB%9C/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>编程规范</title>
+      <link>https://jixinhe111.github.io/tags/%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83/</link>
+      <pubDate>Mon, 01 Jun 2020 12:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/tags/%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83/</guid>
       <description></description>
     </item>
     

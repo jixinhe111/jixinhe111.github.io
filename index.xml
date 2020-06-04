@@ -6,10 +6,19 @@
     <description>Recent content on 两只老虎 --from jxh</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 03 Jun 2020 18:56:00 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 04 Jun 2020 12:56:00 +0800</lastBuildDate>
     
 	<atom:link href="https://jixinhe111.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Tomcat优化</title>
+      <link>https://jixinhe111.github.io/posts/tomcat%E4%BC%98%E5%8C%96/</link>
+      <pubDate>Thu, 04 Jun 2020 12:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/posts/tomcat%E4%BC%98%E5%8C%96/</guid>
+      <description>Tomcat优化 一、优化大纲 Tomcat是我们经常使用的 servlet容器之一，甚至很多线上产品都使用 Tomcat充当服务器。而且优化后的Tomcat性能提升显著，本文从以下几方面进行分析优化。 内存优</description>
+    </item>
     
     <item>
       <title>Tomcat_Server的创建</title>
@@ -53,7 +62,7 @@
       <pubDate>Tue, 02 Jun 2020 12:56:00 +0800</pubDate>
       
       <guid>https://jixinhe111.github.io/posts/%E6%8A%93%E5%8C%85_%E5%8F%91%E5%8C%85/</guid>
-      <description>抓包、发包 1. 抓包 1）什么是抓包？ ​ 抓包（packet capture）就是将网络传输发送与接收的数据包进行截获、重发、编辑、转存等操作，也用来检查网络安全。抓包也经常被用来进行数据截取等。 ​ 在程序运行的</description>
+      <description>抓包、发包 1. 抓包 1）什么是抓包？ 抓包（packet capture）就是将网络传输发送与接收的数据包进行截获、重发、编辑、转存等操作，也用来检查网络安全。抓包也经常被用来进行数据截取等。 在程序运行的数据</description>
     </item>
     
     <item>

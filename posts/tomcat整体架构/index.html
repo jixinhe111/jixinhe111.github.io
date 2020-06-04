@@ -134,27 +134,37 @@
 
 <h3 id="二-server">二、Server</h3>
 
-<p>​       Server是Tomcat最顶层的容器，代表着整个服务器，即一个Tomcat只有一个Server，Server中包含至少一个Service组件，用于提供具体服务。</p>
+<p>Server是Tomcat最顶层的容器，代表着整个服务器，即一个Tomcat只有一个Server，Server中包含至少一个Service组件，用于提供具体服务。</p>
 
 <h3 id="三-service">三、Service</h3>
 
-<p>​       一个Server服务器，它最基本的功能肯定是：</p>
+<p>一个Server服务器，它最基本的功能肯定是：</p>
 
-<p>​       接收客户端的请求，然后解析请求，完成相应的业务逻辑，然后把处理后的结果返回给客户端，一般会提供两个节本方法，一个start打开服务Socket连接，监听服务端口，一个stop停止服务释放网络资源。</p>
+<p>接收客户端的请求，然后解析请求，完成相应的业务逻辑，然后把处理后的结果返回给客户端，一般会提供两个节本方法，一个start打开服务Socket连接，监听服务端口，一个stop停止服务释放网络资源。</p>
 
-<p>​       这时的服务器就是一个Server类，在一个端口上监听Socket请求，然后解析请求，返回处理结果。</p>
+<p><br /></p>
 
-<p>​       但如果将请求监听和请求处理放在一起，<strong>扩展性</strong>会变差，毕竟网络协议不止HTTP一种，如果想适配多种网络协议，请求处理又相同，这时就无能为力了，tomcat的设计大师将请求监听和请求处理分开为两个模块，分别是Connector和Container，Connector负责处理请求监听，Container负责处理请求处理。</p>
+<p>这时的服务器就是一个Server类，在一个端口上监听Socket请求，然后解析请求，返回处理结果。</p>
 
-<p>​       在conf/server.xml文件中，可以看到Service组件包含了Connector组件和Engine组件（前面有提过，Engine就是一种容器），即Service相当于Connector和Engine组件的包装器，将一个或者多个Connector和一个Engine建立关联关系。在默认的配置文件中，定义了一个叫<strong>Catalina</strong> 的服务，它将HTTP/1.1和AJP/1.3这两个Connector与一个名为Catalina的Engine关联起来。</p>
+<p><br /></p>
 
-<p>​       一个Server可以包含多个Service（它们相互独立，只是公用一个JVM及类库），一个Service负责维护多个Connector和一个Container。</p>
+<p>但如果将请求监听和请求处理放在一起，<strong>扩展性</strong>会变差，毕竟网络协议不止HTTP一种，如果想适配多种网络协议，请求处理又相同，这时就无能为力了，tomcat的设计大师将请求监听和请求处理分开为两个模块，分别是Connector和Container，Connector负责处理请求监听，Container负责处理请求处理。</p>
+
+<p><br /></p>
+
+<p>在conf/server.xml文件中，可以看到Service组件包含了Connector组件和Engine组件（前面有提过，Engine就是一种容器），即Service相当于Connector和Engine组件的包装器，将一个或者多个Connector和一个Engine建立关联关系。在默认的配置文件中，定义了一个叫<strong>Catalina</strong> 的服务，它将HTTP/1.1和AJP/1.3这两个Connector与一个名为Catalina的Engine关联起来。</p>
+
+<p><br /></p>
+
+<p>一个Server可以包含多个Service（它们相互独立，只是公用一个JVM及类库），一个Service负责维护多个Connector和一个Container。</p>
 
 <h3 id="四-connector">四、Connector</h3>
 
-<p>​       Connector是连接器，用于接受请求并将请求封装成Request和Response，然后交给Container进行处理，Container处理完之后在交给Connector返回给客户端。</p>
+<p>Connector是连接器，用于接受请求并将请求封装成Request和Response，然后交给Container进行处理，Container处理完之后在交给Connector返回给客户端。</p>
 
-<p>​       一个Connector会监听一个独立的端口来处理来自客户端的请求。server.xml默认配置了两个Connector：</p>
+<p><br /></p>
+
+<p>一个Connector会监听一个独立的端口来处理来自客户端的请求。server.xml默认配置了两个Connector：</p>
 
 <ul>
 <li>&lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot; connectionTimeout=&quot;20000&quot; redirectPort=&quot;8443&quot;/&gt;</li>
@@ -172,9 +182,11 @@
 
 <p><img src="https://s1.ax1x.com/2020/06/03/td5gMj.png" alt="td5gMj.png" /></p>
 
-<p>​       Connector使用ProtocolHandler来处理请求的，不同的ProtocolHandler代表不同的连接类型，比如：Http11Protocol使用的是普通Socket来连接的（tomcat9已经删除了这个类，不再采用BIO的方式），Http11NioProtocol使用的是NioSocket来连接的。</p>
+<p>Connector使用ProtocolHandler来处理请求的，不同的ProtocolHandler代表不同的连接类型，比如：Http11Protocol使用的是普通Socket来连接的（tomcat9已经删除了这个类，不再采用BIO的方式），Http11NioProtocol使用的是NioSocket来连接的。</p>
 
-<p>​       其中ProtocolHandler由包含了三个部件：Endpoint、Processor、Adapter。</p>
+<p><br /></p>
+
+<p>其中ProtocolHandler由包含了三个部件：Endpoint、Processor、Adapter。</p>
 
 <ol>
 <li>Endpoint用来处理底层Socket的网络连接，Processor用于将Endpoint接收到的Socket封装成Request（这个Request和ServletRequest无关），Adapter充当适配器，用于将Request转换为ServletRequest交给Container进行具体的处理。</li>
@@ -190,19 +202,23 @@
 
 <h4 id="5-1-engine">5.1、Engine</h4>
 
-<p>​       一个Service中有多个Connector和一个Engine，Engine表示整个Servlet引擎，一个Engine下面可以包含一个或者多个Host，即一个Tomcat实例可以配置多个虚拟主机，默认的情况下 conf/server.xml 配置文件中<code>&lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;</code> 定义了一个名为Catalina的Engine。</p>
+<p>一个Service中有多个Connector和一个Engine，Engine表示整个Servlet引擎，一个Engine下面可以包含一个或者多个Host，即一个Tomcat实例可以配置多个虚拟主机，默认的情况下 conf/server.xml 配置文件中<code>&lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;</code> 定义了一个名为Catalina的Engine。</p>
 
 <h4 id="5-2-host">5.2、Host</h4>
 
-<p>​       Host，代表一个站点，也可以叫虚拟主机，一个Host可以配置多个Context，在server.xml文件中的默认配置为<code>&lt;Host name=&quot;localhost&quot; appBase=&quot;webapps&quot; unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;</code>, 其中appBase=webapps， 也就是<CATALINA_HOME>\webapps目录，unpackingWARS=true 属性指定在appBase指定的目录中的war包都<strong>自动</strong>的解压，autoDeploy=true 属性指定对加入到appBase目录的war包进行自动的部署。</p>
+<p>Host，代表一个站点，也可以叫虚拟主机，一个Host可以配置多个Context，在server.xml文件中的默认配置为<code>&lt;Host name=&quot;localhost&quot; appBase=&quot;webapps&quot; unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;</code>, 其中appBase=webapps， 也就是<CATALINA_HOME>\webapps目录，unpackingWARS=true 属性指定在appBase指定的目录中的war包都<strong>自动</strong>的解压，autoDeploy=true 属性指定对加入到appBase目录的war包进行自动的部署。</p>
 
-<p>​       一个Engine包含多个Host的设计，使得一个服务器实例可以承担多个域名的服务，是很灵活的设计。</p>
+<p><br /></p>
+
+<p>一个Engine包含多个Host的设计，使得一个服务器实例可以承担多个域名的服务，是很灵活的设计。</p>
 
 <h4 id="5-3-context">5.3、Context</h4>
 
-<p>​       Context，代表一个应用程序，就是日常开发中的web程序，或者一个WEB-INF目录以及下面的web.xml文件，换句话说每一个运行的webapp最终都是以Context的形式存在，每个Context都有一个根路径和请求路径；与Host的区别是Context代表一个应用，如，默认配置下webapps下的每个目录都是一个应用，其中ROOT目录中存放主应用，其他目录存放别的子应用，而整个webapps是一个站点。</p>
+<p>Context，代表一个应用程序，就是日常开发中的web程序，或者一个WEB-INF目录以及下面的web.xml文件，换句话说每一个运行的webapp最终都是以Context的形式存在，每个Context都有一个根路径和请求路径；与Host的区别是Context代表一个应用，如，默认配置下webapps下的每个目录都是一个应用，其中ROOT目录中存放主应用，其他目录存放别的子应用，而整个webapps是一个站点。</p>
 
-<p>​       在Tomcat中通常采用如下方式创建一个Context：</p>
+<p><br /></p>
+
+<p>在Tomcat中通常采用如下方式创建一个Context：</p>
 
 <ol>
 <li><p>在<CATALINA_HOME>\webapps 目录中创建一个目录dirname，此时将自动创建一个context，默认context的访问url为<a href="https://link.jianshu.com?t=http%3A%2F%2Fhost%3Aport%2Fdirname">http://host:port/dirname</a>，也可以通过在ContextRoot\META-INF 中创建一个context.xml文件，其中包含如下内容来指定应用的访问路径：&lt;context path=&quot;/urlpath&quot;&gt;</p></li>
@@ -216,15 +232,19 @@
 
 <h4 id="5-4-wrapper">5.4、Wrapper</h4>
 
-<p>​       一个Context可以包含多个Servlet处理不同请求，当然现在的SpringMVC，struts框架的出现导致程序中不再是大量的Servlet，但其实本质是没变的，都是由Servlet来处理或者当作入口。在tomcat中Servlet被称为wrapper。为了更加灵活，便于扩展，tomcat是用管道（pipeline）和阀(valve)的形式来处理请求，所以将Servlet丢给Wrapper。</p>
+<p>一个Context可以包含多个Servlet处理不同请求，当然现在的SpringMVC，struts框架的出现导致程序中不再是大量的Servlet，但其实本质是没变的，都是由Servlet来处理或者当作入口。在tomcat中Servlet被称为wrapper。为了更加灵活，便于扩展，tomcat是用管道（pipeline）和阀(valve)的形式来处理请求，所以将Servlet丢给Wrapper。</p>
 
 <h3 id="六-tomncat启动流程">六、Tomncat启动流程</h3>
 
-<p>​       tomcat的启动流程很标准化，入口是BootStrap，统一按照生命周期管理接口Lifecycle的定义进行启动。首先，调用init()方法逐级初始化，接着调用start()方法进行启动，同时，每次调用伴随着生命周期状态变更事件的触发。</p>
+<p>tomcat的启动流程很标准化，入口是BootStrap，统一按照生命周期管理接口Lifecycle的定义进行启动。首先，调用init()方法逐级初始化，接着调用start()方法进行启动，同时，每次调用伴随着生命周期状态变更事件的触发。</p>
 
-<p>​       每一级组件除完成自身的处理外，还有负责调用子组件的相关调用，组件和组件之间是松耦合的，可以通过配置进行修改。</p>
+<p><br /></p>
 
-<p>​       大致流程图如下：</p>
+<p>每一级组件除完成自身的处理外，还有负责调用子组件的相关调用，组件和组件之间是松耦合的，可以通过配置进行修改。</p>
+
+<p><br /></p>
+
+<p>大致流程图如下：</p>
 
 <p><img src="https://s1.ax1x.com/2020/06/03/tdHM40.png" alt="tdHM40.png" style="zoom:80%;" /></p>
 </div>

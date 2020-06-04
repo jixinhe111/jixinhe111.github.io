@@ -10,7 +10,7 @@
         content="jxh"/>
 
   
-  <meta name="description" content="抓包、发包 1. 抓包 1）什么是抓包？ ​ 抓包（packet capture）就是将网络传输发送与接收的数据包进行截获、重发、编辑、转存等操作，也用来检查网络安全。抓包也经常被用来进行数据截取等。 ​ 在程序运行的"/>
+  <meta name="description" content="抓包、发包 1. 抓包 1）什么是抓包？ 抓包（packet capture）就是将网络传输发送与接收的数据包进行截获、重发、编辑、转存等操作，也用来检查网络安全。抓包也经常被用来进行数据截取等。 在程序运行的数据"/>
   
 
   
@@ -118,17 +118,23 @@
 
 <h4 id="1-什么是抓包">1）什么是抓包？</h4>
 
-<p>​       抓包（packet capture）就是将网络传输发送与接收的数据包进行截获、重发、编辑、转存等操作，也用来检查网络安全。抓包也经常被用来进行数据截取等。</p>
+<p>抓包（packet capture）就是将网络传输发送与接收的数据包进行截获、重发、编辑、转存等操作，也用来检查网络安全。抓包也经常被用来进行数据截取等。</p>
 
-<p>​       在程序运行的数据交互中，传输的数据一般都是以数据包的形式传输。</p>
+<p><br /></p>
 
-<p>​       在这个发送和接收的过程中，可能发出的数据包中有错误的数据，也可能接收的包中有错误的数据，从而导致后期的程序处理出错。</p>
+<p>在程序运行的数据交互中，传输的数据一般都是以数据包的形式传输。</p>
 
-<p>​       因此我们直接抓取传输中的数据包，通过其他工具或方法解析数据包中的原始数据，就可以定位是否是因为数据出错而导致程序出错，如果出错又是哪一部分的数据出错等。</p>
+<p><br /></p>
+
+<p>在这个发送和接收的过程中，可能发出的数据包中有错误的数据，也可能接收的包中有错误的数据，从而导致后期的程序处理出错。</p>
+
+<p><br /></p>
+
+<p>因此我们直接抓取传输中的数据包，通过其他工具或方法解析数据包中的原始数据，就可以定位是否是因为数据出错而导致程序出错，如果出错又是哪一部分的数据出错等。</p>
 
 <h4 id="2-抓包做什么">2）抓包做什么？</h4>
 
-<p>​       原始数据-&gt;过滤-&gt;分析,这是数据处理的基本套路,抓包的目的就是为了获取到想要的原始数据，拿到数据以后，我们就可以做以下一些事情:</p>
+<p>原始数据-&gt;过滤-&gt;分析,这是数据处理的基本套路,抓包的目的就是为了获取到想要的原始数据，拿到数据以后，我们就可以做以下一些事情:</p>
 
 <ol>
 <li><p>分析数据传输协议。</p></li>
@@ -144,53 +150,57 @@
 
 <p><strong>1.从功能测试角度，通过抓包查看隐藏字段</strong></p>
 
-<p>​       Web 表单中会有很多隐藏的字段，这些隐藏字段一般都有一些特殊的用途，比如收集用户的数据，预防 CRSF 攻击，防网络爬虫，以及一些其他用途。这些隐藏字段在界面上都看不到，如果想检测这些字段，就必须要使用抓包工具。</p>
+<p>Web 表单中会有很多隐藏的字段，这些隐藏字段一般都有一些特殊的用途，比如收集用户的数据，预防 CRSF 攻击，防网络爬虫，以及一些其他用途。这些隐藏字段在界面上都看不到，如果想检测这些字段，就必须要使用抓包工具。</p>
 
 <p><strong>2. 通过抓包工具了解协议内容，方便开展接口和性能测试</strong></p>
 
-<p>​       性能测试方面，性能测试其实就是大量模拟用户的请求，所以我们必须要知道请求中的协议内容和特点，才能更好的模拟用户请求，分析协议就需要用到抓包工具；接口测试方面，在接口测试时，虽然我们尽量要求有完善的接口文档。但很多时候接口文档不可能覆盖所有的情况，或者因为文档滞后，在接口测试过程中，还是需要借助抓包工具来辅助我们进行接口测试。</p>
+<p>性能测试方面，性能测试其实就是大量模拟用户的请求，所以我们必须要知道请求中的协议内容和特点，才能更好的模拟用户请求，分析协议就需要用到抓包工具；接口测试方面，在接口测试时，虽然我们尽量要求有完善的接口文档。但很多时候接口文档不可能覆盖所有的情况，或者因为文档滞后，在接口测试过程中，还是需要借助抓包工具来辅助我们进行接口测试。</p>
 
 <p><strong>3. 需要通过抓包工具，检查数据加密</strong></p>
 
-<p>​       安全测试方面，我们需要检查敏感数据在传输过程中是否加密，也需要借助抓包工具才能检查。</p>
+<p>安全测试方面，我们需要检查敏感数据在传输过程中是否加密，也需要借助抓包工具才能检查。</p>
 
 <p><strong>4. 处理前后端 bug 归属之争</strong></p>
 
-<p>​       在我们提交bug的时候，经常会出现前端（客户端展示）和后端（服务端的逻辑）的争议，那么可以通过抓包工具，确实是数据传递问题还是前端显示的问题。如果抓出来的数据就有问题的话，那么一般是后端的问题；如果抓出来的数据是正确的，那么基本上可以断定是前端显示的问题。</p>
+<p>在我们提交bug的时候，经常会出现前端（客户端展示）和后端（服务端的逻辑）的争议，那么可以通过抓包工具，确实是数据传递问题还是前端显示的问题。如果抓出来的数据就有问题的话，那么一般是后端的问题；如果抓出来的数据是正确的，那么基本上可以断定是前端显示的问题。</p>
 
 <p><strong>5. 通过抓包分析，可以更好的理解整个系统</strong></p>
 
-<p>​       经常使用抓包工具辅助测试，可以很好的了解整个系统，比如数据传输过程前后端的关系，以及整个系统的结构。特别是对现在的微服务架构的产品，抓包能够更好的梳理和掌握整个系统各个服务之间的关系，大大增加测试的覆盖度。另外还可以增进对代码、HTTP协议方面知识的理解。</p>
+<p>经常使用抓包工具辅助测试，可以很好的了解整个系统，比如数据传输过程前后端的关系，以及整个系统的结构。特别是对现在的微服务架构的产品，抓包能够更好的梳理和掌握整个系统各个服务之间的关系，大大增加测试的覆盖度。另外还可以增进对代码、HTTP协议方面知识的理解。</p>
 
 <h4 id="4-常用抓包工具">4）常用抓包工具</h4>
 
-<p>1.httpwatch</p>
+<p><strong>1.httpwatch</strong></p>
 
-<p>​       httpwatch与IE和firefox<strong>浏览器</strong>集成，但不支持chrome；httpwatch界面清晰直观，发送请求后可以快速简单的查看Cookies, Headers, Query Strings and POST data，能够通过页面分组处理多页面场景。</p>
+<p>httpwatch与IE和firefox<strong>浏览器</strong>集成，但不支持chrome；httpwatch界面清晰直观，发送请求后可以快速简单的查看Cookies, Headers, Query Strings and POST data，能够通过页面分组处理多页面场景。</p>
 
-<p>2.Fiddler</p>
+<p><strong>2.Fiddler</strong></p>
 
-<p>​       Fiddler是一个独立的应用，可以调试PC、Mac或Linux系统和移动设备 的之间的通信，支持大部分框架如java、.net、java、Ruby，需要设置代理，可以用来捕获HTTP，HTTPS。</p>
+<p>Fiddler是一个独立的应用，可以调试PC、Mac或Linux系统和移动设备 的之间的通信，支持大部分框架如java、.net、java、Ruby，需要设置代理，可以用来捕获HTTP，HTTPS。</p>
 
-<p>3.wireshark</p>
+<p><strong>3.wireshark</strong></p>
 
-<p>​       wireshark是一款专业的通过抓取网络数据包进行网络检测，网络协议分析工具，可实时监测网络传输数据，全面透视整个网络的动态信息。</p>
+<p>wireshark是一款专业的通过抓取网络数据包进行网络检测，网络协议分析工具，可实时监测网络传输数据，全面透视整个网络的动态信息。</p>
 
-<p>4.firebug</p>
+<p><strong>4.firebug</strong></p>
 
-<p>​       Firebug是firefox下的一个扩展，它除了能进行网络分析还能够调试所有网站语言，如js、Html、Css等，支持各种浏览器如IE、Firefox、Opera、Safari。</p>
+<p>Firebug是firefox下的一个扩展，它除了能进行网络分析还能够调试所有网站语言，如js、Html、Css等，支持各种浏览器如IE、Firefox、Opera、Safari。</p>
 
 <h4 id="5-fiddler的使用">5）Fiddler的使用</h4>
 
-<p>​       当启动fiddler，程序将会把自己作为一个代理，所以的http请求在达到目标服务器之前都会经过fiddler，同样的，所有的http响应都会在返回客户端之前流经fiddler。</p>
+<p>当启动fiddler，程序将会把自己作为一个代理，所以的http请求在达到目标服务器之前都会经过fiddler，同样的，所有的http响应都会在返回客户端之前流经fiddler。</p>
 
-<p>​       Fiddler可以抓取支持http代理的任意程序的数据包，如果要抓取https会话，要先安装证书。</p>
+<p><br /></p>
+
+<p>Fiddler可以抓取支持http代理的任意程序的数据包，如果要抓取https会话，要先安装证书。</p>
 
 <p><strong>Fiddler的工作原理：</strong></p>
 
-<p>​       Fiddler是以代理web服务器的形式工作的，它使用代理地址：127.0.0.1，端口：8888。当Fiddler会自动设置代理，退出的时候它会自动注销代理，这样就不会影响别的程序。不过如果Fiddler非正常退出，这时候因为Fiddler没有自动注销，会造成网页无法访问。解决的办法是重新启动下Fiddler。</p>
+<p>Fiddler是以代理web服务器的形式工作的，它使用代理地址：127.0.0.1，端口：8888。当Fiddler会自动设置代理，退出的时候它会自动注销代理，这样就不会影响别的程序。不过如果Fiddler非正常退出，这时候因为Fiddler没有自动注销，会造成网页无法访问。解决的办法是重新启动下Fiddler。</p>
 
-<p>​       能支持HTTP代理的任意程序的数据包都能被Fiddler嗅探到，Fiddler的运行机制其实就是本机上监听8888端口的HTTP代理。Fiddler启动的时候默认IE的代理设为了127.0.0.1:8888，而其他浏览器是需要手动设置的，所以将Chrome的代理改为127.0.0.1:8888就可以监听数据了。</p>
+<p><br /></p>
+
+<p>能支持HTTP代理的任意程序的数据包都能被Fiddler嗅探到，Fiddler的运行机制其实就是本机上监听8888端口的HTTP代理。Fiddler启动的时候默认IE的代理设为了127.0.0.1:8888，而其他浏览器是需要手动设置的，所以将Chrome的代理改为127.0.0.1:8888就可以监听数据了。</p>
 
 <p><strong>基本界面：</strong></p>
 
@@ -198,9 +208,11 @@
 
 <p><strong>Fiddler的HTTP统计视图：</strong></p>
 
-<p>​       通过陈列出所有的HTTP通信量，Fiddler可以很容易的展示哪些文件生成了当前请求的页面。使用Statistics页签，可以通过选择多个会话来得来这几个会话的总的信息统计，比如多个请求和传输的字节数。</p>
+<p>通过陈列出所有的HTTP通信量，Fiddler可以很容易的展示哪些文件生成了当前请求的页面。使用Statistics页签，可以通过选择多个会话来得来这几个会话的总的信息统计，比如多个请求和传输的字节数。</p>
 
-<p>​       选择第一个请求和最后一个请求，可获得整个页面加载所消耗的总体时间。从条形图表中还可以分别出哪些请求耗时最多，从而对页面的访问进行访问速度优化。</p>
+<p><br /></p>
+
+<p>选择第一个请求和最后一个请求，可获得整个页面加载所消耗的总体时间。从条形图表中还可以分别出哪些请求耗时最多，从而对页面的访问进行访问速度优化。</p>
 
 <p><img src="https://s1.ax1x.com/2020/06/03/tdKlSP.png" alt="Fiddler的HTTP统计视图" style="zoom: 67%;" /></p>
 
@@ -222,53 +234,67 @@
 
 <p><strong>Fiddler中设置断点修改Request：</strong></p>
 
-<p>​       设置好断点后，你可以修改httpRequest 的任何信息包括host, cookie或者表单中的数据。设置断点有两种方法</p>
+<p>设置好断点后，你可以修改httpRequest 的任何信息包括host, cookie或者表单中的数据。设置断点有两种方法。</p>
 
-<p>​       第一种：打开Fiddler 点击Rules-&gt; Automatic Breakpoint -&gt;Before Requests(这种方法会中断所有的会话)，点击Rules-&gt; Automatic Breakpoint -&gt;Disabled消除命令。</p>
+<p><br /></p>
 
-<p>​       第二种: 在命令行中输入命令: bpu www.baidu.com  (这种方法只会中断www.baidu.com)，在命令行中输入命令 bpu消除命令。</p>
+<p>第一种：打开Fiddler 点击Rules-&gt; Automatic Breakpoint -&gt;Before Requests(这种方法会中断所有的会话)，点击Rules-&gt; Automatic Breakpoint -&gt;Disabled消除命令。</p>
+
+<p><br /></p>
+
+<p>第二种: 在命令行中输入命令: bpu www.baidu.com  (这种方法只会中断www.baidu.com)，在命令行中输入命令 bpu消除命令。</p>
 
 <p>例如：</p>
 
-<p>1.打开CSDN的登陆界面 <a href="https://passport.csdn.net/login?code=public">https://passport.csdn.net/login?code=public</a></p>
+<ol>
+<li><p>打开CSDN的登陆界面 <a href="https://passport.csdn.net/login?code=public">https://passport.csdn.net/login?code=public</a></p></li>
 
-<p>2.打开Fiddler, 在命令行中输入bpu <a href="https://passport.csdn.net/v1/api/riskControl">https://passport.csdn.net/v1/api/riskControl</a></p>
+<li><p>打开Fiddler, 在命令行中输入bpu <a href="https://passport.csdn.net/v1/api/riskControl">https://passport.csdn.net/v1/api/riskControl</a></p></li>
 
-<p>3.即可以对登录请求进行拦截，可以用来模拟网页密码输入错误的情况下拦截重新在Request请求中重新输入正确的密码放行，但由于现在大多数网页设计密码是经过加密的，所以无法修改成正确的密码。</p>
+<li><p>即可以对登录请求进行拦截，可以用来模拟网页密码输入错误的情况下拦截重新在Request请求中重新输入正确的密码放行，但由于现在大多数网页设计密码是经过加密的，所以无法修改成正确的密码。</p></li>
+</ol>
 
 <p><img src="https://s1.ax1x.com/2020/06/03/tdKtoj.png" alt="Fiddler中设置断点修改Request" /></p>
 
 <p><strong>Fiddler中设置断点修改Response：</strong></p>
 
-<p>​       第一种：打开Fiddler 点击Rules-&gt; Automatic Breakpoint -&gt;After Response (这种方法会中断所有的会话)，点击Rules-&gt; Automatic Breakpoint -&gt;Disabled消除命令。</p>
+<p>第一种：打开Fiddler 点击Rules-&gt; Automatic Breakpoint -&gt;After Response (这种方法会中断所有的会话)，点击Rules-&gt; Automatic Breakpoint -&gt;Disabled消除命令。</p>
 
-<p>​       第二种: 在命令行中输入命令: bpafter www.baidu.com  (这种方法只会中断www.baidu.com)，在命令行中输入命令 bpafter消除命令。</p>
+<p><br /></p>
+
+<p>第二种: 在命令行中输入命令: bpafter www.baidu.com  (这种方法只会中断www.baidu.com)，在命令行中输入命令 bpafter消除命令。</p>
 
 <p><strong>Fiddler中创建AutoResponder规则：</strong></p>
 
-<p>​       Fiddler 的AutoResponder tab允许从本地返回文件，而不用将http request 发送到服务器上。</p>
+<p>Fiddler 的AutoResponder tab允许从本地返回文件，而不用将http request 发送到服务器上。</p>
 
-<p>​       比如请求一张图片，可以直接改成本地的图片。</p>
+<p><br /></p>
+
+<p>比如请求一张图片，可以直接改成本地的图片。</p>
 
 <p><strong>Fiddler中保存会话：</strong></p>
 
-<p>​       有些时候我们需要把会话保存下来，以便发给别人或者以后去分析。 保存会话的步骤如下：</p>
+<p>有些时候我们需要把会话保存下来，以便发给别人或者以后去分析。 保存会话的步骤如下：</p>
 
-<p>​       选择你想保存的会话，然后点击File-&gt;Save-&gt;Selected Sessions。</p>
+<p>选择你想保存的会话，然后点击File-&gt;Save-&gt;Selected Sessions。</p>
 
 <h4 id="6-wireshark的使用">6）Wireshark的使用</h4>
 
-<p>​       Wireshark是另外一种抓包工具，这种工具比fiddler更强大，消息量更多。有了fiddler，为什么还要用wireshark呢？在测试中，发现用fiddler抓包，有些包是没有抓到的，比如在验证反作弊信息的时候，反作弊pingback信息的消息用fiddler就没有抓到，用wireshark就抓到了。还有另外一种情况，就是在验证cna的时候，如果先用fiddler抓包，如果没有种下cna的时候，以后就永远没有cna了，情况很诡异。解决办法就是把包卸载了重新安装，第一次用wireshark抓包。</p>
+<p>Wireshark是另外一种抓包工具，这种工具比fiddler更强大，消息量更多。有了fiddler，为什么还要用wireshark呢？在测试中，发现用fiddler抓包，有些包是没有抓到的，比如在验证反作弊信息的时候，反作弊pingback信息的消息用fiddler就没有抓到，用wireshark就抓到了。还有另外一种情况，就是在验证cna的时候，如果先用fiddler抓包，如果没有种下cna的时候，以后就永远没有cna了，情况很诡异。解决办法就是把包卸载了重新安装，第一次用wireshark抓包。</p>
+
+<p><br /></p>
 
 <p>Wireshark优势：</p>
 
-<p>​       1、强大的协议解析能力，一到七层全解码，一览无遗，对于协议细节的研究特别有帮助。</p>
+<p>1、强大的协议解析能力，一到七层全解码，一览无遗，对于协议细节的研究特别有帮助。</p>
 
-<p>​       2、对于https加密流量，只要将浏览器的session key 自动导入wireshark，Wireshark可以自动解密https流量。</p>
+<p>2、对于https加密流量，只要将浏览器的session key 自动导入wireshark，Wireshark可以自动解密https流量。</p>
+
+<p><br /></p>
 
 <p>Wireshark不足之处：</p>
 
-<p>​       尽管可以自定义过滤列表，但为了抓取一个特定TCP Flow / Session 流量需要写一个长长的过滤列表，这对于初学者很不友好。</p>
+<p>尽管可以自定义过滤列表，但为了抓取一个特定TCP Flow / Session 流量需要写一个长长的过滤列表，这对于初学者很不友好。</p>
 
 <p><strong>基本界面：</strong></p>
 
@@ -290,9 +316,9 @@
 
 <p><strong>过滤器：</strong></p>
 
-<p>​       过滤器会帮助在大量的数据中迅速找到需要的信息。</p>
+<p>过滤器会帮助在大量的数据中迅速找到需要的信息。</p>
 
-<p>​       过滤器有两种:</p>
+<p>过滤器有两种:</p>
 
 <ul>
 <li>一种是显示过滤器，就是主界面上那个，用来在捕获的记录中找到所需要的记录。在Filter栏上，填好Filter的表达式后，点击Save按钮。</li>
@@ -334,27 +360,27 @@
 
 <p><strong>封包列表(Packet List Pane)：</strong></p>
 
-<p>​       封包列表的面板中显示，编号，时间戳，源地址，目标地址，协议，长度，以及封包信息。 你可以看到不同的协议用了不同的颜色显示。</p>
+<p>封包列表的面板中显示，编号，时间戳，源地址，目标地址，协议，长度，以及封包信息。 你可以看到不同的协议用了不同的颜色显示。</p>
 
-<p>​       可以修改这些显示颜色的规则， View -&gt;Coloring Rules。</p>
+<p>可以修改这些显示颜色的规则， View -&gt;Coloring Rules。</p>
 
 <p>​</p>
 
 <p><strong>封包详细信息 (Packet Details Pane)</strong></p>
 
-<p>​       这个面板是最重要的，用来查看协议中的每一个字段。</p>
+<p>这个面板是最重要的，用来查看协议中的每一个字段。</p>
 
-<p>​       各行信息分别为</p>
+<p>各行信息分别为</p>
 
-<p>​       Frame:  物理层的数据帧概况</p>
+<p>Frame:  物理层的数据帧概况</p>
 
-<p>​       Ethernet II: 数据链路层以太网帧头部信息</p>
+<p>Ethernet II: 数据链路层以太网帧头部信息</p>
 
-<p>​       Internet Protocol Version 4: 互联网层IP包头部信息</p>
+<p>Internet Protocol Version 4: 互联网层IP包头部信息</p>
 
-<p>​       Transmission Control Protocol: 传输层T的数据段头部信息，此处是TCP</p>
+<p>Transmission Control Protocol: 传输层T的数据段头部信息，此处是TCP</p>
 
-<p>​       Hypertext Transfer Protocol: 应用层的信息，此处是HTTP协议</p>
+<p>Hypertext Transfer Protocol: 应用层的信息，此处是HTTP协议</p>
 
 <p>​</p>
 
@@ -368,27 +394,27 @@
 
 <p>第一次握手数据包：</p>
 
-<p>​       客户端发送一个TCP，标志位为SYN，序列号为0， 代表客户端请求建立连接。</p>
+<p>客户端发送一个TCP，标志位为SYN，序列号为0， 代表客户端请求建立连接。</p>
 
 <p><img src="https://s1.ax1x.com/2020/06/03/tdKBlV.png" alt="WireShark中TCP三次握手_1" style="zoom: 67%;" /></p>
 
 <p>第二次握手的数据包：</p>
 
-<p>​       服务器发回确认包，标志位为 SYN，ACK。将确认序号(Acknowledgement Number)设置为客户的Seq加1。     即0+1=1。</p>
+<p>服务器发回确认包，标志位为 SYN，ACK。将确认序号(Acknowledgement Number)设置为客户的Seq加1。即0+1=1。</p>
 
 <p><img src="https://s1.ax1x.com/2020/06/03/tdKdWq.png" alt="WireShark中TCP三次握手_2" style="zoom:67%;" /></p>
 
 <p>第三次握手的数据包：</p>
 
-<p>​       客户端再次发送确认包(ACK)，SYN标志位为0，ACK标志位为1。并且把服务器发来ACK的序号字段+1，Seq的序号字段+1。</p>
+<p>客户端再次发送确认包(ACK)，SYN标志位为0，ACK标志位为1。并且把服务器发来ACK的序号字段+1，Seq的序号字段+1。</p>
 
 <p><img src="https://s1.ax1x.com/2020/06/03/tdKDyT.png" alt="WireShark中TCP三次握手_3" style="zoom: 67%;" /></p>
 
 <h3 id="2-发包">2. 发包</h3>
 
-<p>​       发包主要用来做接口测试以及压力测试。</p>
+<p>发包主要用来做接口测试以及压力测试。</p>
 
-<p>​       常用的发包工具有Postman和jmeter。</p>
+<p>常用的发包工具有Postman和jmeter。</p>
 
 <h4 id="1-postman的使用">1）Postman的使用</h4>
 
@@ -414,33 +440,33 @@
 
 <h4 id="2-jmeter的使用">2）jmeter的使用</h4>
 
-<p>​       jmeter做压力测试时使用过，较为熟悉，这里写的稍简化。</p>
+<p>jmeter做压力测试时使用过，较为熟悉，这里写的稍简化。</p>
 
-<p>​       <strong>接口测试：</strong></p>
+<p><strong>接口测试：</strong></p>
 
-<p>​       一般分五个步骤：</p>
+<p>一般分五个步骤：</p>
 
-<p>​       （1）添加线程组</p>
+<p>（1）添加线程组</p>
 
-<p>​       （2）添加http请求</p>
+<p>（2）添加http请求</p>
 
-<p>​       （3）在http请求中写入接入url、路径、请求方式和参数</p>
+<p>（3）在http请求中写入接入url、路径、请求方式和参数</p>
 
-<p>​       （4）添加查看结果树</p>
+<p>（4）添加查看结果树</p>
 
-<p>​       （5）调用接口、查看返回值</p>
+<p>（5）调用接口、查看返回值</p>
 
-<p>​       <strong>压测结果查看：</strong></p>
+<p><strong>压测结果查看：</strong></p>
 
-<p>​       运行完后，聚合报告会显示压测的结果。主要观察Samples、Average、error、Throughput。</p>
+<p>运行完后，聚合报告会显示压测的结果。主要观察Samples、Average、error、Throughput。</p>
 
-<p>​       Samples：表示一共发出的请求数</p>
+<p>Samples：表示一共发出的请求数</p>
 
-<p>​       Average：平均响应时间，默认情况下是单个Request的平均响应时间（ms）</p>
+<p>Average：平均响应时间，默认情况下是单个Request的平均响应时间（ms）</p>
 
-<p>​       Error%：测试出现的错误请求数量百分比。若出现错误就要看服务端的日志，配合开发查找定位原因</p>
+<p>Error%：测试出现的错误请求数量百分比。若出现错误就要看服务端的日志，配合开发查找定位原因</p>
 
-<p>​       Throughput：简称tps,吞吐量，默认情况下表示每秒处理的请求数，也就是指服务器处理能力，tps越高说明服务器处理能力越好。</p>
+<p>Throughput：简称tps,吞吐量，默认情况下表示每秒处理的请求数，也就是指服务器处理能力，tps越高说明服务器处理能力越好。</p>
 </div>
         <div class="post_footer">
           
@@ -449,7 +475,7 @@
               <span class="field tags">
                 <i class="remixicon-stack-line"></i>
                 
-                <a href="https://jixinhe111.github.io/tags/%E5%AD%A6%E4%B9%A0/">学习</a>
+                <a href="https://jixinhe111.github.io/tags/%E7%BD%91%E7%BB%9C/">网络</a>
                 
               </span>
             </div>
