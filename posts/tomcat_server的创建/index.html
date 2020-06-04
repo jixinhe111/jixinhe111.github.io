@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="jxh"/>
+
+  
+  <meta name="description" content="Tomcat_Server的创建 前面已经介绍了Tomcat服务器的整体结构和启动过程，本篇聚焦server.xml的解析，介绍Server的整个创建过程。 一、server的解析 要了解Server的创建"/>
+  
+
+  
+  
+  <meta name="keywords" content="Hugo, theme, zozo"/>
+  
+
+  
+  <link rel="canonical" href="https://jixinhe111.github.io/posts/tomcat_server%E7%9A%84%E5%88%9B%E5%BB%BA/"/>
+
+  
+
+  <title>Tomcat_Server的创建 &middot; 两只老虎 --from jxh</title>
+
+  <link rel="shortcut icon" href="https://jixinhe111.github.io/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/zozo.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://jixinhe111.github.io/">
+          <span>两只老虎 --from jxh</span>
+          <img src="https://jixinhe111.github.io/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title">一只没有眼睛，一只没有耳朵</p>
+      <div class="my_socials">
+        
+        
+        <a href="%20" title="facebook" target="_blank"><i class="remixicon-facebook-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="instagram" target="_blank"><i class="remixicon-instagram-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="twitter" target="_blank"><i class="remixicon-twitter-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="weibo" target="_blank"><i class="remixicon-weibo-fill"></i></a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/tomcat_server%E7%9A%84%E5%88%9B%E5%BB%BA/'>Tomcat_Server的创建</a></h2>
+          <span class="date">2020.06.03</span>
+        </div>
+        <div class="post_content markdown">
+
+<h2 id="tomcat-server的创建">Tomcat_Server的创建</h2>
+
+<p>前面已经介绍了Tomcat服务器的整体结构和启动过程，本篇聚焦server.xml的解析，介绍Server的整个创建过程。</p>
+
+<h3 id="一-server的解析">一、server的解析</h3>
+
+<p>要了解Server的创建，就需要回到前面关于Tomcat启动过程文章中介绍的Catalina中的load方法，在load方法中会解析conf/server.xml配置文件。</p>
+
+<p><br /></p>
+
+<p>前面有提到，Tomcat是使用Digester解析server.xml的，Digester的解析规则是在Catalina类的createStartDigester方法中。</p>
+
+<p><br /></p>
+
+<p>简单分析下该方法。</p>
+
+<pre><code class="language-java">// 首先实例化一个Digester对象
+Digester digester = new Digester();
+// 设置为false表示解析xml时不需要进行DTD的规则校验  
+digester.setValidating(false);
+// 是否进行节点设置规则校验,如果xml中相应节点没有设置解析规则会在控制台显示提示信息 
+digester.setRulesValidation(true);
+</code></pre>
+
+<h4 id="1-1-创建server实例">1.1、创建Server实例</h4>
+
+<pre><code class="language-java">// Configure the actions we will be using
+digester.addObjectCreate(&quot;Server&quot;,
+                         &quot;org.apache.catalina.core.StandardServer&quot;,
+                         &quot;className&quot;);
+digester.addSetProperties(&quot;Server&quot;);
+digester.addSetNext(&quot;Server&quot;,
+                    &quot;setServer&quot;,
+                    &quot;org.apache.catalina.Server&quot;);
+</code></pre>
+
+<p><strong>默认</strong>的<strong>Server实现类</strong>是<strong>org.apache.catalina.core.StandardServer</strong>，也可以在server.xml的server标签上配置className指定自己的实现。创建Server实例后，然后设置Server相关属性，然后调用栈顶对象（即该Server）之后的对象（是前面通过push(this)放入的Catalina实例）的setServer方法，将server实例设置到Catalina对象中。</p>
+
+<pre><code class="language-java">digester.addObjectCreate(&quot;Server/GlobalNamingResources&quot;,
+                    &quot;org.apache.catalina.deploy.NamingResourcesImpl&quot;);
+digester.addSetProperties(&quot;Server/GlobalNamingResources&quot;);
+digester.addSetNext(&quot;Server/GlobalNamingResources&quot;,
+                    &quot;setGlobalNamingResources&quot;,
+                    &quot;org.apache.catalina.deploy.NamingResourcesImpl&quot;);
+</code></pre>
+
+<p>然后以同样的规则创建J2EE企业命名上下文（JNDI），设置属性并将其设置到Server实例中。</p>
+
+<pre><code class="language-java">digester.addObjectCreate(&quot;Server/Listener&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(&quot;Server/Listener&quot;);
+digester.addSetNext(&quot;Server/Listener&quot;,
+                    &quot;addLifecycleListener&quot;,
+                    &quot;org.apache.catalina.LifecycleListener&quot;);
+</code></pre>
+
+<p>接着为Server实例添加生命周期监听器，默认的server.xml中配置了5个生命周期监听器。</p>
+
+<pre><code class="language-java">&lt;Listener className=&quot;org.apache.catalina.startup.VersionLoggerListener&quot;/&gt;
+&lt;Listener className=&quot;org.apache.catalina.core.AprLifecycleListener&quot; SSLEngine=&quot;on&quot;/&gt;
+&lt;Listener className=&quot;org.apache.catalina.core.JreMemoryLeakPreventionListener&quot;/&gt;
+&lt;Listener className=&quot;org.apache.catalina.mbeans.GlobalResourcesLifecycleListener&quot;/&gt;
+&lt;Listener className=&quot;org.apache.catalina.core.ThreadLocalLeakPreventionListener&quot;/&gt;
+</code></pre>
+
+<p>也可以自己写一个监听器，在server.xml中配置。</p>
+
+<h4 id="1-2-创建service实例">1.2、创建Service实例</h4>
+
+<pre><code class="language-java">digester.addObjectCreate(&quot;Server/Service&quot;,
+                        &quot;org.apache.catalina.core.StandardService&quot;,
+                         &quot;className&quot;);
+digester.addSetProperties(&quot;Server/Service&quot;);
+digester.addSetNext(&quot;Server/Service&quot;,
+                    &quot;addService&quot;,
+                    &quot;org.apache.catalina.Service&quot;);
+</code></pre>
+
+<p>创建<strong>Service</strong>实例，默认是org.apache.catalina.core.StandardService，然后通过addService设置到Server实例中。</p>
+
+<pre><code class="language-java">digester.addObjectCreate(&quot;Server/Service/Listener&quot;,
+                        null, // MUST be specified in the element&quot;
+                        className&quot;);
+digester.addSetProperties(&quot;Server/Service/Listener&quot;);
+digester.addSetNext(&quot;Server/Service/Listener&quot;,
+                    &quot;addLifecycleListener&quot;,
+                    &quot;org.apache.catalina.LifecycleListener&quot;);
+</code></pre>
+
+<p>addLifecycleListener为Service增加<strong>生命周期监听器</strong>，默认情况下，service没有指定监听器。</p>
+
+<pre><code class="language-java">//Executor
+digester.addObjectCreate(&quot;Server/Service/Executor&quot;,
+                 &quot;org.apache.catalina.core.StandardThreadExecutor&quot;,
+                 &quot;className&quot;);
+digester.addSetProperties(&quot;Server/Service/Executor&quot;);
+digester.addSetNext(&quot;Server/Service/Executor&quot;,
+                    &quot;addExecutor&quot;,
+                    &quot;org.apache.catalina.Executor&quot;);
+</code></pre>
+
+<p>创建<strong>Executor</strong>实例，默认为org.apache.catalina.core.StandardThreadExecutor，并将其设置到Service实例中，默认情况下，未配置Executor。</p>
+
+<pre><code class="language-java">digester.addRule(&quot;Server/Service/Connector&quot;,
+                 new ConnectorCreateRule());
+digester.addRule(&quot;Server/Service/Connector&quot;, new SetAllPropertiesRule(
+        new String[]{&quot;executor&quot;, &quot;sslImplementationName&quot;, &quot;protocol&quot;}));
+digester.addSetNext(&quot;Server/Service/Connector&quot;,
+                    &quot;addConnector&quot;,
+                    &quot;org.apache.catalina.connector.Connector&quot;);
+</code></pre>
+
+<p>为Service实例添加<strong>Connector</strong>。在设置Connector相关属性时，会判断server.xml中是否指定了executor属性，如果是，会从Service中查找该名称的Executor设置到Connector中。同时，在创建Connector时，也会判断是否有sslImplementationName属性，如果有，设置到使用的协议中，为其指定一个SSL实现。</p>
+
+<pre><code class="language-java">digester.addObjectCreate(&quot;Server/Service/Connector/Listener&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(&quot;Server/Service/Connector/Listener&quot;);
+digester.addSetNext(&quot;Server/Service/Connector/Listener&quot;,
+                    &quot;addLifecycleListener&quot;,
+                    &quot;org.apache.catalina.LifecycleListener&quot;);
+</code></pre>
+
+<p>为<strong>Connector</strong>添加<strong>监听器</strong>，默认未指定。</p>
+
+<pre><code class="language-java">digester.addObjectCreate(&quot;Server/Service/Connector/UpgradeProtocol&quot;,
+                        null, // MUST be specified in the element
+                        &quot;className&quot;);
+digester.addSetProperties(&quot;Server/Service/Connector/UpgradeProtocol&quot;);
+digester.addSetNext(&quot;Server/Service/Connector/UpgradeProtocol&quot;,
+                    &quot;addUpgradeProtocol&quot;,
+                    &quot;org.apache.coyote.UpgradeProtocol&quot;);
+</code></pre>
+
+<p>为Connector添加添加升级协议。</p>
+
+<pre><code class="language-java">// Add RuleSets for nested elements
+digester.addRuleSet(new NamingRuleSet(&quot;Server/GlobalNamingResources/&quot;));
+digester.addRuleSet(new EngineRuleSet(&quot;Server/Service/&quot;));
+digester.addRuleSet(new HostRuleSet(&quot;Server/Service/Engine/&quot;));
+digester.addRuleSet(new ContextRuleSet(&quot;Server/Service/Engine/Host/&quot;));
+addClusterRuleSet(digester, &quot;Server/Service/Engine/Host/Cluster/&quot;);
+digester.addRuleSet(new NamingRuleSet(&quot;Server/Service/Engine/Host/Context/&quot;));
+
+// When the 'engine' is found, set the parentClassLoader.
+digester.addRule(&quot;Server/Service/Engine&quot;,
+                 new SetParentClassLoaderRule(parentClassLoader));
+addClusterRuleSet(digester, &quot;Server/Service/Engine/Cluster/&quot;);
+</code></pre>
+
+<p>最后这部分代码指定了Servlet容器相关的各级嵌套子节点的解析规则，它将每类子节点的解析封装为一个RuleSet包括GlobalNamingResources，Engine，Host，Context及Cluster的解析，这里重点关注Engine和Host的解析，它们的解析和Context密切相关。</p>
+
+<h3 id="二-engine的解析">二、Engine的解析</h3>
+
+<p>Engine的解析过程在EngineRuleSet类中。</p>
+
+<h4 id="2-1-创建engine实例">2.1、创建Engine实例</h4>
+
+<pre><code class="language-java">//EngineRuleSet.addRuleInstances
+digester.addObjectCreate(prefix + &quot;Engine&quot;,
+                        &quot;org.apache.catalina.core.StandardEngine&quot;,
+                        &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Engine&quot;);
+digester.addRule(prefix + &quot;Engine&quot;,
+                 new LifecycleListenerRule
+                 (&quot;org.apache.catalina.startup.EngineConfig&quot;,
+                  &quot;engineConfigClass&quot;));
+digester.addSetNext(prefix + &quot;Engine&quot;,
+                    &quot;setContainer&quot;,
+                    &quot;org.apache.catalina.Engine&quot;);
+</code></pre>
+
+<p>创建Engine实例，默认是org.apache.catalina.core.<strong>StandardEngine</strong>，为其设置属性。接着会给Engine添加一个<strong>生命周期监听器</strong>，默认是org.apache.catalina.startup.EngineConfig，用于打印Engine启动和停止日志，然后将该Engine实例设置到Service中。</p>
+
+<p><br /></p>
+
+<p>需要说明的是EngineConfig生命监听器不是在server.xml配置的，而是在创建Engine是默认添加的。</p>
+
+<h4 id="2-2-engine集群配置">2.2、Engine集群配置</h4>
+
+<pre><code class="language-java"> //Cluster configuration start
+digester.addObjectCreate(prefix + &quot;Engine/Cluster&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Engine/Cluster&quot;);
+digester.addSetNext(prefix + &quot;Engine/Cluster&quot;,
+                            &quot;setCluster&quot;,
+</code></pre>
+
+<p>这段是为Engine创建集群配置，如需要，应在server.xml中江将Cluster标签注释打开，还未用过Tomcat的集群配置，相关内容就不详细介绍了。</p>
+
+<h4 id="2-3-为engine添加生命周期监听器">2.3、为Engine添加生命周期监听器</h4>
+
+<pre><code class="language-java">digester.addObjectCreate(prefix + &quot;Engine/Listener&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Engine/Listener&quot;);
+digester.addSetNext(prefix + &quot;Engine/Listener&quot;,
+                    &quot;addLifecycleListener&quot;,
+                    &quot;org.apache.catalina.LifecycleListener&quot;);
+</code></pre>
+
+<p>和EngineConfig不同，此处的生命周期监听器是在server.xml中配置的，默认未指定。</p>
+
+<h4 id="2-4-为engine添加realm和valve">2.4、为Engine添加realm和valve</h4>
+
+<pre><code class="language-java">digester.addRuleSet(new RealmRuleSet(prefix + &quot;Engine/&quot;));
+digester.addObjectCreate(prefix + &quot;Engine/Valve&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Engine/Valve&quot;);
+digester.addSetNext(prefix + &quot;Engine/Valve&quot;,
+                    &quot;addValve&quot;,
+                    &quot;org.apache.catalina.Valve&quot;);
+</code></pre>
+
+<p>realm和tomcat安全相关，valve同tomcat处理请求方式相关。</p>
+
+<h3 id="三-host的解析">三、Host的解析</h3>
+
+<p>Host的解析，是在HostRuleSet类的addRuleInstances方法中。</p>
+
+<h4 id="3-1-创建host实例">3.1、创建Host实例</h4>
+
+<pre><code class="language-java">digester.addObjectCreate(prefix + &quot;Host&quot;,
+                    &quot;org.apache.catalina.core.StandardHost&quot;,
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Host&quot;);
+digester.addRule(prefix + &quot;Host&quot;,
+                 new CopyParentClassLoaderRule());
+digester.addRule(prefix + &quot;Host&quot;,
+                 new LifecycleListenerRule
+                 (&quot;org.apache.catalina.startup.HostConfig&quot;,
+                  &quot;hostConfigClass&quot;));
+digester.addSetNext(prefix + &quot;Host&quot;,
+                    &quot;addChild&quot;,
+                    &quot;org.apache.catalina.Container&quot;);
+digester.addCallMethod(prefix + &quot;Host/Alias&quot;,
+                       &quot;addAlias&quot;, 0);
+</code></pre>
+
+<p>创建默认为org.apache.catalina.core.StandardHost的实例，并将host标签上的属性设置到host实例中。接着调用Host实例中的setParentClassLoader将Engine中getParentClassLoader方法的类加载设置进来。</p>
+
+<p><br /></p>
+
+<p>同Engine一样，在创建Host时，默认会添加一个生命周期监听器HostConfig，该生命周期监听器比EngineConfig复杂得多，和web应用的加载有关，将在下一篇介绍。</p>
+
+<p><br /></p>
+
+<p>此外，通过Alias，Host支持别名配置。</p>
+
+<h4 id="3-2-host集群配置">3.2、Host集群配置</h4>
+
+<pre><code class="language-java">//Cluster configuration start
+digester.addObjectCreate(prefix + &quot;Host/Cluster&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Host/Cluster&quot;);
+digester.addSetNext(prefix + &quot;Host/Cluster&quot;,
+                    &quot;setCluster&quot;,
+                    &quot;org.apache.catalina.Cluster&quot;);
+</code></pre>
+
+<p>可见，集群配置可以在Engine级别，也可在Host级别。</p>
+
+<h4 id="3-3-为host添加生命周期监听器">3.3、为Host添加生命周期监听器</h4>
+
+<pre><code class="language-java">digester.addObjectCreate(prefix + &quot;Host/Listener&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Host/Listener&quot;);
+digester.addSetNext(prefix + &quot;Host/Listener&quot;,
+                    &quot;addLifecycleListener&quot;,
+                    &quot;org.apache.catalina.LifecycleListener&quot;);
+</code></pre>
+
+<p>此处的生命周期监听器是在server.xml中配置的，默认未指定。</p>
+
+<h4 id="3-4-为host添加realm和valve">3.4、为Host添加realm和valve</h4>
+
+<pre><code class="language-java">digester.addRuleSet(new RealmRuleSet(prefix + &quot;Host/&quot;));
+
+digester.addObjectCreate(prefix + &quot;Host/Valve&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Host/Valve&quot;);
+digester.addSetNext(prefix + &quot;Host/Valve&quot;,
+                    &quot;addValve&quot;,
+                    &quot;org.apache.catalina.Valve&quot;);
+</code></pre>
+
+<p>从配置文件中可以看到默认的Valve为AccessLogValve，用于在处理请求时记录访问日志。</p>
+
+<pre><code class="language-java">&lt;Host name=&quot;localhost&quot; appBase=&quot;webapps&quot;
+      unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;
+    &lt;Valve className=&quot;org.apache.catalina.valves.AccessLogValve&quot; directory=&quot;logs&quot;
+           prefix=&quot;localhost_access_log&quot; suffix=&quot;.txt&quot;
+           pattern=&quot;%h %l %u %t &amp;quot;%r&amp;quot; %s %b&quot;/&gt;
+&lt;/Host&gt;
+</code></pre>
+
+<h3 id="四-context的解析">四、Context的解析</h3>
+
+<p>Context的解析，在ContextRuleSet的addRuleInstances方法中。</p>
+
+<p><br /></p>
+
+<p>Context配置并非来源一处，在Tomcat的conf目录下和Web应用的META-INF目录下都有Context.xml配置文件，而且在server.xml中也可以配置Context标签。</p>
+
+<p><br /></p>
+
+<p>多数情况并不需要在server.xml中配置Context，更多是由HostConfig自动扫描部署目录，以Context.xml文件为基础进行Context的创建，具体将在下篇介绍。</p>
+
+<p><br /></p>
+
+<p>而这里是指根据server.xml配置的Context进行解析。</p>
+
+<h4 id="4-1-context实例化">4.1、Context实例化</h4>
+
+<pre><code class="language-java">if (create) {
+    digester.addObjectCreate(prefix + &quot;Context&quot;,
+            &quot;org.apache.catalina.core.StandardContext&quot;, &quot;className&quot;);
+    digester.addSetProperties(prefix + &quot;Context&quot;);
+} else {
+    digester.addRule(prefix + &quot;Context&quot;, new SetContextPropertiesRule());
+}
+
+if (create) {
+    digester.addRule(prefix + &quot;Context&quot;,
+                     new LifecycleListenerRule
+                         (&quot;org.apache.catalina.startup.ContextConfig&quot;,
+                          &quot;configClass&quot;));
+    digester.addSetNext(prefix + &quot;Context&quot;,
+                        &quot;addChild&quot;,
+                        &quot;org.apache.catalina.Container&quot;);
+}
+</code></pre>
+
+<p>Context的解析因create不同而不同。通过server.xml配置Context时，create为true，这时默认会创建org.apache.catalina.core.StandardContext的实例。</p>
+
+<p><br /></p>
+
+<p>通过HostConfig自动创建Context时，create为false，此时仅解析子节点即可。</p>
+
+<p><br /></p>
+
+<p>如果create为true，在创建Context同时，会为context实例添加一个生命周期监听器ContextConfig，用于详细配置Context，如解析web.xml等。</p>
+
+<h4 id="4-2-为context添加生命周期监听器">4.2、为Context添加生命周期监听器</h4>
+
+<pre><code class="language-java">digester.addObjectCreate(prefix + &quot;Context/Listener&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Listener&quot;);
+digester.addSetNext(prefix + &quot;Context/Listener&quot;,
+                    &quot;addLifecycleListener&quot;,
+                    &quot;org.apache.catalina.LifecycleListener&quot;);
+</code></pre>
+
+<p>默认未指定，可通过配置className属性指定。</p>
+
+<h4 id="4-3-为context指定类加载器">4.3、为Context指定类加载器</h4>
+
+<pre><code class="language-java">digester.addObjectCreate(prefix + &quot;Context/Loader&quot;,
+                    &quot;org.apache.catalina.loader.WebappLoader&quot;,
+                    &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Loader&quot;);
+digester.addSetNext(prefix + &quot;Context/Loader&quot;,
+                    &quot;setLoader&quot;,
+                    &quot;org.apache.catalina.Loader&quot;);
+</code></pre>
+
+<p>创建WebappLoader实例，并将其设置到Context实例中。</p>
+
+<h4 id="4-4-为context指定会话管理器">4.4、为Context指定会话管理器</h4>
+
+<pre><code class="language-java">digester.addObjectCreate(prefix + &quot;Context/Manager&quot;,
+                         &quot;org.apache.catalina.session.StandardManager&quot;,
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Manager&quot;);
+digester.addSetNext(prefix + &quot;Context/Manager&quot;,
+                    &quot;setManager&quot;,
+                    &quot;org.apache.catalina.Manager&quot;);
+
+digester.addObjectCreate(prefix + &quot;Context/Manager/Store&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Manager/Store&quot;);
+digester.addSetNext(prefix + &quot;Context/Manager/Store&quot;,
+                    &quot;setStore&quot;,
+                    &quot;org.apache.catalina.Store&quot;);
+
+digester.addObjectCreate(prefix + &quot;Context/Manager/SessionIdGenerator&quot;,
+                         &quot;org.apache.catalina.util.StandardSessionIdGenerator&quot;,
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Manager/SessionIdGenerator&quot;);
+digester.addSetNext(prefix + &quot;Context/Manager/SessionIdGenerator&quot;,
+                    &quot;setSessionIdGenerator&quot;,
+                    &quot;org.apache.catalina.SessionIdGenerator&quot;);
+</code></pre>
+
+<p>默认的会话管理器为org.apache.catalina.session.StandardManager，同时为管理器指定会话存储方式和会话标识生成器。</p>
+
+<h4 id="4-5-为context添加初始化参数">4.5、为Context添加初始化参数</h4>
+
+<pre><code class="language-java"> digester.addObjectCreate(prefix + &quot;Context/Parameter&quot;,
+                 &quot;org.apache.tomcat.util.descriptor.web.ApplicationParameter&quot;);
+digester.addSetProperties(prefix + &quot;Context/Parameter&quot;);
+digester.addSetNext(prefix + &quot;Context/Parameter&quot;,
+            &quot;addApplicationParameter&quot;,
+            &quot;org.apache.tomcat.util.descriptor.web.ApplicationParameter&quot;);
+</code></pre>
+
+<h4 id="4-6-为context添加安全配置和web资源配置">4.6、为Context添加安全配置和Web资源配置</h4>
+
+<pre><code class="language-java">digester.addRuleSet(new RealmRuleSet(prefix + &quot;Context/&quot;));
+
+digester.addObjectCreate(prefix + &quot;Context/Resources&quot;,
+                     &quot;org.apache.catalina.webresources.StandardRoot&quot;,
+                     &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Resources&quot;);
+digester.addSetNext(prefix + &quot;Context/Resources&quot;,
+                &quot;setResources&quot;,
+                &quot;org.apache.catalina.WebResourceRoot&quot;);
+
+digester.addObjectCreate(prefix + &quot;Context/Resources/PreResources&quot;,
+                     null, // MUST be specified in the element
+                     &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Resources/PreResources&quot;);
+digester.addSetNext(prefix + &quot;Context/Resources/PreResources&quot;,
+                &quot;addPreResources&quot;,
+                &quot;org.apache.catalina.WebResourceSet&quot;);
+
+digester.addObjectCreate(prefix + &quot;Context/Resources/JarResources&quot;,
+                     null, // MUST be specified in the element
+                     &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Resources/JarResources&quot;);
+digester.addSetNext(prefix + &quot;Context/Resources/JarResources&quot;,
+                &quot;addJarResources&quot;,
+                &quot;org.apache.catalina.WebResourceSet&quot;);
+
+digester.addObjectCreate(prefix + &quot;Context/Resources/PostResources&quot;,
+                     null, // MUST be specified in the element
+                     &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Resources/PostResources&quot;);
+digester.addSetNext(prefix + &quot;Context/Resources/PostResources&quot;,
+                &quot;addPostResources&quot;,
+                &quot;org.apache.catalina.WebResourceSet&quot;);
+</code></pre>
+
+<h4 id="4-7-为context添加valve">4.7、为Context添加Valve</h4>
+
+<pre><code class="language-java">digester.addObjectCreate(prefix + &quot;Context/Valve&quot;,
+                         null, // MUST be specified in the element
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/Valve&quot;);
+digester.addSetNext(prefix + &quot;Context/Valve&quot;,
+                    &quot;addValve&quot;,
+                    &quot;org.apache.catalina.Valve&quot;);
+</code></pre>
+
+<p>具体Valve可由className指定。</p>
+
+<h4 id="4-8-为context添加守护资源配置">4.8、为Context添加守护资源配置</h4>
+
+<pre><code class="language-java">digester.addCallMethod(prefix + &quot;Context/WatchedResource&quot;,
+                       &quot;addWatchedResource&quot;, 0);
+
+digester.addCallMethod(prefix + &quot;Context/WrapperLifecycle&quot;,
+                       &quot;addWrapperLifecycle&quot;, 0);
+
+digester.addCallMethod(prefix + &quot;Context/WrapperListener&quot;,
+                       &quot;addWrapperListener&quot;, 0);
+
+digester.addObjectCreate(prefix + &quot;Context/JarScanner&quot;,
+                         &quot;org.apache.tomcat.util.scan.StandardJarScanner&quot;,
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/JarScanner&quot;);
+digester.addSetNext(prefix + &quot;Context/JarScanner&quot;,
+                    &quot;setJarScanner&quot;,
+                    &quot;org.apache.tomcat.JarScanner&quot;);
+
+digester.addObjectCreate(prefix + &quot;Context/JarScanner/JarScanFilter&quot;,
+                         &quot;org.apache.tomcat.util.scan.StandardJarScanFilter&quot;,
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/JarScanner/JarScanFilter&quot;);
+digester.addSetNext(prefix + &quot;Context/JarScanner/JarScanFilter&quot;,
+                    &quot;setJarScanFilter&quot;,
+                    &quot;org.apache.tomcat.JarScanFilter&quot;);
+</code></pre>
+
+<p>WatchedResource标签可在Context.xml中找到，用于为Context添加监资源，当这些资源发生变化时，Web应用会被重新加载，默认为WEB-INF/web.xml。</p>
+
+<p><br /></p>
+
+<p>WrapperListener标签用于为Context添加一个生命周期类，此类的实例不是添加到Context中，而是Context包含的Wrapper。</p>
+
+<p><br /></p>
+
+<p>JarScanner标签为JarScanner指定一jar扫描器，JarScanFilter则为扫描器指定一个过滤器，只有符合条件的jar包才会被处理。</p>
+
+<h4 id="4-9-为context添加cookie处理器">4.9、为Context添加Cookie处理器</h4>
+
+<pre><code class="language-java">digester.addObjectCreate(prefix + &quot;Context/CookieProcessor&quot;,
+                         &quot;org.apache.tomcat.util.http.Rfc6265CookieProcessor&quot;,
+                         &quot;className&quot;);
+digester.addSetProperties(prefix + &quot;Context/CookieProcessor&quot;);
+digester.addSetNext(prefix + &quot;Context/CookieProcessor&quot;,
+                    &quot;setCookieProcessor&quot;,
+                    &quot;org.apache.tomcat.util.http.CookieProcessor&quot;);
+</code></pre>
+</div>
+        <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://jixinhe111.github.io/tags/tomcat/">Tomcat</a>
+                
+              </span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://jixnhe111.tk">Finished by jxh,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>真奇怪</span>
+  </div>
+</footer>
+
+
+
+<script src="https://jixinhe111.github.io/js/jquery-3.3.1.min.js"></script>
+<script src="https://jixinhe111.github.io/js/zozo.js"></script>
+<script src="https://jixinhe111.github.io/js/highlight.pack.js"></script>
+<link  href="https://jixinhe111.github.io/css/fancybox.min.css" rel="stylesheet">
+<script src="https://jixinhe111.github.io/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>

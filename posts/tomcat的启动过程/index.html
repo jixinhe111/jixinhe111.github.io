@@ -10,7 +10,7 @@
         content="jxh"/>
 
   
-  <meta name="description" content="Tomcat的启动过程 ​ 双击startup.bat启动tomcat，其实是来到catalina.bat脚本中，由catalina.bat脚本去执行org.apache.catalina.startup"/>
+  <meta name="description" content="Tomcat的启动过程 双击startup.bat启动tomcat，其实是来到catalina.bat脚本中，由catalina.bat脚本去执行org.apache.catalina.startup."/>
   
 
   
@@ -114,7 +114,7 @@
 
 <h2 id="tomcat的启动过程">Tomcat的启动过程</h2>
 
-<p>​       双击startup.bat启动tomcat，其实是来到catalina.bat脚本中，由catalina.bat脚本去执行org.apache.catalina.startup.Bootstrap这个类中的main方法。</p>
+<p>双击startup.bat启动tomcat，其实是来到catalina.bat脚本中，由catalina.bat脚本去执行org.apache.catalina.startup.Bootstrap这个类中的main方法。</p>
 
 <h3 id="一-总览main方法">一、总览main方法</h3>
 
@@ -182,18 +182,24 @@
 }
 </code></pre>
 
-<p>​       可以看出main方法大致可以分为两部分。</p>
+<p>可以看出main方法大致可以分为两部分。</p>
 
-<p>​       上部分是实例化一个Bootstrap对象，并调用init方法，然后赋值给daemon变量，当然如果daemon已经不是空了，说明已经初始化过了，就将daemon.catalinaLoader直接设置到当前线程（daemon.catalinaLoader是用来加载tomcat内部服务器所需类的类加载器）。</p>
+<p><br /></p>
 
-<p>​       下部分是根据传递进来的参数决定走哪一步，当双击startup.bat时，传进来的是start，这里主要是调用三个方法，setAwait，load和start。</p>
+<p>上部分是实例化一个Bootstrap对象，并调用init方法，然后赋值给daemon变量，如果daemon已经不是空了，说明已经初始化过了，就将daemon.catalinaLoader直接设置到当前线程（daemon.catalinaLoader是用来加载tomcat内部服务器所需类的类加载器）。</p>
 
-<p>​       所以对于Bootstrap重要关注的就是<strong>init，setAwait，load和start</strong>这四个方法。</p>
+<p><br /></p>
+
+<p>下部分是根据传递进来的参数决定走哪一步，当双击startup.bat时，传进来的是start，这里主要是调用三个方法，setAwait，load和start。</p>
+
+<p><br /></p>
+
+<p>所以对于Bootstrap重要关注的就是<strong>init，setAwait，load和start</strong>这四个方法。</p>
 
 <h3 id="二-init">二、init</h3>
 
 <pre><code class="language-java">public void init() throws Exception {
-    initClassLoaders();
+    initClassLoaders();	//初始化类加载器
     Thread.currentThread().setContextClassLoader(catalinaLoader);
     SecurityClassLoad.securityClassLoad(catalinaLoader);
     // Load our startup class and call its process() method
@@ -216,7 +222,7 @@
 }
 </code></pre>
 
-<p>​       init方法调用initClassLoaders初始化类加载器，然后将初始化好的catalinaLoader设置到当前线程，接着通过反射调用org.apache.catalina.startup.Catalina类的setParentClassLoader，将sharedLoader传入。</p>
+<p>init方法调用initClassLoaders初始化类加载器，然后将初始化好的catalinaLoader设置到当前线程，接着通过<strong>反射</strong>调用org.apache.catalina.startup.Catalina类的setParentClassLoader，将sharedLoader传入。</p>
 
 <h4 id="2-1-initclassloaders方法">2.1、initClassLoaders方法</h4>
 
@@ -237,9 +243,11 @@
 }
 </code></pre>
 
-<p>​       在类加载器篇中有提到，这里初始化三个类加载器，分别是commonLoader，catalinaLoader，sharedLoader并建立他们之间的关系，catalinaLoader和sharedLoader的parent是commonLoader。</p>
+<p>在类加载器篇中有提到，这里初始化三个类加载器，分别是commonLoader，catalinaLoader，sharedLoader并建立他们之间的关系，catalinaLoader和sharedLoader的parent是commonLoader。</p>
 
-<p>​       这三个类加载器都是通过createClassLoader建立的：</p>
+<p><br /></p>
+
+<p>这三个类加载器都是通过createClassLoader建立的：</p>
 
 <pre><code class="language-java">private ClassLoader createClassLoader(String name, ClassLoader parent)
         throws Exception {
@@ -278,21 +286,31 @@
 }
 </code></pre>
 
-<p>​       createClassLoader首先回去读取CatalinaProperties中的common.loader，server.loader，shared.loader三个属性，进入CatalinaProperties类中会发现这三个属性来自conf/catalina.properties文件。</p>
+<p>createClassLoader首先读取CatalinaProperties中的common.loader，server.loader，shared.loader三个属性，进入CatalinaProperties类中会发现这三个属性来自conf/catalina.properties文件。</p>
 
-<p>​       接着往下createClassLoader会将common.loader，server.loader，shared.loader三个属性中的值获取然后解析成Repository，然后交给ClassLoaderFactory.createClassLoader方法去创建类加载器，最后可以实现三个不同的类加载器分别加载不同目录下的类。</p>
+<p><br /></p>
 
-<p>​       当然要说清楚的是，默认情况下，catalina.properties中server.loader，shared.loader并没有配置值，三个类加载是同一个，默认加载{catalina.home}/lib目录下的类和jar包。</p>
+<p>接着往下createClassLoader会将common.loader，server.loader，shared.loader三个属性中的值获取然后解析成Repository，然后交给ClassLoaderFactory.createClassLoader方法去创建类加载器，最后可以实现三个不同的类加载器分别加载不同目录下的类。</p>
 
-<p>​       如果想配置对所有web应用都可见但对tomcat内部服务器不可见的类，此时应该在catalina.properties文件中的shared.loader下进行配置。</p>
+<p><br /></p>
 
-<p>​       Thread.currentThread().setContextClassLoader(catalinaLoader)将catalinaLoader设置为Tomcat主线程的线程上下文类加载器。</p>
+<p>默认情况下，catalina.properties中server.loader，shared.loader并没有配置值，三个类加载是同一个，默认加载{catalina.home}/lib目录下的类和jar包。</p>
+
+<p><br /></p>
+
+<p>如果想配置对所有web应用都可见但对tomcat内部服务器不可见的类，此时应该在catalina.properties文件中的<strong>shared.loader</strong>下进行配置。</p>
+
+<p><br /></p>
+
+<p>Thread.currentThread().setContextClassLoader(catalinaLoader)将catalinaLoader设置为Tomcat主线程的线程上下文类加载器。</p>
 
 <h4 id="2-2-securityclassload-securityclassload-catalinaloader">2.2、SecurityClassLoad.securityClassLoad(catalinaLoader)</h4>
 
-<p>​       SecurityClassLoad.securityClassLoad用于线程安全的加载tomcat容器所需的class。</p>
+<p>SecurityClassLoad.securityClassLoad用于线程安全的加载tomcat容器所需的class。</p>
 
-<p>​       当然，要使这个方法真正起作用，需要启动tomcat安全管理器，由代码可知：</p>
+<p><br /></p>
+
+<p>要使这个方法真正起作用，需要启动tomcat安全管理器，由代码可知：</p>
 
 <pre><code class="language-java">public static void securityClassLoad(ClassLoader loader) throws Exception {
     securityClassLoad(loader, true);
@@ -316,11 +334,15 @@ static void securityClassLoad(ClassLoader loader, boolean requireSecurityManager
 }
 </code></pre>
 
-<p>​       如果没启用安全管理器，System.getSecurityManager()=null，直接return。</p>
+<p>如果没启用安全管理器，System.getSecurityManager()=null，直接return。</p>
 
-<p>​       可以通过命令行的方式启功安全管理器：catalina.bat run -security或者startup.bat -security。</p>
+<p><br /></p>
 
-<p>​       一旦启动了安全管理器，就会根据conf/catalina.policy文件定义的提供默认的安全策略，securityClassLoad方法中System.getSecurityManager()不再等于null，于是就会去执行一系列加载方法，将tomcat的class加载进来。</p>
+<p>可以通过命令行的方式启功安全管理器：catalina.bat run -security或者startup.bat -security。</p>
+
+<p><br /></p>
+
+<p>一旦启动了安全管理器，就会根据conf/catalina.policy文件定义的提供默认的安全策略，securityClassLoad方法中System.getSecurityManager()不再等于null，于是就会去执行一系列加载方法，将tomcat的class加载进来。</p>
 
 <h4 id="2-3-通过反射实例化catalina">2.3、通过反射实例化catalina</h4>
 
@@ -340,11 +362,15 @@ method.invoke(startupInstance, paramValues);
 catalinaDaemon = startupInstance;
 </code></pre>
 
-<p>​       可以看到这部分代码是通过反射来实例化catalina，然后反射调用setParentClassLoader将sharedLoader传入到catalina实例中。</p>
+<p>这部分代码是通过反射来实例化catalina，然后反射调用setParentClassLoader将sharedLoader传入到catalina实例中。</p>
 
-<p>​       为什么不直接通过Bootstrap类直接启动tomcat，而是通过反射生成Catalina实例启动？</p>
+<p><br /></p>
 
-<p>​       再查看tomcat目录结构时应该发现，Bootstrap并不在$CATALINA_HOME/lib目录下，而是在$CATALINA_HOME/bin目录中，Bootstrap和Catalina松耦合（通过反射调用Catalina），它直接依赖JRE运行并为Tomcat应用服务器创建共享类加载器，用于构造Catalina和整个tomcat服务器。实现了启动入口和核心环境的解耦，简化了启动。</p>
+<p>为什么不直接通过Bootstrap类直接启动tomcat，而是通过反射生成Catalina实例启动？</p>
+
+<p><br /></p>
+
+<p>再查看tomcat目录结构时应该发现，Bootstrap并不在$CATALINA_HOME/lib目录下，而是在$CATALINA_HOME/bin目录中，Bootstrap和Catalina<strong>松耦合</strong>（通过反射调用Catalina），它直接依赖JRE运行并为Tomcat应用服务器创建共享类加载器，用于构造Catalina和整个tomcat服务器。实现了启动入口和核心环境的解耦，简化了启动。</p>
 
 <h3 id="三-setawait">三、setAwait</h3>
 
@@ -362,7 +388,7 @@ catalinaDaemon = startupInstance;
 }
 </code></pre>
 
-<p>​       通过反射调用catalina的setAwait方法，其设置的值是留给后面用的，当Catalina将Tomcat的所有组件启动之后，会检查await属性，如果为true，会调用Catalina.await()，而Catalina.await()又会调用其内部的Server的await()。</p>
+<p>通过反射调用catalina的setAwait方法，其设置的值是留给后面用的，当Catalina将Tomcat的所有组件启动之后，会检查await属性，如果为true，会调用Catalina.await()，而Catalina.await()又会调用其内部的Server的await()。</p>
 
 <pre><code class="language-java">public void start() {
     ... 
@@ -373,11 +399,15 @@ catalinaDaemon = startupInstance;
 }
 </code></pre>
 
-<p>​       Server.await()包含一个while循环，此循环用于监听指定socket端口(默认为8005)的连接，当某个连接传入的参数为”SHUTDOWN”(默认为”SHUTDOWN”)时，终止此while循环(端口号和终止while循环的参数，在server.xml的Server标签设置)。</p>
+<p>Server.await()包含一个while循环，此循环用于监听指定socket端口(默认为<strong>8005</strong>)的连接，当某个连接传入的参数为”SHUTDOWN”(默认为”SHUTDOWN”)时，<strong>终止</strong>此while循环(端口号和终止while循环的参数，在server.xml的Server标签设置)。</p>
 
-<p>​       Server.await()用来维持Bootstrap的main方法(main thread)处于运行状态，而线程池中监听http请求的线程是守护线程(daemon thread)。</p>
+<p><br /></p>
 
-<p>​       当Tomcat的指定端口接收到关闭命令时，Server.await()内的while循环终止，然后Catalina会调用stop()方法，关闭Tomcat的所有组件，最终Bootstrap的main thread终止，Tomcat关闭。</p>
+<p>Server.await()用来维持Bootstrap的main方法(main thread)处于运行状态，而线程池中监听http请求的线程是守护线程(daemon thread)。</p>
+
+<p><br /></p>
+
+<p>当Tomcat的指定端口接收到关闭命令时，Server.await()内的while循环终止，然后Catalina会调用stop()方法，关闭Tomcat的所有组件，最终Bootstrap的main thread终止，Tomcat关闭。</p>
 
 <h3 id="四-load">四、load</h3>
 
@@ -404,11 +434,15 @@ catalinaDaemon = startupInstance;
 }
 </code></pre>
 
-<p>​       该方法通过反射调用catalina的load方法。</p>
+<p>该方法通过反射调用catalina的load方法。</p>
 
-<p>​       catalina的load方法首先初始化目录（initDirs）和初始化命名服务（initNaming），然后是createStartDigester（Digester是apache的一个开源组件，通过它可以很方便的从xml文件生成java对象），该方法初始化Digester，为Xml的标签即解析模式增加处理规则rule。</p>
+<p><br /></p>
 
-<p>​       createStartDigester方法：</p>
+<p>catalina的load方法首先初始化目录（initDirs）和初始化命名服务（initNaming），然后是createStartDigester（Digester是apache的一个开源组件，通过它可以很方便的从xml文件生成java对象），该方法初始化Digester，为Xml的标签即解析模式增加处理规则rule。</p>
+
+<p><br /></p>
+
+<p>createStartDigester方法：</p>
 
 <pre><code class="language-java">protected Digester createStartDigester() {
     long t1=System.currentTimeMillis();
@@ -549,19 +583,19 @@ catalinaDaemon = startupInstance;
 }
 </code></pre>
 
-<p>​       该方法初始化digester，创建一系列解析规则，然后在load方法中会调用：</p>
+<p>该方法初始化digester，创建一系列解析规则，然后在load方法中会调用：</p>
 
 <pre><code class="language-java">digester.parse(inputSource);
 </code></pre>
 
-<p>​       digester解析的源是inputSource，而inputSource是来自于conf/server.xml：</p>
+<p>digester解析的源是inputSource，而inputSource是来自于conf/server.xml：</p>
 
 <pre><code class="language-java">file = configFile();
 inputStream = new FileInputStream(file);
 inputSource = new InputSource(file.toURI().toURL().toString());
 </code></pre>
 
-<p>​       configFile：</p>
+<p>configFile：</p>
 
 <pre><code class="language-java"> protected File configFile() {
     //protected String configFile = &quot;conf/server.xml&quot;;
@@ -574,9 +608,11 @@ inputSource = new InputSource(file.toURI().toURL().toString());
 }
 </code></pre>
 
-<p>​       这样便创建出了StandardServer对象，接着便调用getServer().init();</p>
+<p>这样便创建出了StandardServer对象，接着便调用getServer().init();</p>
 
-<p>​       init方法来自StandardServer的父类LifecycleBase：</p>
+<p><br /></p>
+
+<p>init方法来自StandardServer的父类LifecycleBase：</p>
 
 <pre><code class="language-java">public final synchronized void init() throws LifecycleException {
     if (!state.equals(LifecycleState.NEW)) {
@@ -593,17 +629,21 @@ inputSource = new InputSource(file.toURI().toURL().toString());
 }
 </code></pre>
 
-<p>​       具体实现是在子类的initInternal方法中，在调用initInternal方法前后都会设置状态，LifecycleState.INITIALIZING代表正在初始化，LifecycleState.INITIALIZED表示初始化完成，相应会触发生命周期事件。</p>
+<p>具体实现是在子类的initInternal方法中，在调用initInternal方法前后都会设置状态，LifecycleState.INITIALIZING代表正在初始化，LifecycleState.INITIALIZED表示初始化完成，相应会触发生命周期事件。</p>
 
-<p>​       在StandardServer的initInternal方法中会调用子组件Services的init方法，并依次传递下去，完成所有组件的init。</p>
+<p><br /></p>
 
-<p>​       可见catalina的load方法主要是根据conf/server.xml配置文件利用Digester创建服务器组件，然后调用Server的init方法，逐层次的实现所有组件的初始化。</p>
+<p>在StandardServer的initInternal方法中会调用子组件Services的init方法，并依次传递下去，完成所有组件的init。</p>
+
+<p><br /></p>
+
+<p>可见catalina的load方法主要是根据conf/server.xml配置文件利用Digester创建服务器组件，然后调用Server的init方法，逐层次的实现所有组件的初始化。</p>
 
 <p><img src="https://s1.ax1x.com/2020/06/03/twkg4f.png" alt="twkg4f.png" /></p>
 
 <h3 id="五-start">五、start</h3>
 
-<p>​       start方法：</p>
+<p>start方法：</p>
 
 <pre><code class="language-java">public void start()
         throws Exception {
@@ -615,7 +655,7 @@ inputSource = new InputSource(file.toURI().toURL().toString());
 }
 </code></pre>
 
-<p>​       同样也是通过反射调用catalina的start方法：</p>
+<p>同样也是通过反射调用catalina的start方法：</p>
 
 <pre><code class="language-java">public void start() {
     if (getServer() == null) {
@@ -670,7 +710,7 @@ inputSource = new InputSource(file.toURI().toURL().toString());
 }
 </code></pre>
 
-<p>​       该方法主要触发StandardServer的start方法，StandardServer的start方法同init方法一样来自LifecycleBase，主要是改变生命周期的状态，同时触发相应的生命周期时间，具体的执行逻辑交由具体的子类startInternal方法实现：</p>
+<p>该方法主要触发StandardServer的start方法，StandardServer的start方法同init方法一样来自LifecycleBase，主要是改变生命周期的状态，同时触发相应的生命周期时间，具体的执行逻辑交由具体的子类startInternal方法实现：</p>
 
 <pre><code class="language-java">public final synchronized void start() throws LifecycleException {
 
@@ -710,7 +750,7 @@ inputSource = new InputSource(file.toURI().toURL().toString());
 }
 </code></pre>
 
-<p>​       在StandardServer的startInternal方法中会调用子组件service的start方法，并依次调用其他组件的start方法。</p>
+<p>在StandardServer的startInternal方法中会调用子组件service的start方法，并依次调用其他组件的start方法。</p>
 
 <pre><code class="language-java">protected void startInternal() throws LifecycleException {
 
@@ -728,11 +768,11 @@ inputSource = new InputSource(file.toURI().toURL().toString());
 }
 </code></pre>
 
-<p>​       所以同load方法很相似，start方法主要是实现各组件的start方法依次调用，可以用一张图来理解：</p>
+<p>所以同load方法很相似，start方法主要是实现各组件的start方法依次调用，可以用一张图来理解：</p>
 
 <p><img src="https://s1.ax1x.com/2020/06/03/twAZKH.png" alt="twAZKH.png" /></p>
 
-<p>​       还应该看到Catalina的start方法会使用前面的setAwait方法传递的值，为true时，会在8005端口监听，保证主线程一直在运行，直到收到SHUTDOWN命令。</p>
+<p>还应该看到Catalina的start方法会使用前面的setAwait方法传递的值，为true时，会在8005端口监听，保证主线程一直在运行，直到收到SHUTDOWN命令。</p>
 </div>
         <div class="post_footer">
           
@@ -741,7 +781,7 @@ inputSource = new InputSource(file.toURI().toURL().toString());
               <span class="field tags">
                 <i class="remixicon-stack-line"></i>
                 
-                <a href="https://jixinhe111.github.io/tags/%E5%AD%A6%E4%B9%A0/">学习</a>
+                <a href="https://jixinhe111.github.io/tags/tomcat/">Tomcat</a>
                 
               </span>
             </div>

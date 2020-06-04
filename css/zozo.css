@@ -460,6 +460,7 @@ hr {
   font-size: 0.9em;
   background: #f8f8f8 !important;
   border: none;
+  line-height: 18px;
 }
 
 .markdown pre {
@@ -531,7 +532,7 @@ hr {
   font-size: 48px;
   color: #444444;
   font-weight: bold;
-  line-height: 30px;
+  line-height: 20px;
   margin-left: -50px;
   position: absolute;
 }
