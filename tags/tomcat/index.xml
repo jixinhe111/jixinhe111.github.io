@@ -47,5 +47,14 @@
       <description>Tomcat类加载器 下载tomcat解压后，可以在webapps目录下看到几个文件夹（这些都是web应用），webapps对应到tomcat容器中的Host，里面的文件夹则对应到Context。tom</description>
     </item>
     
+    <item>
+      <title>Tomcat整体架构</title>
+      <link>https://jixinhe111.github.io/posts/tomcat%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</link>
+      <pubDate>Tue, 02 Jun 2020 15:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/posts/tomcat%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</guid>
+      <description>Tomcat整体架构 一、Tomcat顶层结构 Server：服务器的意思，代表整个tomcat服务器，一个tomcat只有一个Server； Service：Server中的一个逻辑功能层， 一个Serve</description>
+    </item>
+    
   </channel>
 </rss>

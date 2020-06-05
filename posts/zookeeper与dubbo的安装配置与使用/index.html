@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="jxh"/>
+
+  
+  <meta name="description" content="Zookeeper与Dubbo的安装、配置与使用 一、Zookeeper 1、什么是Zookeeper 在Zookeeper的官网上有这么一句话：ZooKeeper is a centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services。
+
+这大概描述了Zookeeper主要是一个分布式服务协调框架，实现同步服务，配置维护和命名服务等分布式应用。是一个高性能的分布式数据一致性解决方案。
+
+通俗地讲，ZooKeeper是动物园管理员，它是拿来管大象 Hadoop、鲸鱼 HBase、Kafka等的管理员。
+2、Zookeeper和CAP的关系 作为一个分布式系统，分区容错性是一个必须要考虑的关键点。一个分布式系统一旦丧失了分区容错性，也就表示放弃了扩展性。因为在分布式系统中，网络故障是经常出现的，一旦出现在这种问题就会导致整个系统不可用是绝对不能容忍的。所以，大部分分布式系统都会在保证分区容错性的前提下在一致性和可用性之间做权衡。
+
+ZooKeeper是个CP（一致性&#43;分区容错性）的，即任何时刻对ZooKeeper的访问请求能得到一致的数据结果，同时系统对网络分割具备容错性；但是它不能保证每次服务请求的可用性。也就是在极端环境下，ZooKeeper可能会丢弃一些请求，消费者程序需要重新请求才能获得结果。
+
+ZooKeeper是分布式协调服务，它的职责是保证数据在其管辖下的所有服务之间保持同步、一致；所以就不难理解为什么ZooKeeper被设计成CP而不是AP特性的了。而且， 作为ZooKeeper的核心实现算法Zab，就是解决了分布式系统下数据如何在多个服务之间保持同步问题的。
+3、Zookeeper节点特性及节点属性分析 Zookeeper提供基于类似于文件系统的目录节点树方式的数据存储，但是Zookeeper并不是用来专门存储数据的，它的作用主要是用来维护和监控你存储的数据的状态变化。通过监控这些数据状态的变化，从而可以达到基于数据的集群管理。
+3.1、数据模型 与Linux文件系统不同的是，Linux文件系统有目录和文件的区别，而Zookeeper的数据节点称为ZNode，ZNode是Zookeeper中数据的最小单元，每个ZNode都可以保存数据，同时还可以挂载子节点，因此构成了一个层次化的命名空间，称为树。
+
+
+Zookeeper中ZNode的节点创建时候是可以指定类型的，主要有下面几种类型。
+PERSISTENT：持久化ZNode节点，一旦创建这个ZNode点存储的数据不会主动消失，除非是客户端主动的delete。
+EPHEMERAL：临时ZNode节点，Client连接到Zookeeper Service的时候会建立一个Session，之后用这个Zookeeper连接实例创建该类型的ZNode，一旦Client关闭了Zookeeper的连接，服务器就会清除Session，然后这个Session建立的ZNode节点都会从命名空间消失。总结就是，这个类型的znode的生命周期是和Client建立的连接一样的。
+PERSISTENT_SEQUENTIAL：顺序自动编号的ZNode节点，这种ZNode节点会根据当前已经存在的ZNode节点编号自动加 1，而且不会随Session断开而消失。
+EPEMERAL_SEQUENTIAL：临时自动编号节点，ZNode节点编号会自动增加，但是会随Session消失而消失。
+3.2、Watcher数据变更通知 Zookeeper使用Watcher机制实现分布式数据的发布/订阅功能。
+Zookeeper的Watcher机制主要包括客户端线程、客户端WatcherManager、Zookeeper服务器三部分。客户端在向Zookeeper服务器注册的同时，会将Watcher对象存储在客户端的WatcherManager当中。当Zookeeper服务器触发Watcher事件后，会向客户端发送通知，客户端线程从WatcherManager中取出对应的Watcher对象来执行回调逻辑。
+3.3、ACL保障数据的安全 Zookeeper内部存储了分布式系统运行时状态的元数据，这些元数据会直接影响基于Zookeeper进行构造的分布式系统的运行状态，如何保障系统中数据的安全，从而避免因误操作而带来的数据随意变更而导致的数据库异常十分重要，Zookeeper提供了一套完善的ACL权限控制机制来保障数据的安全。
+
+我们可以从三个方面来理解ACL机制：权限模式 Scheme、授权对象 ID、权限 Permission，通常使用&amp;quot;scheme: id :permission&amp;quot;来标识一个有效的ACL信息。
+3.4、内存数据 Zookeeper的数据模型是树结构，在内存数据库中，存储了整棵树的内容，包括所有的节点路径、节点数据、ACL信息，Zookeeper会定时将这个数据存储到磁盘上。
+
+DataTree：DataTree是内存数据存储的核心，是一个树结构，代表了内存中一份完整的数据。DataTree不包含任何与网络、客户端连接及请求处理相关的业务逻辑，是一个独立的组件。
+
+DataNode：DataNode是数据存储的最小单元，其内部除了保存了结点的数据内容、ACL列表、节点状态之外，还记录了父节点的引用和子节点列表两个属性，其也提供了对子节点列表进行操作的接口。
+
+ZKDatabase：Zookeeper的内存数据库，管理Zookeeper的所有会话、DataTree存储和事务日志。ZKDatabase会定时向磁盘dump快照数据，同时在Zookeeper启动时，会通过磁盘的事务日志和快照文件恢复成一个完整的内存数据库。
+4、Zookeeper的实现原理分析 4.1、Zookeeper Service网络结构 Zookeeper的工作集群可以简单分成两类，一个是Leader，唯一一个，其余的都是follower，如何确定Leader是通过内部选举确定的。
+Leader和各个follower是互相通信的，对于Zookeeper系统的数据都是保存在内存里面的，同样也会备份一份在磁盘上。
+
+如果Leader挂了，Zookeeper集群会重新选举，在毫秒级别就会重新选举出一个Leader。
+
+集群中除非有一半以上的Zookeeper节点挂了，Zookeeper Service才不可用。
+4.2、Zookeeper读写数据 写数据，一个客户端进行写数据请求时，如果是follower接收到写请求，就会把请求转发给Leader，Leader通过内部的Zab协议进行原子广播，直到所有Zookeeper节点都成功写了数据后（内存同步以及磁盘更新），这次写请求算是完成，然后Zookeeper Service就会给Client发回响应。（一致性）
+
+读数据，因为集群中所有的Zookeeper节点都呈现一个同样的命名空间视图（就是结构数据），上面的写请求已经保证了写一次数据必须保证集群所有的Zookeeper节点都是同步命名空间的，所以读的时候可以在任意一台Zookeeper节点上。
+4.3、Zookeeper工作原理 Zab协议
+
+Zookeeper的核心是广播，这个机制保证了各个Server之间的同步。实现这个机制的协议叫做Zab协议。
+
+Zab（ZooKeeper Atomic Broadcast）原子消息广播协议作为数据一致性的核心算法，Zab协议是专为Zookeeper设计的支持崩溃恢复原子消息广播算法。
+
+Zab协议核心如下：
+
+所有的事务请求必须一个全局唯一的服务器（Leader）来协调处理，集群其余的服务器称为follower服务器。Leader服务器负责将一个客户端请求转化为事务提议（Proposal），并将该proposal分发给集群所有的follower服务器。之后Leader服务器需要等待所有的follower服务器的反馈，一旦超过了半数的follower服务器进行了正确反馈后，那么Leader服务器就会再次向所有的follower服务器分发commit消息，要求其将前一个proposal进行提交。
+
+Zab模式
+
+Zab协议包括两种基本的模式：崩溃恢复和消息广播。
+
+当整个服务框架启动过程中或Leader服务器出现网络中断、崩溃退出与重启等异常情况时，Zab协议就会进入恢复模式并选举产生新的Leader服务器。"/>
+  
+
+  
+  
+  <meta name="keywords" content="Hugo, theme, zozo"/>
+  
+
+  
+  <link rel="canonical" href="https://jixinhe111.github.io/posts/zookeeper%E4%B8%8Edubbo%E7%9A%84%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE%E4%B8%8E%E4%BD%BF%E7%94%A8/"/>
+
+  
+
+  <title> &middot; 两只老虎 --from jxh</title>
+
+  <link rel="shortcut icon" href="https://jixinhe111.github.io/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/zozo.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://jixinhe111.github.io/">
+          <span>两只老虎 --from jxh</span>
+          <img src="https://jixinhe111.github.io/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title">一只没有眼睛，一只没有耳朵</p>
+      <div class="my_socials">
+        
+        
+        <a href="%20" title="facebook" target="_blank"><i class="remixicon-facebook-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="instagram" target="_blank"><i class="remixicon-instagram-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="twitter" target="_blank"><i class="remixicon-twitter-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="weibo" target="_blank"><i class="remixicon-weibo-fill"></i></a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/zookeeper%E4%B8%8Edubbo%E7%9A%84%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE%E4%B8%8E%E4%BD%BF%E7%94%A8/'></a></h2>
+          <span class="date">0001.01.01</span>
+        </div>
+        <div class="post_content markdown">
+
+<h2 id="zookeeper与dubbo的安装-配置与使用">Zookeeper与Dubbo的安装、配置与使用</h2>
+
+<h3 id="一-zookeeper">一、Zookeeper</h3>
+
+<h4 id="1-什么是zookeeper">1、什么是Zookeeper</h4>
+
+<p>在Zookeeper的官网上有这么一句话：ZooKeeper is a centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services。</p>
+
+<p><br /></p>
+
+<p>这大概描述了Zookeeper主要是一个<strong>分布式服务协调框架</strong>，实现同步服务，配置维护和命名服务等分布式应用。是一个高性能的分布式数据一致性解决方案。</p>
+
+<p><br /></p>
+
+<p>通俗地讲，ZooKeeper是动物园管理员，它是拿来管大象 Hadoop、鲸鱼 HBase、Kafka等的管理员。</p>
+
+<h4 id="2-zookeeper和cap的关系">2、Zookeeper和CAP的关系</h4>
+
+<p>作为一个分布式系统，分区容错性是一个必须要考虑的关键点。一个分布式系统一旦丧失了分区容错性，也就表示放弃了扩展性。因为在分布式系统中，网络故障是经常出现的，一旦出现在这种问题就会导致整个系统不可用是绝对不能容忍的。所以，大部分分布式系统都会在保证分区容错性的前提下在一致性和可用性之间做权衡。</p>
+
+<p><br /></p>
+
+<p>ZooKeeper是个<strong>CP</strong>（一致性+分区容错性）的，即任何时刻对ZooKeeper的访问请求能得到一致的数据结果，同时系统对网络分割具备容错性；但是它不能保证每次服务请求的可用性。也就是在极端环境下，ZooKeeper可能会丢弃一些请求，消费者程序需要重新请求才能获得结果。</p>
+
+<p><br /></p>
+
+<p>ZooKeeper是分布式协调服务，它的职责是保证数据在其管辖下的所有服务之间保持同步、一致；所以就不难理解为什么ZooKeeper被设计成CP而不是AP特性的了。而且， 作为ZooKeeper的核心实现算法Zab，就是解决了分布式系统下数据如何在多个服务之间保持同步问题的。</p>
+
+<h4 id="3-zookeeper节点特性及节点属性分析">3、Zookeeper节点特性及节点属性分析</h4>
+
+<p>Zookeeper提供基于类似于文件系统的<strong>目录节点树</strong>方式的数据存储，但是Zookeeper并不是用来专门存储数据的，它的作用主要是用来<strong>维护和监控</strong>你存储的数据的状态变化。通过监控这些数据状态的变化，从而可以达到基于数据的集群管理。</p>
+
+<h5 id="3-1-数据模型">3.1、数据模型</h5>
+
+<p>与Linux文件系统不同的是，Linux文件系统有目录和文件的区别，而Zookeeper的数据节点称为ZNode，ZNode是Zookeeper中数据的最小单元，每个ZNode都可以保存数据，同时还可以挂载子节点，因此构成了一个层次化的命名空间，称为树。</p>
+
+<p><br /></p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDUiXF.png" alt="tDUiXF.png" /></p>
+
+<p><br /></p>
+
+<p>Zookeeper中ZNode的节点创建时候是可以指定类型的，主要有下面几种类型。</p>
+
+<p><strong>PERSISTENT</strong>：持久化ZNode节点，一旦创建这个ZNode点存储的数据不会主动消失，除非是客户端主动的delete。</p>
+
+<p><strong>EPHEMERAL</strong>：临时ZNode节点，Client连接到Zookeeper Service的时候会建立一个<strong>Session</strong>，之后用这个Zookeeper连接实例创建该类型的ZNode，一旦Client关闭了Zookeeper的连接，服务器就会<strong>清除Session</strong>，然后这个Session建立的ZNode节点都会从命名空间消失。总结就是，<strong>这个类型的znode的生命周期是和Client建立的连接一样的</strong>。</p>
+
+<p><strong>PERSISTENT_SEQUENTIAL</strong>：顺序自动编号的ZNode节点，这种ZNode节点会根据当前已经存在的ZNode节点编号自动加 1，而且不会随Session断开而消失。</p>
+
+<p><strong>EPEMERAL_SEQUENTIAL</strong>：临时自动编号节点，ZNode节点编号会自动增加，但是会随Session消失而消失。</p>
+
+<h5 id="3-2-watcher数据变更通知">3.2、Watcher数据变更通知</h5>
+
+<p>Zookeeper使用Watcher机制实现分布式数据的发布/订阅功能。</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDaa5R.png" alt="tDaa5R.png" /></p>
+
+<p>Zookeeper的Watcher机制主要包括客户端线程、客户端WatcherManager、Zookeeper服务器三部分。客户端在向Zookeeper服务器注册的同时，会将Watcher对象存储在客户端的WatcherManager当中。当Zookeeper服务器触发Watcher事件后，会向客户端发送通知，客户端线程从WatcherManager中取出对应的Watcher对象来执行<strong>回调逻辑</strong>。</p>
+
+<h5 id="3-3-acl保障数据的安全">3.3、ACL保障数据的安全</h5>
+
+<p>Zookeeper内部存储了分布式系统运行时状态的元数据，这些元数据会直接影响基于Zookeeper进行构造的分布式系统的运行状态，如何保障系统中数据的安全，从而避免因误操作而带来的数据随意变更而导致的数据库异常十分重要，Zookeeper提供了一套完善的ACL权限控制机制来保障数据的安全。</p>
+
+<p><br /></p>
+
+<p>我们可以从三个方面来理解ACL机制：权限模式 Scheme、授权对象 ID、权限 Permission，通常使用&quot;scheme: id :permission&quot;来标识一个有效的ACL信息。</p>
+
+<h5 id="3-4-内存数据">3.4、内存数据</h5>
+
+<p>Zookeeper的数据模型是树结构，在内存数据库中，存储了整棵树的内容，包括所有的节点路径、节点数据、ACL信息，Zookeeper会定时将这个数据存储到磁盘上。</p>
+
+<p><br /></p>
+
+<p>DataTree：DataTree是内存数据存储的核心，是一个树结构，代表了内存中一份完整的数据。DataTree不包含任何与网络、客户端连接及请求处理相关的业务逻辑，是一个独立的组件。</p>
+
+<p><br /></p>
+
+<p>DataNode：DataNode是数据存储的最小单元，其内部除了保存了结点的数据内容、ACL列表、节点状态之外，还记录了父节点的引用和子节点列表两个属性，其也提供了对子节点列表进行操作的接口。</p>
+
+<p><br /></p>
+
+<p>ZKDatabase：Zookeeper的内存数据库，管理Zookeeper的所有会话、DataTree存储和事务日志。ZKDatabase会定时向磁盘dump快照数据，同时在Zookeeper启动时，会通过磁盘的事务日志和快照文件恢复成一个完整的内存数据库。</p>
+
+<h4 id="4-zookeeper的实现原理分析">4、Zookeeper的实现原理分析</h4>
+
+<h5 id="4-1-zookeeper-service网络结构">4.1、Zookeeper Service网络结构</h5>
+
+<p>Zookeeper的工作集群可以简单分成两类，一个是Leader，唯一一个，其余的都是follower，如何确定Leader是通过内部选举确定的。</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDdwwQ.png" alt="tDdwwQ.png" /></p>
+
+<p>Leader和各个follower是互相通信的，对于Zookeeper系统的数据都是保存在内存里面的，同样也会备份一份在磁盘上。</p>
+
+<p><br /></p>
+
+<p>如果Leader挂了，Zookeeper集群会重新选举，在<strong>毫秒级别</strong>就会重新选举出一个Leader。</p>
+
+<p><br /></p>
+
+<p>集群中除非有一半以上的Zookeeper节点挂了，Zookeeper Service才不可用。</p>
+
+<h5 id="4-2-zookeeper读写数据">4.2、Zookeeper读写数据</h5>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDd7Sx.png" alt="tDd7Sx.png" style="zoom:150%;" /></p>
+
+<p>写数据，一个客户端进行写数据请求时，如果是follower接收到写请求，就会把请求转发给Leader，Leader通过内部的Zab协议进行原子<strong>广播</strong>，直到<strong>所有</strong>Zookeeper节点都成功写了数据后（<strong>内存同步以及磁盘更新</strong>），这次写请求算是完成，然后Zookeeper Service就会给Client发回<strong>响应</strong>。（一致性）</p>
+
+<p><br /></p>
+
+<p>读数据，因为集群中所有的Zookeeper节点都呈现一个同样的命名空间视图（就是结构数据），上面的写请求已经保证了写一次数据必须保证集群所有的Zookeeper节点都是同步命名空间的，所以读的时候可以在任意一台Zookeeper节点上。</p>
+
+<h5 id="4-3-zookeeper工作原理">4.3、Zookeeper工作原理</h5>
+
+<p>Zab协议</p>
+
+<p><br /></p>
+
+<p>Zookeeper的核心是广播，这个机制保证了各个Server之间的同步。实现这个机制的协议叫做Zab协议。</p>
+
+<p><br /></p>
+
+<p>Zab（ZooKeeper Atomic Broadcast）原子消息广播协议作为数据一致性的核心算法，Zab协议是专为Zookeeper设计的支持崩溃恢复原子消息广播算法。</p>
+
+<p><br /></p>
+
+<p>Zab协议核心如下：</p>
+
+<p><br /></p>
+
+<p>所有的事务请求必须一个全局唯一的服务器（Leader）来协调处理，集群其余的服务器称为follower服务器。Leader服务器负责将一个客户端请求转化为事务提议（Proposal），并将该proposal分发给集群所有的follower服务器。之后Leader服务器需要等待所有的follower服务器的反馈，一旦<strong>超过了半数</strong>的follower服务器进行了正确反馈后，那么Leader服务器就会再次向所有的follower服务器分发commit消息，要求其将前一个proposal进行提交。</p>
+
+<p><br /></p>
+
+<p>Zab模式</p>
+
+<p><br /></p>
+
+<p>Zab协议包括两种基本的模式：崩溃恢复和消息广播。</p>
+
+<p><br /></p>
+
+<p>当整个服务框架启动过程中或Leader服务器出现网络中断、崩溃退出与重启等异常情况时，Zab协议就会进入<strong>恢复模式</strong>并选举产生新的Leader服务器。</p>
+
+<p><br /></p>
+
+<p>当选举产生了新的Leader服务器，同时集群中已经有过半的机器与该Leader服务器完成了状态同步之后，Zab协议就会退出恢复模式，状态同步是指数据同步，用来保证集群在过半的机器能够和Leader服务器的数据状态保持一致。</p>
+
+<p><br /></p>
+
+<p>当集群中已经有过半的Follower服务器完成了和Leader服务器的状态同步，那么整个服务框架就可以进入消息<strong>广播模式</strong>。</p>
+
+<p><br /></p>
+
+<p>当一台同样遵守Zab协议的服务器启动后加入到集群中，如果此时集群中已经存在一个Leader服务器在负责进行消息广播，那么加入的服务器就会自觉地进入数据恢复模式：找到Leader所在的服务器，并与其进行数据同步，然后一起参与到消息广播流程中去。</p>
+
+<p><br /></p>
+
+<p>Zookeeper只允许唯一的一个Leader服务器来进行事务请求的处理，Leader服务器在接收到客户端的事务请求后，会生成对应的事务提议并发起一轮广播协议，而如果集群中的其他机器收到客户端的事务请求后，那么这些非Leader服务器会首先将这个事务请求转发给Leader服务器。</p>
+
+<p><br /></p>
+
+<p>消息广播</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDwYN9.png" alt="tDwYN9.png" /></p>
+
+<p>Zab协议的消息广播过程使用是一个原子广播协议，类似一个<strong>2PC</strong>提交过程。具体的：</p>
+
+<p><br /></p>
+
+<p>ZooKeeper使用单一主进程Leader用于处理客户端所有事务请求，并采用Zab的原子广播协议，将服务器数据状态变更以事务Proposal的形式广播Follower上，因此能很好的处理客户端的大量并发请求。</p>
+
+<p><br /></p>
+
+<p>另一方面，由于事务间可能存在着依赖关系，Zab协议保证Leader广播的变更序列被<strong>顺序</strong>的处理，有些状态的变更必须依赖于比它早生成的那些状态变更。</p>
+
+<p><br /></p>
+
+<p>最后，考虑到主进程Leader在任何时候可能崩溃或者异常退出， 因此Zab协议还要Leader进程崩溃的时候可以重新选出Leader并且保证数据的完整性；Follower收到Proposal后，写到磁盘，返回ACK。Leader收到大多数ACK后，广播Commit消息，自己也提交该消息。Follower收到Commit之后，提交该消息。</p>
+
+<p><br /></p>
+
+<p>Zab协议简化了2PC事务提交：</p>
+
+<p>去除中断逻辑移除，follower要么ACK，要么抛弃Leader。</p>
+
+<p>Leader不需要所有的Follower都响应成功，只要一个多数派ACK即可。</p>
+
+<p><br /></p>
+
+<p>崩溃恢复</p>
+
+<p><br /></p>
+
+<p>上面我们讲了Zab协议在正常情况下的消息广播过程，那么一旦Leader服务器出现崩溃或者与过半的follower服务器失去联系，就进入崩溃恢复模式。</p>
+
+<p><br /></p>
+
+<p>恢复模式需要重新选举出一个新的Leader，让所有的Server都恢复到一个正确的状态。</p>
+
+<h4 id="5-zookeeper实践-共享锁-leader选举">5、Zookeeper实践，共享锁，Leader选举</h4>
+
+<p>分布式锁用于控制分布式系统之间同步访问共享资源的一种方式，可以保证不同系统访问一个或一组资源时的一致性，主要分为排它锁和共享锁。</p>
+
+<p><br /></p>
+
+<p>排它锁又称为写锁或独占锁，若事务T1对数据对象O1加上了排它锁，那么在整个加锁期间，只允许事务T1对O1进行读取和更新操作，其他任何事务都不能再对这个数据对象进行任何类型的操作，直到T1释放了排它锁。</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDB2Of.png" alt="tDB2Of.png" /></p>
+
+<p>共享锁又称为读锁，若事务T1对数据对象O1加上共享锁，那么当前事务只能对O1进行读取操作，其他事务也只能对这个数据对象加共享锁，直到该数据对象上的所有共享锁都被释放。</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDBj7F.png" alt="tDBj7F.png" /></p>
+
+<h5 id="leader选举">Leader选举</h5>
+
+<p>Leader选举是保证分布式数据一致性的关键所在。当Zookeeper集群中的一台服务器出现以下两种情况之一时，需要进入Leader选举。</p>
+
+<p><br /></p>
+
+<p>服务器初始化启动。</p>
+
+<p><br /></p>
+
+<p>服务器运行期间无法和Leader保持连接。</p>
+
+<p><br /></p>
+
+<p>Zookeeper在3.4.0版本后只保留了TCP版本的 FastLeaderElection 选举算法。当一台机器进入Leader选举时，当前集群可能会处于以下两种状态：</p>
+
+<p><br /></p>
+
+<p>集群中已存在Leader。</p>
+
+<p><br /></p>
+
+<p>集群中不存在Leader。</p>
+
+<p><br /></p>
+
+<p>对于集群中已经存在Leader而言，此种情况一般都是某台机器启动得较晚，在其启动之前，集群已经在正常工作，对这种情况，该机器试图去选举Leader时，会被告知当前服务器的Leader信息，对于该机器而言，仅仅需要和Leader机器建立起连接，并进行状态同步即可。</p>
+
+<p><br /></p>
+
+<p>而在集群中不存在Leader情况下则会相对复杂，其步骤如下：</p>
+
+<p><br /></p>
+
+<p>(1) 第一次投票。无论哪种导致进行Leader选举，集群的所有机器都处于试图选举出一个Leader的状态，即<strong>LOOKING</strong>状态，LOOKING机器会向所有其他机器发送消息，该消息称为投票。投票中包含了SID（服务器的唯一标识）和ZXID（事务ID），(SID, ZXID)形式来标识一次投票信息。假定Zookeeper由5台机器组成，SID分别为1、2、3、4、5，ZXID分别为9、9、9、8、8，并且此时SID为2的机器是Leader机器，某一时刻，1、2所在机器出现故障，因此集群开始进行Leader选举。<strong>在第一次投票时，每台机器都会将自己作为投票对象</strong>，于是SID为3、4、5的机器投票情况分别为(3, 9)，(4, 8)， (5, 8)。</p>
+
+<p><br /></p>
+
+<p>(2) 变更投票。每台机器发出投票后，也会收到其他机器的投票，每台机器会根据一定规则来处理收到的其他机器的投票，并以此来决定是否需要变更自己的投票，这个规则也是整个Leader选举算法的核心所在，其中术语描述如下</p>
+
+<p><br /></p>
+
+<p>vote_sid：接收到的投票中所推举Leader服务器的SID。</p>
+
+<p><br /></p>
+
+<p>vote_zxid：接收到的投票中所推举Leader服务器的ZXID。</p>
+
+<p><br /></p>
+
+<p>self_sid：当前服务器自己的SID。</p>
+
+<p><br /></p>
+
+<p>self_zxid：当前服务器自己的ZXID。</p>
+
+<p><br /></p>
+
+<p>每次对收到的投票的处理，都是对(vote_sid, vote_zxid)和(self_sid, self_zxid)对比的过程。</p>
+
+<p><br /></p>
+
+<p>规则一：如果vote_zxid大于self_zxid，就认可当前收到的投票，并再次将该投票发送出去。</p>
+
+<p><br /></p>
+
+<p>规则二：如果vote_zxid小于self_zxid，那么坚持自己的投票，不做任何变更。</p>
+
+<p><br /></p>
+
+<p>规则三：如果vote_zxid等于self_zxid，那么就对比两者的SID，如果vote_sid大于self_sid，那么就认可当前收到的投票，并再次将该投票发送出去。</p>
+
+<p><br /></p>
+
+<p>规则四：如果vote_zxid等于self_zxid，并且vote_sid小于self_sid，那么坚持自己的投票，不做任何变更。</p>
+
+<p><br /></p>
+
+<p>结合上面规则，给出下面的集群变更过程。</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDrnVU.png" alt="tDrnVU.png" /></p>
+
+<p>(3) 确定Leader。经过第二轮投票后，集群中的每台机器都会再次接收到其他机器的投票，然后开始统计投票，如果一台机器收到了<strong>超过半数的相同投票</strong>，那么这个投票对应的SID机器即为Leader。此时Server3将成为Leader。</p>
+
+<p><br /></p>
+
+<p>由上面规则可知，通常那台服务器上的数据越新（ZXID会越大），其成为Leader的可能性越大，也就越能够保证数据的恢复。如果ZXID相同，则SID越大机会越大。</p>
+
+<h3 id="二-dubbo">二、Dubbo</h3>
+
+<p>Dubbo是阿里开源的一个分布式服务框架，致力于提供高性能和透明化的RPC远程调用方案，以及SOA服务治理方案。</p>
+
+<h4 id="2-1-什么是soa">2.1、什么是SOA</h4>
+
+<p>SOA，Service Oriented Architecture，面向服务的架构，是一个组件模型（即子项目模型）， 它将应用程序的不同功能单元（称为服务）通过这些服务之间定义的良好接口和契约联系起来。接口是采用中立的方式进行定义的（所谓中立方式是指没有与任何具体实现相绑定的的定义方式，即只有接口，没有实现的方式）。它应该独立于实现服务的硬件平台、操作系统 （即跨平台）和编程语言（即已被编译为可执行文件）。这使得构建在各种各样的系统中的服务可以以一种统一和通用的方式进行交互。</p>
+
+<p><br /></p>
+
+<p>面向服务架构，它可以根据需求通过网络对松散耦合的粗粒度应用组件（即子项目）进行分布式部署、组合和使用。服务层是 SOA 的基础，可以直接被应用调用，从而有效控制系统中与软件代理交互的人为依赖性（即人为参与度更低了）。</p>
+
+<p><br /></p>
+
+<p>SOA 是一种粗粒度、松耦合服务架构，服务之间通过简单、精确定义的接口进行通讯， 不涉及底层编程接口和通讯模型。SOA 可以看作是 B/S 模型、XML（ 标准通用标记语言的子 集）/Web Service 技术之后的自然延伸。</p>
+
+<p><br /></p>
+
+<p>SOA 将能够帮助软件工程师们站在一个新的高度理解企业级架构中的各种组件的开发、 部署形式，它将帮助企业系统架构者以更迅速、更可靠、更具重用性架构整个业务系统。较之以往，以 SOA 架构的系统能够更加从容地面对业务的急剧变化。</p>
+
+<h4 id="2-2-什么是rpc">2.2、什么是RPC</h4>
+
+<p>RPC，即远程过程调用协议，它是一种通过网络从远程计算机上强求服务，而不需要了解底层网络技术的协议，RPC协议假定某些传输协议的存在，如TCP或UDP，为了通讯之间携带信息数据，在OSI网络通讯模型中，RCP跨越了传输层和应用层，RPC使得开发包括网络分布式程序在内的应用程序更加容易。</p>
+
+<p><br /></p>
+
+<p>RPC采用客户端/服务端模式，请求程序就是一个客户端，而服务端提供程序就是一个服务器，首先，客户端调用进程发送一个有进程参数的调用信息到服务进程，然后等待应答信息，在服务端，进程保持睡眠状态知道调用信息到达为止，当一个调用信息到达，服务器获得进程参数，计算结果，发送答复信息，然后等待下一个调用信息，最后客户端调用进程接受到答复信息，获得进程结果，然后调用执行继续进行。</p>
+
+<p><br /></p>
+
+<p>其实RPC的底层就是socket实现的，只要知道对方的主机和端口号，就可以通过网络连接上，而无需知道底层是怎么实现通讯的。</p>
+
+<h4 id="2-3-系统架构设计的关键点">2.3、系统架构设计的关键点</h4>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tsEIzt.png" alt="tsEIzt.png" /></p>
+
+<p><strong>单一应用架构</strong></p>
+
+<p>当网站流量很小时，只需要一个应用，将所有功能都部署在在一起，以减少部署节点和成本，当流量增加的时候，搭建集群增加主机水平扩展，以便提高整个应用的性能，此时，用于简化增删改查工作量的数据访问才是关键。</p>
+
+<p><strong>垂直应用架构</strong></p>
+
+<p>当访问数据量增大，单一应用的水平扩展，其所带来的速度越来越小，此时可能要将应用拆分成独立的几个应用，以提高效率，这是用于加速前端页面开发的web框架是关键。</p>
+
+<p><strong>分布式服务架构</strong></p>
+
+<p>当垂直应用越来越多，应用之间的交互是不可避免的，这时候将核心业务抽离出来，独立一个服务，逐渐形成稳定的服务中心，使前端应用可以更快速响应多变的市场需求，此时，用于提高业务复用以及整合的分布式服务框架是关键。</p>
+
+<p><strong>流动计算架构</strong></p>
+
+<p>当服务越来越多，容量的评估(主机所能支撑特定服务的能力成为容量)，小服务资源的浪费等问题逐渐显现，此时需要增加一个调度中心，使其基于访问压力实时管理集群容量，提高集群利用率，此时用于提高机器利用率的资源调度和治理中心是关键。</p>
+
+<h4 id="2-4-dubbo适用于哪些场景">2.4、Dubbo适用于哪些场景</h4>
+
+<p>当网站变大后，不可避免的需要拆分应用进行服务化，以提高开发效率，调优性能，节省关键竞争资源等。</p>
+
+<p><br /></p>
+
+<p>当服务越来越多时，服务的URL地址信息就会爆炸式增长，配置管理变得非常困难，F5硬件负载均衡器的单点压力也越来越大。</p>
+
+<p><br /></p>
+
+<p>当进一步发展，服务间依赖关系变得错踪复杂，甚至分不清哪个应用要在哪个应用之前启动，架构师都不能完整的描述应用的架构关系。</p>
+
+<p><br /></p>
+
+<p>接着，服务的调用量越来越大，服务的容量问题就暴露出来，这个服务需要多少机器支撑？什么时候该加机器？等等……</p>
+
+<p><br /></p>
+
+<p>在遇到这些问题时，都可以用Dubbo来解决。</p>
+
+<h4 id="2-5-dubbo架构">2.5、Dubbo架构</h4>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDceSJ.png" alt="tDceSJ.png" /></p>
+
+<p>Provider：暴露服务的服务提供方</p>
+
+<p><br /></p>
+
+<p>Consumer：调用远程服务的服务消费方</p>
+
+<p><br /></p>
+
+<p>Registry：服务注册与发现注册中心</p>
+
+<p><br /></p>
+
+<p>Monitor：统计服务的调用次数和调用时间的监控中心</p>
+
+<p><br /></p>
+
+<p>（init：仅执行一次，async：异步处理过程，sync：同步处理过程）</p>
+
+<p><br /></p>
+
+<p>start：Dubbo服务启动，Spring容器首先会创建服务提供者</p>
+
+<p><br /></p>
+
+<p>register：服务提供者创建成功之后，马上会把服务注册到register，这个注册过程称为<strong>服务暴露</strong>，服务暴露的本质就是把服务名称和服务提供者主机写到注册中心的服务映射表中，注册中心充当域名服务器的角色。</p>
+
+<p><br /></p>
+
+<p>subsribe：服务消费者创建成功后，首先会向服务注册中心订阅服务，当然服务必须是服务提供者暴露在注册中心的服务。</p>
+
+<p><br /></p>
+
+<p>notify：消费者可能订阅的服务还没有提供相应的提供者，当相应的服务提供者注册成功后，就会通知服务消费者，但消费者在订阅了执行服务后，在没有收到注册中心的通知之前是不会被阻塞的，而是可以订阅其他服务，一个消费者可以订阅多个服务。</p>
+
+<p><br /></p>
+
+<p>invoke：消费者会<strong>同步</strong>的方式调用提供者的请求，消费者通过远程注册中心的服务列表调用远程服务，基于负载均衡会选一台提供者处理消费者的请求，而消费者的这个调用是同步的，即提供者在没有像消费者返回处理结果之前，消费者处于阻塞状态，直到返回结果，或者等待超时，随后，dubbo会在提供一个提供者服务为消费者服务。</p>
+
+<p><br /></p>
+
+<p>count：每个消费者对各个服务的累计调用次数，调用时间，每个提供者被消费调用的累加次数，和时间，消费者和提供者都会定时发送到监控中心，有监控中心记录，这些统计数据可以在dubbo的可视化界面看到。</p>
+
+<h4 id="2-6-dubbo整体架构">2.6、Dubbo整体架构</h4>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDh2X4.jpg" alt="tDh2X4.jpg" /></p>
+
+<p>上图中，左边是serviceConsumer使用的接口和类；右边是serviceProvider使用的接口和类；中间是双方均要使用的接口和类。总体上将整个架构分成三大层，分别是Business层、RPC层、Remoting层。其中：</p>
+
+<p><br /></p>
+
+<p>Business层是应用层的接口和实现类，完成应用层的业务逻辑。对于消费端应用层则是利用config配置层的功能在实现类中调用Proxy层实现的代理类（即为远程服务的引用）；对于服务端应用层则是实现业务逻辑然后通过Proxy层的Invoker封装之后，利用config配置层的功能将服务暴露给消费端使用。</p>
+
+<p><br /></p>
+
+<p>RPC层是Dubbo框架的核心，提供透明化的服务发布和服务引用，里面可以细分为如下六层：</p>
+
+<p><br /></p>
+
+<p>1）config配置层：使用这一层提供的@注解，xml配置等方法来暴露服务和为服务消费端生成远程服务代理类；主要是为了<strong>方便应用层的使用</strong>，提供了与Spring框架的融合功能。</p>
+
+<p><br /></p>
+
+<p>2）proxy服务代理层：服务接口透明代理，可以像调本地服务一样调远程服务。在服务暴露的过程中，为服务实现类创建Invoker的代理，在代理类中主要是根据接受到的类名、方法名、参数值等信息通过<strong>反射</strong>的方式完成对服务实现类的调用。在服务引用过程中，为远程服务引用Invoker对象（通过从注册中心获取服务地址并创建的Invoker对象）创建代理，在应用层调用该代理时，由代理类负责调用服务引用Invoker对象。</p>
+
+<p><br /></p>
+
+<p>3）registry注册中心层：完成服务地址的注册与发现。目前支持的注册协议有dubbo、multicast、zookeeper、redis。在服务暴露过程中，将服务地址发布到注册中心上。在服务引用过程中，对注册中心进行监听与订阅，发现注册中心上面的所有服务地址，并且在服务地址发生变动时能及时地通知服务消费端更新服务引用Invoker。</p>
+
+<p><br /></p>
+
+<p>4）cluster层：主要是将相同的服务封装成集群，在服务调用的过程中完成对服务的路由、负载均衡等逻辑处理，最终选择合适的服务提供者。该层主要是消费端使用，在服务引用过程中，将相同的服务封装成集群对象，当调用服务时，该集群对象负责进行路由选择和负载均衡策略逻辑处理，从服务引用Invoker列表中选择一个Invoker对象发起远程服务调用。</p>
+
+<p><br /></p>
+
+<p>5）monitor监控层：RPC调用次数和调用时间监控，发送数据到monitor监控中心。主要是在服务暴露和服务引用时，为Invoker添加过滤器链时将MonitorFilter过滤器放入过滤器链中，从而将服务名称、服务方法、调用耗时、并发数等信息记录下来，其中服务消费端记录服务提供者的信息，服务提供端记录服务消费者的信息。</p>
+
+<p><br /></p>
+
+<p>6）protocol远程调用层：封装RPC调用，抽象各种协议，目前支持的协议有dubbo、mock、injvm、rmi、hessian、thrift、memcached、redis、rest。在该层实现各种协议，主要是实现各协议创建服务容器、接受请求并将请求向上层传递以及发送响应消息等通信层面的业务逻辑。目前Dubbo框架为扩展协议的实现提供了接口及抽象类。</p>
+
+<p><br /></p>
+
+<p>Remoting层主要实现dubbo协议，若使用hessian或其他协议，就不会用到这一层；具体细分为三层：</p>
+
+<p><br /></p>
+
+<p>1）exchange信息交换层：封装请求响应模式，同步转异步，封装Request-Response语义。</p>
+
+<p><br /></p>
+
+<p>2）transport网络传输层：对Mina,Netty,Grizzly的抽象，socket TCP，UDP编程。</p>
+
+<p><br /></p>
+
+<p>3）serialize数据序列化层，将请求消息或响应消息进行序列化之后发送到通信线路上，对收到的消息进行反序列化之后提供给上层进行处理。</p>
+
+<h3 id="一-搭建zookeeper集群">一、搭建Zookeeper集群</h3>
+
+<h4 id="1-1-准备工作">1.1、准备工作</h4>
+
+<ol>
+<li><p>将Zookeeper上传到服务器。</p></li>
+
+<li><p>解压Zookeeper，并创建data目录，将conf下的zoo_sample.cfg文件改名为zoo.cfg。</p></li>
+
+<li><p>建立<code>/user/local/zookeeper-cluster</code>,将解压后的Zookeeper复制到以下三个目录。</p>
+
+<pre><code>/usr/local/zookeeper-cluster/zookeeper-1
+/usr/local/zookeeper-cluster/zookeeper-2
+/usr/local/zookeeper-cluster/zookeeper-3
+</code></pre></li>
+</ol>
+
+<p><img src="https://s1.ax1x.com/2020/06/04/tDAQ9P.png" alt="tDAQ9P.png" /></p>
+
+<ol>
+<li>配置每一个 Zookeeper 的 dataDir（zoo.cfg）clientPort 分别为218、2182、2183。</li>
+</ol>
+
+<p>修改<code>/usr/local/zookeeper-cluster/zookeeper-1/conf/zoo.cfg</code></p>
+
+<pre><code class="language-shell">clientPort=2181
+dataDir=/usr/local/zookeeper-cluster/zookeeper-1/data
+</code></pre>
+
+<p>修改/usr/local/zookeeper-cluster/zookeeper-2/conf/zoo.cfg</p>
+
+<pre><code class="language-shell">clientPort=2182
+dataDir=/usr/local/zookeeper-cluster/zookeeper-2/data
+</code></pre>
+
+<p>修改/usr/local/zookeeper-cluster/zookeeper-3/conf/zoo.cfg</p>
+
+<pre><code class="language-shell">clientPort=2182
+dataDir=/usr/local/zookeeper-cluster/zookeeper-3/data
+</code></pre>
+
+<h4 id="1-2-配置集群">1.2、配置集群</h4>
+
+<ol>
+<li><p>在每个 zookeeper 的 data 目录下创建一个 myid 文件，内容分别是 1、2、3 。这个文件就是记录每个服务器的 ID</p></li>
+
+<li><p>在每一个 zookeeper 的 zoo.cfg 配置客户端访问端口（clientPort）和集群服务器 IP 列表。</p></li>
+</ol>
+
+<p>集群服务器 IP 列表如下</p>
+
+<pre><code class="language-shell">server.1=192.168.1.136:2881:3881
+server.2=192.168.1.136:2882:3882
+server.3=192.168.1.136:2883:3883
+</code></pre>
+
+<p>解释：server.服务器 ID=服务器 IP 地址：服务器之间通信端口：服务器之间投票选举端口。</p>
+
+<h4 id="1-3-启动集群">1.3、启动集群</h4>
+
+<p>启动集群就是分别启动每个实例。</p>
+
+<pre><code class="language-shell">/usr/local/zookeeper-cluster/zookeeper-1/bin/zkServer.sh start
+/usr/local/zookeeper-cluster/zookeeper-2/bin/zkServer.sh start
+/usr/local/zookeeper-cluster/zookeeper-3/bin/zkServer.sh start
+</code></pre>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDATDe.png" alt="tDATDe.png" /></p>
+
+<p>可以通过status查看节点是leader还是follower。</p>
+
+<p>至此Zookeeper集群搭建完成。</p>
+
+<h3 id="二-搭建dubbo">二、搭建Dubbo</h3>
+
+<h4 id="2-1-创建rpc服务接口">2.1、创建RPC服务接口</h4>
+
+<p>创建一个Maven项目，该项目主要包含pom.xml和IUserService.java接口两个文件。</p>
+
+<p>pom.xml：</p>
+
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.jxh.demo&lt;/groupId&gt;
+    &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+&lt;/project&gt;
+</code></pre>
+
+<p>IUserService.java</p>
+
+<pre><code class="language-java">package com.jxh.service;
+
+public interface IUserService {
+    public String sayHello(String name);
+}
+</code></pre>
+
+<h4 id="2-2-服务提供者">2.2、服务提供者</h4>
+
+<p><strong>1）添加依赖pom.xml</strong></p>
+
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.jxh.demo&lt;/groupId&gt;
+    &lt;artifactId&gt;springboot-dubbo-provider&lt;/artifactId&gt;
+    &lt;version&gt;1.0&lt;/version&gt;
+
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.0.1.RELEASE&lt;/version&gt;
+    &lt;/parent&gt;
+
+    &lt;dependencies&gt;
+        &lt;!--dubbo--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba.spring.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;2.0.0&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;artifactId&gt;log4j-to-slf4j&lt;/artifactId&gt;
+                    &lt;groupId&gt;org.apache.logging.log4j&lt;/groupId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.zookeeper&lt;/groupId&gt;
+            &lt;artifactId&gt;zookeeper&lt;/artifactId&gt;
+            &lt;version&gt;3.6.1&lt;/version&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+                    &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;log4j&lt;/groupId&gt;
+                    &lt;artifactId&gt;log4j&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.101tec&lt;/groupId&gt;
+            &lt;artifactId&gt;zkclient&lt;/artifactId&gt;
+            &lt;version&gt;0.9&lt;/version&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;
+                    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.jxh.demo&lt;/groupId&gt;
+            &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;
+            &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+        &lt;/dependency&gt;
+
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;
+</code></pre>
+
+<p><strong>2）配置文件application.properties</strong></p>
+
+<pre><code class="language-xml"># dubbo config provider
+spring.application.name=dubbo-demo-provider
+spring.dubbo.application.id=dubbo-demo-provider
+spring.dubbo.application.name=dubbo-demo-provider
+spring.dubbo.registry.address=zookeeper://192.168.1.136:2181;zookeeper://192.168.1.136:2182;zookeeper://192.168.1.136:2183
+spring.dubbo.server=true
+spring.dubbo.protocol.name=dubbo
+spring.dubbo.protocol.port=20880
+</code></pre>
+
+<p><strong>3）启动类ProviderBootstrap</strong></p>
+
+<pre><code class="language-java">package com.jxh;
+
+import com.alibaba.dubbo.spring.boot.annotation.EnableDubboConfiguration;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@EnableDubboConfiguration
+@SpringBootApplication
+public class ProviderBootstrap {
+
+    public static void main(String[] args){
+        SpringApplication.run(ProviderBootstrap.class, args);
+    }
+
+}
+</code></pre>
+
+<p><strong>4）服务实现UserServiceImpl.java</strong></p>
+
+<pre><code class="language-java">package com.jxh.service.impl;
+
+import com.alibaba.dubbo.config.annotation.Service;
+import com.jxh.service.IUserService;
+import org.springframework.stereotype.Component;
+
+
+@Component
+@Service(interfaceClass = IUserService.class)
+public class UserServiceImpl implements IUserService{
+    @Override
+    public String sayHello(String name) {
+        return &quot;hello:&quot;+name;
+    }
+}
+</code></pre>
+
+<p>至此服务提供者代码编写完成。</p>
+
+<h4 id="2-3-服务消费者">2.3、服务消费者</h4>
+
+<p><strong>1）添加依赖pom.xml</strong></p>
+
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.jxh.demo&lt;/groupId&gt;
+    &lt;artifactId&gt;springboot-dubbo-consumer&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.0.1.RELEASE&lt;/version&gt;
+    &lt;/parent&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;!--dubbo--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba.spring.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;2.0.0&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;artifactId&gt;log4j-to-slf4j&lt;/artifactId&gt;
+                    &lt;groupId&gt;org.apache.logging.log4j&lt;/groupId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+
+        &lt;!--zookeeper--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.zookeeper&lt;/groupId&gt;
+            &lt;artifactId&gt;zookeeper&lt;/artifactId&gt;
+            &lt;version&gt;3.6.1&lt;/version&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+                    &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;log4j&lt;/groupId&gt;
+                    &lt;artifactId&gt;log4j&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.101tec&lt;/groupId&gt;
+            &lt;artifactId&gt;zkclient&lt;/artifactId&gt;
+            &lt;version&gt;0.9&lt;/version&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;
+                    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+
+        &lt;!--API--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.jxh.demo&lt;/groupId&gt;
+            &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;
+            &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    
+&lt;/project&gt;
+</code></pre>
+
+<p><strong>2）配置文件application.properties</strong></p>
+
+<pre><code class="language-xml">## Dubbo consumer config
+spring.application.name=dubbo-demo-consumer
+spring.dubbo.application.name=dubbo-demo-consumer
+spring.dubbo.application.id=dubbo-demo-consumer
+spring.dubbo.registry.address=zookeeper://192.168.1.136:2181;zookeeper://192.168.1.136:2182;zookeeper://192.168.1.136:2183
+</code></pre>
+
+<p><strong>3）启动类ConsumerBootstrap</strong></p>
+
+<pre><code class="language-java">package com.jxh;
+
+import com.alibaba.dubbo.spring.boot.annotation.EnableDubboConfiguration;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@EnableDubboConfiguration
+@SpringBootApplication
+public class ConsumerBootstrap {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerBootstrap.class);
+    }
+}
+</code></pre>
+
+<p><strong>4）Controller</strong></p>
+
+<pre><code class="language-java">package com.jxh.controller;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.jxh.service.IUserService;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(&quot;/user&quot;)
+public class UserController {
+
+    @Reference
+    private IUserService userService;
+
+    @RequestMapping(&quot;/sayHello&quot;)
+    public String sayHello(String name){
+        return userService.sayHello(name);
+    }
+
+}
+</code></pre>
+
+<p>至此服务消费者代码编写完成。</p>
+
+<h3 id="三-功能测试">三、功能测试</h3>
+
+<h4 id="3-1-dubbo-admin">3.1、dubbo-admin</h4>
+
+<p>1）下载dubbo-admin.war，上传到Zookeeper集群的系统环境Linux下tomcat/webapps文件夹中，启动tomcat，即可通过<a href="http://192.168.1.136:8081/dubbo-admin/访问Dubbo的搭建管理控制台。">http://192.168.1.136:8081/dubbo-admin/访问Dubbo的搭建管理控制台。</a></p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDeG2q.png" alt="tDeG2q.png" /></p>
+
+<p>2）服务提供者</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDe8Gn.png" alt="tDe8Gn.png" /></p>
+
+<p>3）服务消费者</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDe3Ps.png" alt="tDe3Ps.png" /></p>
+
+<h4 id="3-2-服务提供者-消费者测试">3.2、服务提供者、消费者测试</h4>
+
+<p>1）启动服务提供者、服务消费者。</p>
+
+<p>2）访问<a href="http://localhost:8081/user/sayHello?name=jxh，显示hello:jxh。">http://localhost:8081/user/sayHello?name=jxh，显示hello:jxh。</a></p>
+
+<p><img src="https://s1.ax1x.com/2020/06/05/tDedZF.png" alt="tDedZF.png" /></p>
+</div>
+        <div class="post_footer">
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://jixnhe111.tk">Finished by jxh,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>真奇怪</span>
+  </div>
+</footer>
+
+
+
+<script src="https://jixinhe111.github.io/js/jquery-3.3.1.min.js"></script>
+<script src="https://jixinhe111.github.io/js/zozo.js"></script>
+<script src="https://jixinhe111.github.io/js/highlight.pack.js"></script>
+<link  href="https://jixinhe111.github.io/css/fancybox.min.css" rel="stylesheet">
+<script src="https://jixinhe111.github.io/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>
