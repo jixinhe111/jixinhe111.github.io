@@ -10,61 +10,7 @@
         content="jxh"/>
 
   
-  <meta name="description" content="Zookeeper与Dubbo的安装、配置与使用 一、Zookeeper 1、什么是Zookeeper 在Zookeeper的官网上有这么一句话：ZooKeeper is a centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services。
-
-这大概描述了Zookeeper主要是一个分布式服务协调框架，实现同步服务，配置维护和命名服务等分布式应用。是一个高性能的分布式数据一致性解决方案。
-
-通俗地讲，ZooKeeper是动物园管理员，它是拿来管大象 Hadoop、鲸鱼 HBase、Kafka等的管理员。
-2、Zookeeper和CAP的关系 作为一个分布式系统，分区容错性是一个必须要考虑的关键点。一个分布式系统一旦丧失了分区容错性，也就表示放弃了扩展性。因为在分布式系统中，网络故障是经常出现的，一旦出现在这种问题就会导致整个系统不可用是绝对不能容忍的。所以，大部分分布式系统都会在保证分区容错性的前提下在一致性和可用性之间做权衡。
-
-ZooKeeper是个CP（一致性&#43;分区容错性）的，即任何时刻对ZooKeeper的访问请求能得到一致的数据结果，同时系统对网络分割具备容错性；但是它不能保证每次服务请求的可用性。也就是在极端环境下，ZooKeeper可能会丢弃一些请求，消费者程序需要重新请求才能获得结果。
-
-ZooKeeper是分布式协调服务，它的职责是保证数据在其管辖下的所有服务之间保持同步、一致；所以就不难理解为什么ZooKeeper被设计成CP而不是AP特性的了。而且， 作为ZooKeeper的核心实现算法Zab，就是解决了分布式系统下数据如何在多个服务之间保持同步问题的。
-3、Zookeeper节点特性及节点属性分析 Zookeeper提供基于类似于文件系统的目录节点树方式的数据存储，但是Zookeeper并不是用来专门存储数据的，它的作用主要是用来维护和监控你存储的数据的状态变化。通过监控这些数据状态的变化，从而可以达到基于数据的集群管理。
-3.1、数据模型 与Linux文件系统不同的是，Linux文件系统有目录和文件的区别，而Zookeeper的数据节点称为ZNode，ZNode是Zookeeper中数据的最小单元，每个ZNode都可以保存数据，同时还可以挂载子节点，因此构成了一个层次化的命名空间，称为树。
-
-
-Zookeeper中ZNode的节点创建时候是可以指定类型的，主要有下面几种类型。
-PERSISTENT：持久化ZNode节点，一旦创建这个ZNode点存储的数据不会主动消失，除非是客户端主动的delete。
-EPHEMERAL：临时ZNode节点，Client连接到Zookeeper Service的时候会建立一个Session，之后用这个Zookeeper连接实例创建该类型的ZNode，一旦Client关闭了Zookeeper的连接，服务器就会清除Session，然后这个Session建立的ZNode节点都会从命名空间消失。总结就是，这个类型的znode的生命周期是和Client建立的连接一样的。
-PERSISTENT_SEQUENTIAL：顺序自动编号的ZNode节点，这种ZNode节点会根据当前已经存在的ZNode节点编号自动加 1，而且不会随Session断开而消失。
-EPEMERAL_SEQUENTIAL：临时自动编号节点，ZNode节点编号会自动增加，但是会随Session消失而消失。
-3.2、Watcher数据变更通知 Zookeeper使用Watcher机制实现分布式数据的发布/订阅功能。
-Zookeeper的Watcher机制主要包括客户端线程、客户端WatcherManager、Zookeeper服务器三部分。客户端在向Zookeeper服务器注册的同时，会将Watcher对象存储在客户端的WatcherManager当中。当Zookeeper服务器触发Watcher事件后，会向客户端发送通知，客户端线程从WatcherManager中取出对应的Watcher对象来执行回调逻辑。
-3.3、ACL保障数据的安全 Zookeeper内部存储了分布式系统运行时状态的元数据，这些元数据会直接影响基于Zookeeper进行构造的分布式系统的运行状态，如何保障系统中数据的安全，从而避免因误操作而带来的数据随意变更而导致的数据库异常十分重要，Zookeeper提供了一套完善的ACL权限控制机制来保障数据的安全。
-
-我们可以从三个方面来理解ACL机制：权限模式 Scheme、授权对象 ID、权限 Permission，通常使用&amp;quot;scheme: id :permission&amp;quot;来标识一个有效的ACL信息。
-3.4、内存数据 Zookeeper的数据模型是树结构，在内存数据库中，存储了整棵树的内容，包括所有的节点路径、节点数据、ACL信息，Zookeeper会定时将这个数据存储到磁盘上。
-
-DataTree：DataTree是内存数据存储的核心，是一个树结构，代表了内存中一份完整的数据。DataTree不包含任何与网络、客户端连接及请求处理相关的业务逻辑，是一个独立的组件。
-
-DataNode：DataNode是数据存储的最小单元，其内部除了保存了结点的数据内容、ACL列表、节点状态之外，还记录了父节点的引用和子节点列表两个属性，其也提供了对子节点列表进行操作的接口。
-
-ZKDatabase：Zookeeper的内存数据库，管理Zookeeper的所有会话、DataTree存储和事务日志。ZKDatabase会定时向磁盘dump快照数据，同时在Zookeeper启动时，会通过磁盘的事务日志和快照文件恢复成一个完整的内存数据库。
-4、Zookeeper的实现原理分析 4.1、Zookeeper Service网络结构 Zookeeper的工作集群可以简单分成两类，一个是Leader，唯一一个，其余的都是follower，如何确定Leader是通过内部选举确定的。
-Leader和各个follower是互相通信的，对于Zookeeper系统的数据都是保存在内存里面的，同样也会备份一份在磁盘上。
-
-如果Leader挂了，Zookeeper集群会重新选举，在毫秒级别就会重新选举出一个Leader。
-
-集群中除非有一半以上的Zookeeper节点挂了，Zookeeper Service才不可用。
-4.2、Zookeeper读写数据 写数据，一个客户端进行写数据请求时，如果是follower接收到写请求，就会把请求转发给Leader，Leader通过内部的Zab协议进行原子广播，直到所有Zookeeper节点都成功写了数据后（内存同步以及磁盘更新），这次写请求算是完成，然后Zookeeper Service就会给Client发回响应。（一致性）
-
-读数据，因为集群中所有的Zookeeper节点都呈现一个同样的命名空间视图（就是结构数据），上面的写请求已经保证了写一次数据必须保证集群所有的Zookeeper节点都是同步命名空间的，所以读的时候可以在任意一台Zookeeper节点上。
-4.3、Zookeeper工作原理 Zab协议
-
-Zookeeper的核心是广播，这个机制保证了各个Server之间的同步。实现这个机制的协议叫做Zab协议。
-
-Zab（ZooKeeper Atomic Broadcast）原子消息广播协议作为数据一致性的核心算法，Zab协议是专为Zookeeper设计的支持崩溃恢复原子消息广播算法。
-
-Zab协议核心如下：
-
-所有的事务请求必须一个全局唯一的服务器（Leader）来协调处理，集群其余的服务器称为follower服务器。Leader服务器负责将一个客户端请求转化为事务提议（Proposal），并将该proposal分发给集群所有的follower服务器。之后Leader服务器需要等待所有的follower服务器的反馈，一旦超过了半数的follower服务器进行了正确反馈后，那么Leader服务器就会再次向所有的follower服务器分发commit消息，要求其将前一个proposal进行提交。
-
-Zab模式
-
-Zab协议包括两种基本的模式：崩溃恢复和消息广播。
-
-当整个服务框架启动过程中或Leader服务器出现网络中断、崩溃退出与重启等异常情况时，Zab协议就会进入恢复模式并选举产生新的Leader服务器。"/>
+  <meta name="description" content="Zookeeper与Dubbo的安装、配置与使用 一、Zookeeper 1、什么是Zookeeper 在Zookeeper的官网上有这么一句话：ZooKeeper is a centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group servic"/>
   
 
   
@@ -77,7 +23,7 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
   
 
-  <title> &middot; 两只老虎 --from jxh</title>
+  <title>Zookeeper与Dubbo的安装、配置与使用 &middot; 两只老虎 --from jxh</title>
 
   <link rel="shortcut icon" href="https://jixinhe111.github.io/images/favicon.ico"/>
   <link rel="stylesheet" href="https://jixinhe111.github.io/css/animate.min.css"/>
@@ -161,8 +107,8 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
     <div class="post_page">
       <div class="post animated fadeInDown">
         <div class="post_title post_detail_title">
-          <h2><a href='/posts/zookeeper%E4%B8%8Edubbo%E7%9A%84%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE%E4%B8%8E%E4%BD%BF%E7%94%A8/'></a></h2>
-          <span class="date">0001.01.01</span>
+          <h2><a href='/posts/zookeeper%E4%B8%8Edubbo%E7%9A%84%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE%E4%B8%8E%E4%BD%BF%E7%94%A8/'>Zookeeper与Dubbo的安装、配置与使用</a></h2>
+          <span class="date">2020.06.06</span>
         </div>
         <div class="post_content markdown">
 
@@ -198,7 +144,11 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
 <p>Zookeeper提供基于类似于文件系统的<strong>目录节点树</strong>方式的数据存储，但是Zookeeper并不是用来专门存储数据的，它的作用主要是用来<strong>维护和监控</strong>你存储的数据的状态变化。通过监控这些数据状态的变化，从而可以达到基于数据的集群管理。</p>
 
-<h5 id="3-1-数据模型">3.1、数据模型</h5>
+<p><br /></p>
+
+<p><strong>3.1、数据模型</strong></p>
+
+<p><br /></p>
 
 <p>与Linux文件系统不同的是，Linux文件系统有目录和文件的区别，而Zookeeper的数据节点称为ZNode，ZNode是Zookeeper中数据的最小单元，每个ZNode都可以保存数据，同时还可以挂载子节点，因此构成了一个层次化的命名空间，称为树。</p>
 
@@ -218,7 +168,11 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
 <p><strong>EPEMERAL_SEQUENTIAL</strong>：临时自动编号节点，ZNode节点编号会自动增加，但是会随Session消失而消失。</p>
 
-<h5 id="3-2-watcher数据变更通知">3.2、Watcher数据变更通知</h5>
+<p><br /></p>
+
+<p><strong>3.2、Watcher数据变更通知</strong></p>
+
+<p><br /></p>
 
 <p>Zookeeper使用Watcher机制实现分布式数据的发布/订阅功能。</p>
 
@@ -226,7 +180,11 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
 <p>Zookeeper的Watcher机制主要包括客户端线程、客户端WatcherManager、Zookeeper服务器三部分。客户端在向Zookeeper服务器注册的同时，会将Watcher对象存储在客户端的WatcherManager当中。当Zookeeper服务器触发Watcher事件后，会向客户端发送通知，客户端线程从WatcherManager中取出对应的Watcher对象来执行<strong>回调逻辑</strong>。</p>
 
-<h5 id="3-3-acl保障数据的安全">3.3、ACL保障数据的安全</h5>
+<p><br /></p>
+
+<p><strong>3.3、ACL保障数据的安全</strong></p>
+
+<p><br /></p>
 
 <p>Zookeeper内部存储了分布式系统运行时状态的元数据，这些元数据会直接影响基于Zookeeper进行构造的分布式系统的运行状态，如何保障系统中数据的安全，从而避免因误操作而带来的数据随意变更而导致的数据库异常十分重要，Zookeeper提供了一套完善的ACL权限控制机制来保障数据的安全。</p>
 
@@ -234,7 +192,11 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
 <p>我们可以从三个方面来理解ACL机制：权限模式 Scheme、授权对象 ID、权限 Permission，通常使用&quot;scheme: id :permission&quot;来标识一个有效的ACL信息。</p>
 
-<h5 id="3-4-内存数据">3.4、内存数据</h5>
+<p><br /></p>
+
+<p><strong>3.4、内存数据</strong></p>
+
+<p><br /></p>
 
 <p>Zookeeper的数据模型是树结构，在内存数据库中，存储了整棵树的内容，包括所有的节点路径、节点数据、ACL信息，Zookeeper会定时将这个数据存储到磁盘上。</p>
 
@@ -252,11 +214,17 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
 <h4 id="4-zookeeper的实现原理分析">4、Zookeeper的实现原理分析</h4>
 
-<h5 id="4-1-zookeeper-service网络结构">4.1、Zookeeper Service网络结构</h5>
+<p><strong>4.1、Zookeeper Service网络结构</strong></p>
+
+<p><br /></p>
 
 <p>Zookeeper的工作集群可以简单分成两类，一个是Leader，唯一一个，其余的都是follower，如何确定Leader是通过内部选举确定的。</p>
 
+<p><br /></p>
+
 <p><img src="https://s1.ax1x.com/2020/06/05/tDdwwQ.png" alt="tDdwwQ.png" /></p>
+
+<p><br /></p>
 
 <p>Leader和各个follower是互相通信的，对于Zookeeper系统的数据都是保存在内存里面的，同样也会备份一份在磁盘上。</p>
 
@@ -268,9 +236,15 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
 <p>集群中除非有一半以上的Zookeeper节点挂了，Zookeeper Service才不可用。</p>
 
-<h5 id="4-2-zookeeper读写数据">4.2、Zookeeper读写数据</h5>
+<p><br /></p>
+
+<p><strong>4.2、Zookeeper读写数据</strong></p>
+
+<p><br /></p>
 
 <p><img src="https://s1.ax1x.com/2020/06/05/tDd7Sx.png" alt="tDd7Sx.png" style="zoom:150%;" /></p>
+
+<p><br /></p>
 
 <p>写数据，一个客户端进行写数据请求时，如果是follower接收到写请求，就会把请求转发给Leader，Leader通过内部的Zab协议进行原子<strong>广播</strong>，直到<strong>所有</strong>Zookeeper节点都成功写了数据后（<strong>内存同步以及磁盘更新</strong>），这次写请求算是完成，然后Zookeeper Service就会给Client发回<strong>响应</strong>。（一致性）</p>
 
@@ -278,7 +252,9 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
 <p>读数据，因为集群中所有的Zookeeper节点都呈现一个同样的命名空间视图（就是结构数据），上面的写请求已经保证了写一次数据必须保证集群所有的Zookeeper节点都是同步命名空间的，所以读的时候可以在任意一台Zookeeper节点上。</p>
 
-<h5 id="4-3-zookeeper工作原理">4.3、Zookeeper工作原理</h5>
+<p><strong>4.3、Zookeeper工作原理</strong></p>
+
+<p><br /></p>
 
 <p>Zab协议</p>
 
@@ -330,7 +306,11 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
 <p>消息广播</p>
 
+<p><br /></p>
+
 <p><img src="https://s1.ax1x.com/2020/06/05/tDwYN9.png" alt="tDwYN9.png" /></p>
+
+<p><br /></p>
 
 <p>Zab协议的消息广播过程使用是一个原子广播协议，类似一个<strong>2PC</strong>提交过程。具体的：</p>
 
@@ -374,13 +354,23 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 
 <p>排它锁又称为写锁或独占锁，若事务T1对数据对象O1加上了排它锁，那么在整个加锁期间，只允许事务T1对O1进行读取和更新操作，其他任何事务都不能再对这个数据对象进行任何类型的操作，直到T1释放了排它锁。</p>
 
+<p><br /></p>
+
 <p><img src="https://s1.ax1x.com/2020/06/05/tDB2Of.png" alt="tDB2Of.png" /></p>
+
+<p><br /></p>
 
 <p>共享锁又称为读锁，若事务T1对数据对象O1加上共享锁，那么当前事务只能对O1进行读取操作，其他事务也只能对这个数据对象加共享锁，直到该数据对象上的所有共享锁都被释放。</p>
 
+<p><br /></p>
+
 <p><img src="https://s1.ax1x.com/2020/06/05/tDBj7F.png" alt="tDBj7F.png" /></p>
 
-<h5 id="leader选举">Leader选举</h5>
+<p><br /></p>
+
+<p><strong>Leader选举</strong></p>
+
+<p><br /></p>
 
 <p>Leader选举是保证分布式数据一致性的关键所在。当Zookeeper集群中的一台服务器出现以下两种情况之一时，需要进入Leader选举。</p>
 
@@ -589,6 +579,8 @@ Zab协议包括两种基本的模式：崩溃恢复和消息广播。
 <h4 id="2-6-dubbo整体架构">2.6、Dubbo整体架构</h4>
 
 <p><img src="https://s1.ax1x.com/2020/06/05/tDh2X4.jpg" alt="tDh2X4.jpg" /></p>
+
+<p><br /></p>
 
 <p>上图中，左边是serviceConsumer使用的接口和类；右边是serviceProvider使用的接口和类；中间是双方均要使用的接口和类。总体上将整个架构分成三大层，分别是Business层、RPC层、Remoting层。其中：</p>
 
@@ -1034,6 +1026,17 @@ public class UserController {
 <p><img src="https://s1.ax1x.com/2020/06/05/tDedZF.png" alt="tDedZF.png" /></p>
 </div>
         <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://jixinhe111.github.io/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/">中间件</a>
+                
+              </span>
+            </div>
+          </div>
           
         </div>
       </div>
