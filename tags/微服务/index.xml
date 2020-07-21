@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>微服务 on 两只老虎 --from jxh</title>
+    <link>https://jixinhe111.github.io/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/</link>
+    <description>Recent content in 微服务 on 两只老虎 --from jxh</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Wed, 15 Jul 2020 12:56:00 +0800</lastBuildDate>
+    
+	<atom:link href="https://jixinhe111.github.io/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Dubbo</title>
+      <link>https://jixinhe111.github.io/posts/dubbo/</link>
+      <pubDate>Wed, 15 Jul 2020 12:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/posts/dubbo/</guid>
+      <description>Dubbo 1、简介 Dubbo是阿里SOA服务化治理方案的核心框架，是众多RPC框架中卓越的框架之一，它提供了注册中心机制，解耦了消费方和服务方动态发现的问题，并提高了可靠能力。我们可以通过官方的架构图了解下D</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -6,10 +6,37 @@
     <description>Recent content on 两只老虎 --from jxh</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 06 Jun 2020 12:34:00 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 15 Jul 2020 12:56:00 +0800</lastBuildDate>
     
 	<atom:link href="https://jixinhe111.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Dubbo</title>
+      <link>https://jixinhe111.github.io/posts/dubbo/</link>
+      <pubDate>Wed, 15 Jul 2020 12:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/posts/dubbo/</guid>
+      <description>Dubbo 1、简介 Dubbo是阿里SOA服务化治理方案的核心框架，是众多RPC框架中卓越的框架之一，它提供了注册中心机制，解耦了消费方和服务方动态发现的问题，并提高了可靠能力。我们可以通过官方的架构图了解下D</description>
+    </item>
+    
+    <item>
+      <title>RockerMQ</title>
+      <link>https://jixinhe111.github.io/posts/rockermq/</link>
+      <pubDate>Tue, 30 Jun 2020 12:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/posts/rockermq/</guid>
+      <description>RockerMQ 对于上图中几个角色的说明： （1）NameServer：RocketMQ集群的命名服务器（也可以说是注册中心），它本身是无状态的（实际情况下可能存在每个NameServer实例上的数据有短暂的不一致现</description>
+    </item>
+    
+    <item>
+      <title>Kafka</title>
+      <link>https://jixinhe111.github.io/posts/kafka/</link>
+      <pubDate>Sat, 20 Jun 2020 12:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/posts/kafka/</guid>
+      <description>Kafka 1、Kafka 是什么？主要应用场景有哪些？ Kafka 是一个分布式流式处理平台。 流平台具有三个关键功能： 消息队列：发布和订阅消息流，这个功能类似于消息队列，这也是 Kafka 也被归类为消息队列的原因。 容错的持久方式存储</description>
+    </item>
     
     <item>
       <title>Zookeeper与Dubbo的安装、配置与使用</title>

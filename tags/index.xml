@@ -6,10 +6,28 @@
     <description>Recent content in Tags on 两只老虎 --from jxh</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 06 Jun 2020 12:34:00 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 15 Jul 2020 12:56:00 +0800</lastBuildDate>
     
 	<atom:link href="https://jixinhe111.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>微服务</title>
+      <link>https://jixinhe111.github.io/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/</link>
+      <pubDate>Wed, 15 Jul 2020 12:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>MQ</title>
+      <link>https://jixinhe111.github.io/tags/mq/</link>
+      <pubDate>Tue, 30 Jun 2020 12:56:00 +0800</pubDate>
+      
+      <guid>https://jixinhe111.github.io/tags/mq/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>中间件</title>

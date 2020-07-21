@@ -1,0 +1,2665 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="jxh"/>
+
+  
+  <meta name="description" content="Dubbo 1、简介 Dubbo是阿里SOA服务化治理方案的核心框架，是众多RPC框架中卓越的框架之一，它提供了注册中心机制，解耦了消费方和服务方动态发现的问题，并提高了可靠能力。我们可以通过官方的架构图了解下D"/>
+  
+
+  
+  
+  <meta name="keywords" content="Hugo, theme, zozo"/>
+  
+
+  
+  <link rel="canonical" href="https://jixinhe111.github.io/posts/dubbo/"/>
+
+  
+
+  <title>Dubbo &middot; 两只老虎 --from jxh</title>
+
+  <link rel="shortcut icon" href="https://jixinhe111.github.io/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/zozo.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://jixinhe111.github.io/">
+          <span>两只老虎 --from jxh</span>
+          <img src="https://jixinhe111.github.io/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title">一只没有眼睛，一只没有耳朵</p>
+      <div class="my_socials">
+        
+        
+        <a href="%20" title="facebook" target="_blank"><i class="remixicon-facebook-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="instagram" target="_blank"><i class="remixicon-instagram-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="twitter" target="_blank"><i class="remixicon-twitter-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="weibo" target="_blank"><i class="remixicon-weibo-fill"></i></a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/dubbo/'>Dubbo</a></h2>
+          <span class="date">2020.07.15</span>
+        </div>
+        <div class="post_content markdown">
+
+<h2 id="dubbo">Dubbo</h2>
+
+<h3 id="1-简介">1、简介</h3>
+
+<p>Dubbo是阿里SOA服务化治理方案的核心框架，是众多RPC框架中卓越的框架之一，它提供了<strong>注册中心机制</strong>，<strong>解耦</strong>了消费方和服务方动态发现的问题，并提高了可靠能力。我们可以通过官方的架构图了解下Dubbo的工作机制和工作原理：</p>
+
+<p><img src="https:////upload-images.jianshu.io/upload_images/524615-055539202aa4d856.png?imageMogr2/auto-orient/strip|imageView2/2/w/476/format/webp" alt="img" /></p>
+
+<pre><code class="language-undefined">Container：服务运行的容器
+Provider：暴露服务的服务提供方
+Registry: 服务注册与发现的注册中心
+Consumer: 调用远程服务的服务消费者
+Monitor: 统计服务的调用次数和调用时间的监控中心
+</code></pre>
+
+<p>几个角色协调运作的过程：</p>
+
+<p>Provider启动时会向注册中心吧自己的元数据信息注册上去（例如服务IP地址和端口号等），Consumer启动时会从注册中心订阅（第一次订阅会拉取全量数据）服务提供方的元数据，
+ 注册中心发生数据变更时会将变更的数据推送给订阅的Consumer。Consumer在获取到元数据之后，可以发起RPC调用，在RPC调用前后会向监控中心上报统计信息（调用的接口以及并发数等信息）。</p>
+
+<p><strong>dubbo的特点</strong></p>
+
+<p><strong>(1) 连通性：</strong></p>
+
+<ul>
+<li>注册中心负责服务地址的注册与查找，相当于目录服务，服务提供者和消费者只在启动时与注册中心交互，注册中心不转发请求，压力较小</li>
+<li>监控中心负责统计各服务调用次数，调用时间等，统计先在内存汇总后每分钟一次发送到监控中心服务器，并以报表展示</li>
+<li>服务提供者向注册中心注册其提供的服务，并汇报调用时间到监控中心，此时间不包含网络开销</li>
+<li>服务消费者向注册中心获取服务提供者地址列表，并根据负载算法直接调用提供者，同时汇报调用时间到监控中心，此时间包含网络开销</li>
+<li>注册中心，服务提供者，服务消费者三者之间均为长连接，监控中心除外</li>
+<li>注册中心通过长连接感知服务提供者的存在，服务提供者宕机，注册中心将立即<strong>推送</strong>事件通知消费者</li>
+<li>注册中心和监控中心全部宕机，<strong>不影响</strong>已运行的提供者和消费者，消费者在本地缓存了提供者列表</li>
+<li>注册中心和监控中心都是<strong>可选</strong>的，服务消费者可以<strong>直连</strong>服务提供者</li>
+</ul>
+
+<p><strong>(2) 健状性：</strong></p>
+
+<ul>
+<li>监控中心宕掉不影响使用，只是丢失部分采样数据</li>
+<li>数据库宕掉后，注册中心仍能通过缓存提供服务列表查询，但不能注册新服务</li>
+<li>注册中心对等集群，任意一台宕掉后，将自动切换到另一台</li>
+<li>注册中心全部宕掉后，服务提供者和服务消费者仍能通过本地缓存通讯</li>
+<li>服务提供者无状态，任意一台宕掉后，不影响使用</li>
+<li>服务提供者全部宕掉后，服务消费者应用将无法使用，并无限次重连等待服务提供者恢复</li>
+</ul>
+
+<p><strong>(3) 伸缩性：</strong></p>
+
+<ul>
+<li>注册中心为对等集群，可动态增加机器部署实例，所有客户端将自动发现新的注册中心</li>
+<li>服务提供者无状态，可动态增加机器部署实例，注册中心将推送新的服务提供者信息给消费者</li>
+</ul>
+
+<p><strong>(4) 升级性：</strong></p>
+
+<p>当服务集群规模进一步扩大，带动IT治理结构进一步升级，需要实现动态部署，进行流动计算，现有分布式服务架构不会带来阻力。</p>
+
+<p><strong>Dubbo支持的协议</strong></p>
+
+<p>在通信过程中，不同的服务等级一般对应着不同的服务质量，那么选择合适的协议便是一件非常重要的事情。你可以根据你应用的创建来选择。例如，使用RMI协议，一般会受到防火墙的限制，所以对于外部与内部进行通信的场景，就不要使用RMI协议，而是基于HTTP协议或者Hessian协议。Dubbo支持8种左右的协议，如下所示：</p>
+
+<ul>
+<li>(1) dubbo:// Dubbo协议</li>
+<li>(2) rmi:// RMI协议</li>
+<li>(3) hessian:// Hessian协议</li>
+<li>(4) http:// HTTP协议</li>
+<li>(5) webservice:// WebService协议</li>
+<li>(6) thrift:// Thrift协议</li>
+<li>(7) memcached:// Memcached协议</li>
+<li>(8)redis:// Redis协议</li>
+<li>在通信过程中，不同的服务等级一般对应着不同的服务质量，那么选择合适的协议便是一件非常重要的事情。你可以根据你应用的创建来选择。</li>
+<li><strong>例如，使用RMI协议，一般会受到防火墙的限制，所以对于外部与内部进行通信的场景，就不要使用RMI协议，而是基于HTTP协议或者Hessian协议。</strong></li>
+</ul>
+
+<p>部分协议的特点和使用场景如下：</p>
+
+<p>1、dubbo协议</p>
+
+<p>Dubbo缺省协议采用单一长连接和NIO异步通讯，适合于小数据量大并发的服务调用，以及服务消费者机器数远大于服务提供者机器数的情况。</p>
+
+<pre><code>缺省协议，使用基于mina1.1.7+hessian3.2.1的tbremoting交互。
+连接个数：单连接
+连接方式：长连接
+传输协议：TCP
+传输方式：NIO异步传输
+序列化：Hessian二进制序列化
+适用范围：传入传出参数数据包较小（建议小于100K），消费者比提供者个数多，单一消费者无法压满提供者，尽量不要用dubbo协议传输大文件或超大字符串。
+适用场景：常规远程服务方法调用
+</code></pre>
+
+<pre><code>为什么要消费者比提供者个数多：
+因dubbo协议采用单一长连接，
+假设网络为千兆网卡(1024Mbit=128MByte)，
+根据测试经验数据每条连接最多只能压满7MByte(不同的环境可能不一样，供参考)，
+理论上1个服务提供者需要20个服务消费者才能压满网卡。
+
+为什么不能传大包：
+因dubbo协议采用单一长连接，
+如果每次请求的数据包大小为500KByte，假设网络为千兆网卡(1024Mbit=128MByte)，每条连接最大7MByte(不同的环境可能不一样，供参考)，
+单个服务提供者的TPS(每秒处理事务数)最大为：128MByte / 500KByte = 262。
+单个消费者调用单个服务提供者的TPS(每秒处理事务数)最大为：7MByte / 500KByte = 14。
+如果能接受，可以考虑使用，否则网络将成为瓶颈。
+
+为什么采用异步单一长连接：
+因为服务的现状大都是服务提供者少，通常只有几台机器，
+而服务的消费者多，可能整个网站都在访问该服务，
+比如Morgan的提供者只有6台提供者，却有上百台消费者，每天有1.5亿次调用，
+如果采用常规的hessian服务，服务提供者很容易就被压跨，
+通过单一连接，保证单一消费者不会压死提供者，
+长连接，减少连接握手验证等，
+并使用异步IO，复用线程池，防止C10K问题。
+</code></pre>
+
+<p>2、RMI</p>
+
+<p>RMI协议采用JDK标准的java.rmi.*实现，采用阻塞式短连接和JDK标准序列化方式</p>
+
+<pre><code>Java标准的远程调用协议。
+连接个数：多连接
+连接方式：短连接
+传输协议：TCP
+传输方式：同步传输
+序列化：Java标准二进制序列化
+适用范围：传入传出参数数据包大小混合，消费者与提供者个数差不多，可传文件。
+适用场景：常规远程服务方法调用，与原生RMI服务互操作
+</code></pre>
+
+<p>3、hessian</p>
+
+<p>Hessian协议用于集成Hessian的服务，Hessian底层采用Http通讯，采用Servlet暴露服务，Dubbo缺省内嵌Jetty作为服务器实现</p>
+
+<pre><code>基于Hessian的远程调用协议。
+
+连接个数：多连接
+连接方式：短连接
+传输协议：HTTP
+传输方式：同步传输
+序列化：Hessian二进制序列化
+适用范围：传入传出参数数据包较大，提供者比消费者个数多，提供者压力较大，可传文件。
+适用场景：页面传输，文件传输，或与原生hessian服务互操作
+</code></pre>
+
+<p>4、http</p>
+
+<p>采用Spring的HttpInvoker实现</p>
+
+<pre><code>基于http表单的远程调用协议。
+
+连接个数：多连接
+连接方式：短连接
+传输协议：HTTP
+传输方式：同步传输
+序列化：表单序列化（JSON）
+适用范围：传入传出参数数据包大小混合，提供者比消费者个数多，可用浏览器查看，可用表单或URL传入参数，暂不支持传文件。
+适用场景：需同时给应用程序和浏览器JS使用的服务。
+</code></pre>
+
+<p>5、webservice</p>
+
+<p>基于CXF的frontend-simple和transports-http实现</p>
+
+<pre><code>基于WebService的远程调用协议。
+
+连接个数：多连接
+连接方式：短连接
+传输协议：HTTP
+传输方式：同步传输
+序列化：SOAP文本序列化
+适用场景：系统集成，跨语言调用。
+</code></pre>
+
+<p>6、thrif</p>
+
+<p>Thrift是Facebook捐给Apache的一个RPC框架，当前 dubbo 支持的 thrift 协议是对 thrift 原生协议的扩展，在原生协议的基础上添加了一些额外的头信息，比如service name，magic number等。</p>
+
+<h3 id="2-dubbo核心组件及整体调用过程">2、Dubbo核心组件及整体调用过程</h3>
+
+<p><strong>Dubbo框架的核心组件</strong></p>
+
+<p><img src="https:////upload-images.jianshu.io/upload_images/524615-3e7bc516b9937e97.png?imageMogr2/auto-orient/strip|imageView2/2/w/1021/format/webp" alt="img" /></p>
+
+<p>Dubbo中的分层主要可以分为业务层、RPC层和Remote层，如果把每层进行详细划分的话整体又可以分为以下几层：</p>
+
+<pre><code class="language-swift">业务层：
+service层：包括业务代码的接口与实现，即开发者实现的业务代码
+
+RPC层：
+config：配置层，主要围绕ServiceConfig（暴露的服务配置）和ReferenceConfig（引用的服务配置）两个类展开，初始化配置信息。
+**proxy：服务代理层，无论是生产者还是消费者，Dubbo都会生成一个代理类，这样当调用一个远程接口时，就像调用本地接口一样，代理层会自动做远程调用并返回结果。
+registry：注册层，负责Dubbo框架的服务注册与发现。
+cluster：集群容错层，主要负责远程调用失败时的集群容错策略（如快速失败、失败重试等）。
+monitor：监控层，负责监控统计调用次数和调用时间等。
+**protocol：远程调用层，封装PRC调用的具体过程，是Invoker暴露和引用的主要功能入口，负责管理Invoker的整个生命周期。
+
+Remot层：
+exchange：信息交换层，封装请求响应模式，如把同步请求转换为异步请求。
+transport：网络传输层，把网络传输抽象为统一的接口。
+Serialize：序列化层，将需要网络传输的数据极性序列化，转换成二进制流。
+</code></pre>
+
+<p><strong>Dubbo服务的具体调用过程</strong></p>
+
+<p><img src="https:////upload-images.jianshu.io/upload_images/524615-6821332efbc531d4.png?imageMogr2/auto-orient/strip|imageView2/2/w/766/format/webp" alt="img" /></p>
+
+<p><strong>URL：</strong></p>
+
+<p><strong>1、解析服务</strong></p>
+
+<ul>
+<li>Spring在遇到dubbo名称空间时，会回调DubboNamespaceHandler。这个类也是Dubbo基于spring扩展点编写的解析xml文件的类。</li>
+<li>解析的xml标签使用DubboBeanDefinitionParser将其转化为bean对象。</li>
+<li>服务提供方在ServiceConfig.export()初始化时将bean对象转化为URL格式，所有Bean属性转换成URL参数。这时候的URL就会传给协议扩展点。根据URL中protocol的值通过扩展点自适应机制进行不同协议的服务暴露或引用。</li>
+<li>而服务消费方则是ReferenceConfig.export()方法。</li>
+</ul>
+
+<p><strong>2、直接暴露服务端口</strong></p>
+
+<ul>
+<li>在没有注册中心时，ServiceConfig解析出的URL格式为：dubbo://service-host/com.foo.FooService?version=1.0.0</li>
+<li>基于扩展点自适应机制。通过URL的dubbo://协议头识别，这时候就调用DubboProtocol中的export方法进行暴露服务端口</li>
+</ul>
+
+<p><strong>3、向注册中心暴露服务端口</strong></p>
+
+<ul>
+<li>有注册中心时。ServiceConfig解析出的URL格式就类似：registry://registry-host/org.apache.dubbo.registry.RegistryService?export=URL.encode(&quot;dubbo://service-host/com.foo.FooService?version=1.0.0&quot;)</li>
+<li>基于扩展点自适应机制，识别到URL以registry://开头，就会调用RegistryProtocol中的export方法先将该URL注册到注册中心里</li>
+<li>再传给Protocol扩展点进行暴露，这时候就只剩下dubbo://service-host/com.foo.FooService?version=1.0.0。同样的基于dubbo://协议头识别，通过DubboProtocol的export方法打开服务端口</li>
+</ul>
+
+<p><strong>4、直接引用服务</strong></p>
+
+<ul>
+<li>在没有注册中心，ReferenceConfig解析出的URL格式就为dubbo://service-host/com.foo.FooService?version=1.0.0</li>
+<li>基于扩展点自适应机制，通过 URL 的dubbo://协议头识别，直接调用DubboProtocol的refer方法，返回提供者引用</li>
+</ul>
+
+<p><strong>5、从注册中心引用服务</strong></p>
+
+<ul>
+<li>有注册中心时，ReferenceCofig解析出来的URL格式为：registry://registry-host/org.apache.dubbo.registry.RegistryService?refer=URL.encode(&quot;consumer://consumer-host/com.foo.FooService?version=1.0.0&quot;)</li>
+<li>同样先识别URL的协议头，调用RegistryProtocol中的refer方法</li>
+<li>通过refer参数中的条件查询到提供者的URL。如dubbo://service-host/com.foo.FooService?version=1.0.0。此时就会调用DubboProtocol中的refer方法得到提供者引用</li>
+<li>最后若是存在集群Cluster扩展点，需要伪装成单个提供者引用返回</li>
+</ul>
+
+<p>Dubbo服务的具体调用过程如上图所示，从生产者（服务提供者）暴露自己的服务和消费者（服务调用者）调用远程服务两个过程进行大致的分析：</p>
+
+<p><strong>服务暴露大致过程</strong></p>
+
+<pre><code class="language-jsx">1、服务提供者在启动框架式，初始化服务实例。
+2、通过Proxy组件调用具体协议（Dubbo支持多种协议)。
+3、服务端把暴露的接口封装成Invoker，然后转换成Exporter。
+4、通过Registry把服务元数据注册到注册中心。
+</code></pre>
+
+<p><strong>消费者调用服务的大致过程</strong></p>
+
+<pre><code class="language-jsx">1、从Proxy开始，Proxy持有Invoker对象，然后触发invoke调用。
+2、在invoke调用过程中，需要使用到cluster容错策略，来负责调用远程服务失败后的一些后续操作。
+3、Cluster在调用之前会通过Directory获取所有可以调用的Invoker列表并且根据路由规则过滤一遍。
+4、经过过滤之后的Invoker可能不止一个，此时通过LoadBaklance负载均衡策略选出一个最终调用的Invoker。
+5、经过网络序列化以及传输将数据包送到服务提供者。
+6、调用者的request被分配到线程池进行处理，找到对应的Exporter，经过一系列的Filter之后得具体接口的真正实现并调用。
+7、调用完成之后将结果原路返回。
+</code></pre>
+
+<h3 id="3-服务暴露">3、服务暴露</h3>
+
+<p>1.暴露本地服务
+2.暴露远程服务
+3.启动Netty服务
+4.连接Zookeeper并到Zookeeper进行注册
+5.监听Zookeeper</p>
+
+<p>通过Dubbo发布过程的详细图解看下服务提供者暴露服务的一个详细过程：</p>
+
+<p><img src="https:////upload-images.jianshu.io/upload_images/524615-57dc802466e9dbc8.jpg?imageMogr2/auto-orient/strip|imageView2/2/w/959/format/webp" alt="img" /></p>
+
+<p>首先ServiceConfig拿到对外提供服务的实际类ref(如Dubbo源码中 dubbo-demo-xml-provider下的DemoServiceImpl类)，然后通过ProxyFactory的getInvoker方法使用ref生成一个AbstractProxyInvoker的实例，到这一步就完成具体服务到Invoker的转换，接下来就是Invoker到Exporter的转换。</p>
+
+<p>总结：</p>
+
+<p>ServiceBean</p>
+
+<p>-&gt; ServiceConfig</p>
+
+<p>-&gt; monitor</p>
+
+<p>-&gt; ProxyFactory.getInvoker(T proxy, Class&lt;T&gt; type, URL url)(Wrapper类代理的Invoker)</p>
+
+<p>-&gt; RegistryProtocol</p>
+
+<p>-&gt; DubboProtocol的export方法生成Exporter(ProtocolFilterWrapper、QosProtocolWrapper和ProtocolListenerWrapper) ， openServer(url)根据providerUrl开启一个server</p>
+
+<p>-&gt; RegistryProtocol的register()方法将url注册到zookeeper上（使用ZookeeperRegister.register()）</p>
+
+<p>-&gt; RegistryProtocol的registry.subscribe方法，加了订阅Listener监听<strong>ovrride</strong>数据，当节点发生变化时（通常是URL发生变化时）会调用notify方法，进行重新暴露。</p>
+
+<p>1、ServiceBean在afterPropertiesSet方法或onApplicationEvent方法中调用export方法进行服务暴露。</p>
+
+<p>2、ServiceConfig调用doExport方法中的doExportUrls方法，通过loadRegistries方法加载注册中心链接，然后再遍历ProtocolConfig 集合导出每个服务。</p>
+
+<p>3、调用doExportUrlsFor1Protocol()组装参数并且暴露Dubbo服务。首先进行URL类的装配，将bean对象转化为URL格式，所有Bean属性转换成URL参数。根据URL中protocol的值通过扩展点自适应机制进行不同协议的服务暴露。</p>
+
+<p>4、判断scope变量来决定是否将服务导出远程或者本地，导出到本地实际上很简单只需要生成Invoker。</p>
+
+<p>5、当导出到远程就需要添加监视器monitor，监视器能让Dubbo定时查看注册中心的状态，会抛出指定异常。</p>
+
+<p>6、通过ProxyFactory，默认是JavassistProxyFactory，getInvoker方法，通过Wrapper类动态代理生成Invoker（service代理成invoker）。invoke()通过调用doInvoker()中的Wrapper包装类（动态代理类）的wrapper.invokeMethod()调用方法。再通过DelegateProviderMetaDataInvoker类生成带有元数据的Invoker。</p>
+
+<p>7、Invoker通过protocol.export()生成Expoter使得服务消费方能够远程调用到服务，并且还会进行注册到注册中心。</p>
+
+<p>8、首先根据URL使用RegistryProtocol，DubboProtocol是在RegistryProtocal里面做的。在此之前会先执行ProtocolFilterWrapper、QosProtocolWrapper和ProtocolListenerWrapper。他们对registry协议基本没做啥，直接进入了RegistryProtocol的export。</p>
+
+<p>9、doLocalExport方法进行本地暴露。通过DubboProtocol的export方法生成exporter，之前还会调用ProtocolFilterWrapper和ProtocolListenerWrapper。</p>
+
+<p>10、ProtocolFilterWrapper是专门为服务提供方和服务消费方调用过程进行拦截设计的，每次远程方法执行，该拦截都会被执行。会用到@Activate注解，group 用来区分是 consumer 还是 provider 端。</p>
+
+<p>11、ProtocolListenerWrapper将Exporter包装成ListenerExporterWrapper的实例，他是原来的exporter(DubboExporter)和从SPI扩展点中获取的ExporterListener的实例<strong>组成</strong>，并通过装饰模式逐个调用ExporterListener.exported()方法，并返回ListenerExporterWrapper对象（<strong>返回的实例是ListenerExporterWrapper</strong>）。</p>
+
+<p>12、DubboProtocol的export方法new DubboExporter&lt;T&gt;(invoker, key, exporterMap);创建Exporter。然后通过openServer(url)根据providerUrl开启一个server。根据key（ip+port）判断server是否存在，不存在则调用createServer(URL url)方法创建一个链接ExchangeServer。</p>
+
+<p>Exchangers的bind方法getExchanger(url)得到的默认为HeaderExchanger，HeaderExchanger的bind方法又调用了Transporters中的bind方法，看getTransporter方法又碰到了熟悉的适配加载机制，Transporter类的注解为@SPI(&quot;netty&quot;)，默认会调用NettyTransporter的bind方法，NettyTransporter的bind方法直接new了一个NettyServer，NettyServer初始化的时候调用父类的构造方法，父类的构造方法中调用了NettyServer的doOpen方法，NettyServer的链接创建在doOpen方法中完成，开启端口等着调用者连进来。</p>
+
+<p>在NettyServer的doOpen方法中可以看到这里绑定了netty的端口和链接。方法到这里<strong>本地的Server端口都已经暴露完毕</strong>。</p>
+
+<p>13、将这个exporter和原始invoker封装到了ExporterChangeableWrapper里面，进行返回。</p>
+
+<p>14、然后RegisterProtocol通过register()方法将url注册到zookeeper上，通过zkClient在zookeeper上创建一个节点信息，这样就把服务暴露到zk上去了。</p>
+
+<p>15、暴露完服务之后，还会调用registry的subscribe方法，加了订阅Listener监听<strong>ovrride</strong>数据，当节点发生变化时（通常是URL发生变化时）会调用notify方法，进行重新暴露。</p>
+
+<pre><code class="language-java">final URL overrideSubscribeUrl = getSubscribedOverrideUrl(registedProviderUrl);
+final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
+overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
+registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
+</code></pre>
+
+<ul>
+<li>第一句代码根据registedProviderUrl来获取overrideSubscribeUrl。</li>
+<li>第二句代码创建overrideSubscribeListener</li>
+<li>第三句代码将{ overrideSubscribeUrl : overrideSubscribeListener放入缓存 }</li>
+<li>第四句代码实现真正的订阅与通知</li>
+</ul>
+
+<p>一、获取overrideSubscribeUrl</p>
+
+<p>开始时的registedProviderUrl如下：</p>
+
+<ul>
+<li>dubbo://10.10.10.10:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&amp;application=demo-provider&amp;dubbo=2.0.0&amp;generic=false&amp;interface=com.alibaba.dubbo.demo.DemoService&amp;methods=sayHello&amp;pid=5259&amp;side=provider&amp;timestamp=1507294508053</li>
+</ul>
+
+<p>最终的overrideSubscribeUrl如下：</p>
+
+<ul>
+<li><strong>provider</strong>://10.10.10.10:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&amp;application=demo-provider&amp;<strong>category=configurators</strong>&amp;<strong>check=false</strong>&amp;dubbo=2.0.0&amp;generic=false&amp;interface=com.alibaba.dubbo.demo.DemoService&amp;methods=sayHello&amp;pid=5259&amp;side=provider&amp;timestamp=1507294508053</li>
+</ul>
+
+<p>二、创建overrideSubscribeListener，包括subscribeUrl和originalInvoker，将创建好的OverrideListener实例存储在RegistryProtocol的属性Map<URL, NotifyListener> overrideListeners中。</p>
+
+<p>三、registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);</p>
+
+<p>这里的registry是ZookeeperRegistry实例，subscribe(URL url, NotifyListener listener)方法在其父类FailbackRegistry中。</p>
+
+<ul>
+<li>首先调用其父类AbstractRegistry的方法，将之前创建出来的overrideSubscribeListener实例加入到overrideSubscribeUrl所对应的监听器集合中；</li>
+<li>然后从failedSubscribed／failedUnsubscribed中overrideSubscribeUrl所对应的监听器集合中删除overrideSubscribeListener实例；从failedNotified获取当前url的通知失败map Map<NotifyListener, List\<URL>&gt;，之后从中删除掉该NotifyListener实例以及其需要通知的所有的url。</li>
+<li>之后使用具体的子类（这里是ZookeeperRegistry）向服务器端发送订阅请求</li>
+<li>如果在订阅的过程中抛出了异常，那么尝试获取缓存url，如果有缓存url，则进行失败通知，之后“将失败的订阅请求记录到失败列表，定时重试”，如果没有缓存url，如果开启了启动时检测或者直接抛出的异常是SkipFailbackWrapperException，则直接抛出异常，不会“将失败的订阅请求记录到失败列表，定时重试”</li>
+</ul>
+
+<ol>
+<li><p>调用<code>doLocalExport()</code>方法暴露服务。</p></li>
+
+<li><p>向注册中心注册服务。</p></li>
+
+<li><p>向注册中心进行订阅ovrride数据：当前的provider订阅了/dubbo/com.alibaba.dubbo.demo.DemoService/configurators，当其下的子节点发生变化时，如果其下的子节点的url或者当前的providerUrl发生了变化，需要重新暴露。</p></li>
+</ol>
+
+<p><a href="https://www.cnblogs.com/java-zhao/p/7632929.html">https://www.cnblogs.com/java-zhao/p/7632929.html</a></p>
+
+<p><a href="https://www.jianshu.com/p/1a1404ce2201">https://www.jianshu.com/p/1a1404ce2201</a></p>
+
+<ol>
+<li>创建并返回<code>DestroyableExporter</code>。（exporter、originInvoker、subscribeUrl、registerUrl）</li>
+</ol>
+
+<h3 id="4-服务调用">4、服务调用</h3>
+
+<p>ReferenceBean</p>
+
+<p>-&gt; ReferenceConfig的createProxy()：1、拼装URL    2、RegistryProtocol.refer()  3、cluster.join()    4、proxyFactory.getProxy(invoker, interfaces)</p>
+
+<p>-&gt; RegistryProtocol.refer()</p>
+
+<p>​       1、URL转换成zookeeper协议获取Registry</p>
+
+<p>​       2、根据接口类和URL生成<strong>RegistryDirectory</strong>（NotifyListener监听器）</p>
+
+<p>​       3、生成以comsumer开头的subscribeUrl</p>
+
+<p>​       4、Registry.register(subscribeUrl)，subscribeUrl+&quot;category&quot;, &quot;consumers&quot;, &quot;check&quot;,&quot;false&quot;注册</p>
+
+<p>​       5、RegistryDirectory.subscribe(subscribeUrl+(&quot;category&quot;, &quot;providers,configurators,routers&quot;));订阅监听</p>
+
+<p>​        6、Invoker invoker = cluster.join(directory);   MockClusterWrapper、FailoverCluster</p>
+
+<p>-&gt; cluster.join（多个URL）</p>
+
+<p>-&gt; proxyFactory.getProxy(invoker, interfaces)</p>
+
+<p>1、ReferenceBean是一个FactoryBean类，其中的getObject方法自动调用，调用ReferenceConfig的get方法，然后调用init方法中的createProxy方法根据配置拼装URL。</p>
+
+<p>2、调用RegistryProtocol的refer方法将URL的registry协议替换成注册中心的协议比如zookeeper协议获取对应的Registry，然后调用doRefer方法，根据接口类和URL生成<strong>RegistryDirectory</strong>（NotifyListener监听器），设置Registry和Protocol，根据RegistryDirectory中的参数生成以comsumer开头的subscribeUrl。</p>
+
+<p>3、Registry.register方法根据subscribeUrl向注册中心注册消费者。</p>
+
+<p>4、通过RegistryDirectory.subscribe方法为消息消费者添加category=<strong>providers,configurators,routers</strong>属性后，然后向注册中心订阅该URL，关注该服务下的providers,configurators,routers发生变化时通知RegistryDirectory，以便及时发现服务提供者、配置、路由规则的变化，有变化时<strong>notify</strong>。
+RegistryDirectory.subscribe方法会调用Registry的subscribe方法，参数是url和NotifyListener(RegistryDirectory)。
+其中的doSubscribe方法会调用notify方法（当关注的路径下增减节点，也会触发回调，通过notify方法，进行业务数据的变更逻辑），具体的逻辑在doNotify里面，调用RegistryDirectory的notify方法，生成invokerUrls，调用refreshInvoker方法。
+<strong>toInvokers</strong>方法将URL列表转成Invoker列表生成一个map（属性urlInvokerMap），其中会调用DubboProtocol的refer生成DubboInvoker可以进行Dubbo协议的通信，在此之前会调用ProtocolFilterWrapper,ProtocolListenerWrapper包装类。
+<strong>toMethodInvokers</strong>方法将toInvokers的返回值map作为入参，返回方法名称作为key，value是可以被执行的invoker的列表（属性methodInvokerMap），这里说的可以被执行，不是指全部，而是指经过<strong>route</strong>过滤后的。由于Dubbo的服务调用是<strong>以方法为单位</strong>，那么每个方法都会匹配一批Invoker集合 。</p>
+
+<p>5、Invoker invoker = cluster.join(directory);</p>
+
+<p>根据Directory，通过MockClusterWrapper和默认FailoverCluster的返回一个<strong>集群</strong>Invoker。
+这个invoker是一个集成Invoker，MockClusterInvoker，提供了mock功能，是对于invoker和directory的封装，内部invoker默认是FailoverClusterInvoker，包括LoadBalance功能。</p>
+
+<p>6、然后proxyFactory.getProxy(this.invoker)创建代理对象，实际调用的是FailoverClusterInvoker的invoke方法。return Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));</p>
+
+<p>1、Consumer针对每个reference标签(对应引用provider的服务引用)会生成MockClusterInvoker对象。</p>
+
+<p>2、MockClusterInvoker对象内部包含ClusterInvoker对象，根据集群策略不同的ClusterInvoker对象，具体的Cluster策略在com.alibaba.dubbo.rpc.cluster.Cluster文件定义。</p>
+
+<p>3、ClusterInvoker对象(如FailoverClusterInvoker对象)包含directory对象RegistryDirectory，RegistryDirectory包含引用接口的provider侧的invokers列表。</p>
+
+<p>4、MockClusterInvoker的invoke()方法会调用FailoverClusterInvoker.invoke()方法；FailoverClusterInvoker.invoke()方法会调用RegistryDirectory()的list()方法返回可用的invokers列表。</p>
+
+<p>5、FailoverClusterInvoker.invoke()会返回指定的负载均衡策略并选择合适的invoker进行调用。</p>
+
+<p>6、执行invoker的invoke()调用。</p>
+
+<h3 id="5-集群容错策略">5、集群容错策略</h3>
+
+<p>首先，根据Dubbo文档，我们引用文档提供的一个架构图以及各组件关系说明，如下所示：
+<img src="https://images2018.cnblogs.com/blog/137084/201805/137084-20180507104753924-755727985.png" alt="img" />
+上述各个组件之间的关系（引自Dubbo文档）说明如下：</p>
+
+<ul>
+<li>这里的Invoker是Provider的一个可调用Service的抽象，Invoker封装了Provider地址及Service接口信息。</li>
+<li>Directory代表多个Invoker，可以把它看成List，但与List不同的是，它的值可能是<strong>动态变化</strong>的，比如注册中心<strong>推送</strong>变更。</li>
+<li>Cluster将Directory中的多个Invoker伪装成一个Invoker，对上层透明，伪装过程包含了容错逻辑，调用失败后，重试另一个。</li>
+<li>Router负责从多个Invoker中按<strong>路由规则</strong>选出子集，比如读写分离，应用隔离等。</li>
+<li>LoadBalance负责从多个Invoker中选出具体的一个用于本次调用，选的过程包含了<strong>负载均衡</strong>算法，调用失败后，需要重选。</li>
+</ul>
+
+<p><strong>1.  集群容错策略</strong></p>
+
+<p>Dubbo内置支持如下6种集群模式：</p>
+
+<p><strong>(1) Failover Cluster模式</strong></p>
+
+<p>配置值为failover。这种模式是Dubbo集群容错<strong>默认</strong>的模式选择，调用失败时，会自动切换，重新尝试调用其他节点上可用的服务。对于一些幂等性操作可以使用该模式，如读操作，因为每次调用的副作用是相同的，所以可以选择自动切换并重试调用，对调用者完全透明。可以看到，如果重试调用必然会带来响应端的延迟，如果出现大量的重试调用，可能说明我们的服务提供方发布的服务有问题，如网络延迟严重、硬件设备需要升级、程序算法非常耗时，等等，这就需要仔细检测排查了。
+例如，可以这样显式指定Failover模式，或者不配置则默认开启Failover模式，配置示例如下：</p>
+
+<pre><code>&lt;dubbo:service interface=&quot;org.shirdrn.dubbo.api.ChatRoomOnlineUserCounterService&quot; version=&quot;1.0.0&quot;
+     cluster=&quot;failover&quot; retries=&quot;2&quot; timeout=&quot;100&quot; ref=&quot;chatRoomOnlineUserCounterService&quot; protocol=&quot;dubbo&quot; &gt;
+     &lt;dubbo:method name=&quot;queryRoomUserCount&quot; timeout=&quot;80&quot; retries=&quot;2&quot; /&gt;
+&lt;/dubbo:service&gt;
+</code></pre>
+
+<p>上述配置使用Failover Cluster模式，如果调用失败一次，可以再次重试2次调用，服务级别调用超时时间为100ms，调用方法queryRoomUserCount的超时时间为80ms，允许重试2次，最坏情况调用花费时间160ms。如果该服务接口org.shirdrn.dubbo.api.ChatRoomOnlineUserCounterService还有其他的方法可供调用，则其他方法没有显式配置则会继承使用dubbo:service配置的属性值。</p>
+
+<p><strong>(2) Failfast Cluster模式</strong></p>
+
+<p><strong>配置值为failfast。这种模式称为快速失败模式，调用只执行一次，失败则立即报错。</strong>这种模式适用于<strong>非幂等</strong>性操作，每次调用的副作用是不同的，如写操作，比如交易系统我们要下订单，如果一次失败就应该让它失败，通常由服务消费方控制是否重新发起下订单操作请求（另一个新的订单）。</p>
+
+<p><strong>(3) Failsafe Cluster模式</strong></p>
+
+<p>配置值为failsafe。失败安全模式，如果调用失败， 则直接<strong>忽略</strong>失败的调用，而是要<strong>记录</strong>下失败的调用到日志文件，以便后续审计。</p>
+
+<p><strong>(4) Failback Cluster模式</strong></p>
+
+<p>配置值为failback。失败自动恢复，后台<strong>记录</strong>失败请求，<strong>定时重发</strong>。通常用于消息通知操作。</p>
+
+<p><strong>(5) Forking Cluster模式</strong></p>
+
+<p><strong>配置值为forking。并行调用多个服务器，只要一个成功即返回</strong>。通常用于<strong>实时性</strong>要求较高的读操作，但需要浪费更多服务资源。</p>
+
+<p><strong>(6) Broadcast Cluster模式</strong></p>
+
+<p><strong>配置值为broadcast。广播调用所有提供者，逐个调用，任意一台报错则报错（2.1.0开始支持）。</strong>通常用于<strong>通知所有提供者更新缓存或日志等本地资源信息</strong>。
+上面的6种模式都可以应用于生产环境，我们可以根据实际应用场景选择合适的集群容错模式。如果我们觉得Dubbo内置提供的几种集群容错模式都不能满足应用需要，也可以<strong>定制</strong>实现自己的集群容错模式，因为Dubbo框架给我提供的扩展的接口，只需要实现接口com.alibaba.dubbo.rpc.cluster.Cluster即可。</p>
+
+<p><strong>2. Router的实现原理</strong></p>
+
+<p>Router 的实现有三种：条件路由 ConditionRouter、脚本路由 ScriptRouter 和标签路由 TagRouter。</p>
+
+<p>Router 负责从多个 Invoker 中按路由规则选出子集，比如<strong>读写分离</strong>，<strong>应用隔离</strong>等。</p>
+
+<p>也就是说，第一步通过 Directory 选出当前可用的服务提供者，然后再通过 Router 按规则过滤出服务提供者的子集。</p>
+
+<p>它的主要实现类有三个，ConditionRouter 、 ScriptRouter 和 TagRouter。</p>
+
+<p>当新建一个路由规则时，会在zookeeper中新建一个节点：</p>
+
+<p><img src="https://upload-images.jianshu.io/upload_images/5401975-d437a3241cce9da2.png?imageMogr2/auto-orient/strip|imageView2/2/w/890/format/webp" alt="img" style="zoom: 50%;" /></p>
+
+<p>会调用 RegistryDirectory 中的 notify 方法进行通知。</p>
+
+<p><strong>条件路由ConditionRouter</strong></p>
+
+<p>条件路由即基于条件表达式的路由规则，如：host = 10.20.153.10 =&gt; host = 10.20.153.11</p>
+
+<p>=&gt; 之前的为消费者匹配条件，所有参数和消费者的 URL 进行对比，当消费者满足匹配条件时，对该消费者执行后面的过滤规则。
+=&gt; 之后为提供者地址列表的过滤条件，所有参数和提供者的 URL 进行对比，消费者最终只拿到过滤后的地址列表。
+如果匹配条件为空，表示对所有消费方应用，如：=&gt; host != 10.20.153.11
+如果过滤条件为空，表示禁止访问，如：host = 10.20.153.10 =&gt;</p>
+
+<p><strong>示例：</strong></p>
+
+<ol>
+<li><p>排除预发布机：</p>
+
+<pre><code>=&gt; host != 172.22.3.91
+</code></pre></li>
+
+<li><p>白名单 [<a href="http://dubbo.apache.org/zh-cn/docs/user/demos/routing-rule-deprecated.html#fn3">3]</a>：</p>
+
+<pre><code>host != 10.20.153.10,10.20.153.11 =&gt;
+</code></pre></li>
+
+<li><p>黑名单：</p>
+
+<pre><code>host = 10.20.153.10,10.20.153.11 =&gt;
+</code></pre></li>
+
+<li><p>服务寄宿在应用上，只暴露一部分的机器，防止整个集群挂掉：</p>
+
+<pre><code>=&gt; host = 172.22.3.1*,172.22.3.2*
+</code></pre></li>
+
+<li><p>为重要应用提供额外的机器：</p>
+
+<pre><code>application != kylin =&gt; host != 172.22.3.95,172.22.3.96
+</code></pre></li>
+
+<li><p>读写分离：</p>
+
+<pre><code>method = find*,list*,get*,is* =&gt; host = 172.22.3.94,172.22.3.95,172.22.3.96
+method != find*,list*,get*,is* =&gt; host = 172.22.3.97,172.22.3.98
+</code></pre></li>
+
+<li><p>前后台分离：</p>
+
+<pre><code>application = bops =&gt; host = 172.22.3.91,172.22.3.92,172.22.3.93
+application != bops =&gt; host = 172.22.3.94,172.22.3.95,172.22.3.96
+</code></pre></li>
+
+<li><p>隔离不同机房网段：</p>
+
+<pre><code>host != 172.22.3.* =&gt; host != 172.22.3.*
+</code></pre></li>
+
+<li><p>提供者与消费者部署在同集群内，本机只访问本机的服务：</p>
+
+<pre><code>=&gt; host = $host
+</code></pre></li>
+</ol>
+
+<p><strong>脚本路由ScriptRouter</strong></p>
+
+<p>脚本路由规则 [<a href="http://dubbo.apache.org/zh-cn/docs/user/demos/routing-rule-deprecated.html#fn4">4]</a> 支持 JDK 脚本引擎的所有脚本，比如：javascript, jruby, groovy 等，通过 <code>type=javascript</code> 参数设置脚本类型，缺省为 javascript。</p>
+
+<pre><code>&quot;script://0.0.0.0/com.foo.BarService?category=routers&amp;dynamic=false&amp;rule=&quot; + URL.encode(&quot;（function route(invokers) { ... } (invokers)）&quot;)
+</code></pre>
+
+<p>基于脚本引擎的路由规则，如：</p>
+
+<pre><code class="language-javascript">（function route(invokers) {
+    var result = new java.util.ArrayList(invokers.size());
+    for (i = 0; i &lt; invokers.size(); i ++) {
+        if (&quot;10.20.153.10&quot;.equals(invokers.get(i).getUrl().getHost())) {
+            result.add(invokers.get(i));
+        }
+    }
+    return result;
+} (invokers)）; // 表示立即执行方法
+</code></pre>
+
+<p><strong>标签路由规则TagRouter</strong></p>
+
+<p>标签路由规则，当应用选择装配标签路由(TagRouter)之后，一次 dubbo 调用能够根据请求携带的 tag 标签智能地选择对应 tag 的服务提供者进行调用。</p>
+
+<p><strong>服务提供者</strong></p>
+
+<ol>
+<li><p>给应用装配标签路由器：</p>
+
+<pre><code class="language-Java">@Bean
+public ApplicationConfig applicationConfig() {
+ApplicationConfig applicationConfig = new ApplicationConfig();
+applicationConfig.setName(&quot;provider-book&quot;);
+applicationConfig.setQosEnable(false);
+// instruct tag router
+Map&lt;String,String&gt; parameters = new HashMap&lt;&gt;();
+parameters.put(Constants.ROUTER_KEY, &quot;tag&quot;);
+applicationConfig.setParameters(parameters);
+return applicationConfig;
+}
+</code></pre></li>
+
+<li><p>给应用设置具体的标签：</p>
+
+<pre><code class="language-java">@Bean
+public ProviderConfig providerConfig(){
+	ProviderConfig providerConfig = new ProviderConfig();
+	providerConfig.setTag(&quot;red&quot;);
+	return providerConfig;
+}
+</code></pre></li>
+</ol>
+
+<p>应用未装配 tag 属性或服务提供者未设置 tag 属性，都将被认为是默认的应用，这些默认应用将会在调用无法匹配 provider 时当作降级方案。</p>
+
+<p><strong>服务消费者</strong></p>
+
+<pre><code class="language-Java">RpcContext.getContext().setAttachment(Constants.REQUEST_TAG_KEY,&quot;red&quot;);
+</code></pre>
+
+<p>请求标签的作用域为每一次 invocation，使用 attachment 来传递请求标签，注意保存在 attachment 中的值将会在一次完整的远程调用中持续传递，得益于这样的特性，我们只需要在起始调用时，通过一行代码的设置，达到标签的持续传递。</p>
+
+<blockquote>
+<p>目前仅仅支持 hardcoding 的方式设置 requestTag。注意到 RpcContext 是线程绑定的，优雅的使用 TagRouter 特性，建议通过 servlet 过滤器(在 web 环境下)，或者定制的 SPI 过滤器设置 requestTag。</p>
+</blockquote>
+
+<p><strong>规则描述</strong></p>
+
+<ol>
+<li>request.tag=red 时优先选择 tag=red 的 provider。若集群中不存在与请求标记对应的服务，可以降级请求 tag=null 的 provider，即默认 provider。</li>
+<li>request.tag=null 时，只会匹配 tag=null 的 provider。即使集群中存在可用的服务，若 tag 不匹配就无法调用，这与规则1不同，携带标签的请求可以降级访问到无标签的服务，但不携带标签/携带其他种类标签的请求永远无法访问到其他标签的服务。</li>
+</ol>
+
+<p><strong>3. LoadBalance的实现原理</strong></p>
+
+<p>Dubbo框架内置提供负载均衡的功能以及扩展接口，我们可以透明地扩展一个服务或服务集群，根据需要非常容易地增加/移除节点，提高服务的可伸缩性。</p>
+
+<p>Dubbo框架内置提供了4种负载均衡策略，如下所示：</p>
+
+<p>(1)Random LoadBalance：随机策略，配置值为random。可以设置权重，有利于充分利用服务器的资源，高配的可以设置权重大一些，低配的可以稍微小一些。</p>
+
+<p>(2)RoundRobin LoadBalance：轮询策略，配置值为roundrobin。</p>
+
+<p>(3)LeastActive LoadBalance：配置值为leastactive。根据请求调用的次数计数，<strong>处理请求更慢的节点会受到更少的请求</strong>。</p>
+
+<p>(4)ConsistentHash LoadBalance：一致性Hash策略，具体配置方法可以参考Dubbo文档。相同调用参数的请求会发送到同一个服务提供方节点上，如果某个节点发生故障无法提供服务，则会基于一致性Hash算法映射到虚拟节点上（其他服务提供方）。</p>
+
+<p>Dubbo框架也提供了实现自定义负载均衡策略的接口，可以实现com.alibaba.dubbo.rpc.cluster.LoadBalance接口。</p>
+
+<h3 id="6-注册中心">6、注册中心</h3>
+
+<p><strong>1. 注册中心的工作流程</strong></p>
+
+<p><strong>2. 注册中心的数据结构</strong></p>
+
+<p><strong>3. 订阅发布实现的原理</strong></p>
+
+<h3 id="7-服务治理">7、服务治理</h3>
+
+<p>路由规则，动态配置，服务降级，访问控制，权重调整，负载均衡，等手动配置</p>
+
+<p>monitor： 统计服务的调用次调和调用时间的监控中心</p>
+
+<p>Consumer端在发起调用之前会先走filter链；provider端在接收到请求时也是先走filter链，然后才进行真正的业务逻辑处理。</p>
+
+<p>默认情况下，在consumer和provider的filter链中都会有Monitorfilter。</p>
+
+<p>1、MonitorFilter向DubboMonitor发送数据
+2、DubboMonitor将数据进行聚合后（默认聚合1min中的统计数据）暂存到ConcurrentMap<Statistics, AtomicReference> statisticsMap，然后使用一个含有3个线程（线程名字：DubboMonitorSendTimer）的线程池每隔1min，调用SimpleMonitorService遍历发送statisticsMap中的统计数据，每发送完毕一个，就重置当前的Statistics的AtomicReference
+3、SimpleMonitorService将这些聚合数据塞入BlockingQueue queue中（队列大写为100000）
+4、SimpleMonitorService使用一个后台线程（线程名为：DubboMonitorAsyncWriteLogThread）将queue中的数据写入文件（该线程以死循环的形式来写）
+5、SimpleMonitorService还会使用一个含有1个线程（线程名字：DubboMonitorTimer）的线程池每隔5min钟，将文件中的统计数据画成图表</p>
+
+<h3 id="8-扩展机制">8、扩展机制</h3>
+
+<h4 id="1-spi">1、SPI</h4>
+
+<p>SPI 全称为 Service Provider Interface，是一种服务发现机制。</p>
+
+<p><strong>Java SPI</strong></p>
+
+<p><img src="https://img2020.cnblogs.com/blog/1443749/202006/1443749-20200616123331024-2140867089.png" alt="img" /></p>
+
+<p>从上面可以看出Java中的SPI最大的缺点是会加载一些不必要的组件。</p>
+
+<p><strong>Dubbo SPI</strong></p>
+
+<p>（1）基本原理</p>
+
+<p>Dubbo在某个接口上加上@SPI注解后，表明该接口为可扩展接口。</p>
+
+<p><strong>ExtensionLoader</strong>类是<strong>扩展加载器</strong>，这是dubbo实现SPI扩展机制等<strong>核心</strong>，几乎所有实现的逻辑都被封装在ExtensionLoader中。</p>
+
+<p><img src="https://img2020.cnblogs.com/blog/1443749/202006/1443749-20200616123354766-1240289258.png" alt="img" /></p>
+
+<p>示例代码</p>
+
+<pre><code>@SPI(&quot;alipay&quot;)
+public interface PayService {
+    void pay(double price);
+}
+
+public class AlipayService implements PayService {
+    @Override
+    public void pay(double price) {
+        System.out.println(&quot;使用支付宝支付&quot; + price +  &quot;元&quot;);
+    }
+}
+
+public class WechatPayService implements PayService {
+    public void pay(double price) {
+        System.out.println(&quot;使用微信支付&quot; + price +  &quot;元&quot;);
+    }
+}
+</code></pre>
+
+<p>在/resources/META-INF/services/目录下有个文件com.test.PayService，内容如下：</p>
+
+<pre><code>wechatPay = com.test.WechatPayService
+alipay = com.test.AlipayService
+</code></pre>
+
+<pre><code>public static void main(String[] args) {
+    ExtensionLoader&lt;PayService&gt; extensionLoader = ExtensionLoader.getExtensionLoader(PayService.class);
+
+    PayService wechatPay = extensionLoader.getExtension(&quot;wechatPay&quot;);
+    wechatPay.pay(20);
+
+    PayService alipay = extensionLoader.getExtension(&quot;alipay&quot;);
+    alipay.pay(20);
+}
+</code></pre>
+
+<p>（2）Dubbo中的使用（间接调用）</p>
+
+<p>Dubbo 就是通过 SPI 机制加载所有的组件，但是Dubbo中一般不直接通过。</p>
+
+<p>extensionLoader.getExtension(&quot;alipay&quot;) 方法来调用，而是动态适配的，即通过<strong>Adaptive</strong>实现。</p>
+
+<p>ProxyFactory是一个接口，在其接口上使用了@SPI注解，并默认赋值为javassist。</p>
+
+<pre><code>@SPI(&quot;javassist&quot;) // 默认
+public interface ProxyFactory {...}
+</code></pre>
+
+<p>在 /dubbo-rpc-api/src/main/resources/META-INF/dubbo/internal 目录下有一个com.alibaba.dubbo.rpc.ProxyFactory 文件，文件内容如下</p>
+
+<pre><code>stub=com.alibaba.dubbo.rpc.proxy.wrapper.StubProxyFactoryWrapper
+jdk=com.alibaba.dubbo.rpc.proxy.jdk.JdkProxyFactory
+javassist=com.alibaba.dubbo.rpc.proxy.javassist.JavassistProxyFactory
+</code></pre>
+
+<p>Dubbo间接使用的地方，如ReferenceConfig类创建代理对象的过程</p>
+
+<pre><code>public class ReferenceConfig&lt;T&gt; extends AbstractReferenceConfig {
+    private static final ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();	//先获得一个proxyFactory
+    ...
+    private T createProxy(Map&lt;String, String&gt; map) {
+        ...
+        // 该方法的最后一行
+        return (T) proxyFactory.getProxy(invoker);	//根据invoker的url获取对应的proxyFactory
+    }
+     ...   
+}
+</code></pre>
+
+<p>proxyFactory 会通过ExtensionLoader，再调用getAdaptiveExtension方法，会生成一个ProxyFactory$Adaptive类。</p>
+
+<pre><code>public java.lang.Object getProxy(com.alibaba.dubbo.rpc.Invoker arg0) throws com.alibaba.dubbo.rpc.RpcException {
+    if (arg0 == null) 
+        throw new IllegalArgumentException(&quot;com.alibaba.dubbo.rpc.Invoker argument == null&quot;);
+    if (arg0.getUrl() == null) 
+        throw new IllegalArgumentException(&quot;com.alibaba.dubbo.rpc.Invoker argument getUrl() == null&quot;);
+    com.alibaba.dubbo.common.URL url = arg0.getUrl();
+    // 1.从 URL 中获取指定的SPI的扩展名称，proxy
+    String extName = url.getParameter(&quot;proxy&quot;, &quot;javassist&quot;);
+    if(extName == null) 
+        throw new IllegalStateException(&quot;Fail to get extension(com.alibaba.dubbo.rpc.ProxyFactory) name from url(&quot; 
+                                        + url.toString() + &quot;) use keys([proxy])&quot;);
+    // 2.通过 SPI 加载具体的实现类
+    com.alibaba.dubbo.rpc.ProxyFactory extension = (com.alibaba.dubbo.rpc.ProxyFactory)ExtensionLoader
+        .getExtensionLoader(com.alibaba.dubbo.rpc.ProxyFactory.class).getExtension(extName);
+    // 3.调用目标方法
+    return extension.getProxy(arg0);
+}
+</code></pre>
+
+<p>步骤2则是真正调用的地方。</p>
+
+<h4 id="2-adaptive">2、Adaptive</h4>
+
+<p>在 Dubbo 中，很多拓展都是通过 SPI 机制进行加载的，比如 Protocol、Cluster、LoadBalance 等。有时，有些拓展并不想在框架启动阶段被加载，而是希望在拓展方法被调用时，根据运行时参数进行加载。这听起来有些矛盾。拓展未被加载，那么拓展方法就无法被调用（静态方法除外）。拓展方法未被调用，拓展就无法被加载。对于这个矛盾的问题，Dubbo <strong>通过自适应拓展机制很好的解决</strong>了。自适应拓展机制的实现逻辑比较复杂，首先 Dubbo 会为拓展接口生成具有代理功能的代码。然后通过 javassist 或 jdk 编译这段代码，得到 Class 类。最后再通过反射创建代理类，整个过程比较复杂。</p>
+
+<p>Adaptive是对SPI的<strong>二次包装</strong>。Dubbo一般不直接使用SPI这种方式，而是直接使用Adaptive来间接使用SPI这种方式。</p>
+
+<p>简言之，分两步：</p>
+
+<p>1、ExtensionLoader.getExtensionLoader(XXX.class).getAdaptiveExtension();获取XXX$Adaptive代理类；</p>
+
+<p>2、XXX$Adaptive类实现AOP功能，根据URL通过getExtension(extName)（SPI机制）获取实际类。</p>
+
+<pre><code class="language-java">String extName = ( url.getProtocol() == null ? &quot;dubbo&quot; : url.getProtocol() );
+Protocol extension = (Protocol)ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(extName);
+</code></pre>
+
+<p>如果是通过Adaptive方式，我们不用关心URL是否动态的，因为生成的代理类在其方法中会自动适配，符合模块接口设计的可插拔原则。</p>
+
+<h4 id="3-wrapper">3、Wrapper</h4>
+
+<p>dubbo所有功能都是基于dubbo内核之上完成的，dubbo内核由四部分构成，分别为SPI、Adaptive、Wrapper、Activate。而dubbo的内核设计原则，也是我们所熟悉的aop,ioc与动态编译compiler,这些称之为dubbo的内核原理。</p>
+
+<p><strong>Wrapper机制</strong></p>
+
+<p>即<strong>扩展点自动包装</strong>。Wrapper 类同样<strong>实现了扩展点接口</strong>，但是 Wrapper 不是扩展点的真正实现。它的用途主要是用于从 ExtensionLoader 返回扩展点时，包装在真正的扩展点实现外。即从 ExtensionLoader 中返回的实际上是 <strong>Wrapper 类的实例</strong>，Wrapper 持有了实际的扩展点实现类。</p>
+
+<p>扩展点的 Wrapper 类可以有多个，也可以根据需要新增。</p>
+
+<p>通过 Wrapper 类可以把所有扩展点<strong>公共逻辑</strong>移至 Wrapper 中。新加的 Wrapper 在所有的扩展点上添加了逻辑，有些类似 <strong>AOP</strong>，即 Wrapper 代理了扩展点。</p>
+
+<p><strong>Wrapper的规范</strong></p>
+
+<p>Wrapper 机制不是通过注解实现的，而是通过一套 Wrapper 规范实现的。</p>
+
+<p>Wrapper 类在定义时需要遵循如下规范：</p>
+
+<ul>
+<li>该类要实现 SPI 接口</li>
+<li>该类中要有 SPI 接口的引用</li>
+<li>该类中必须含有一个含参的构造方法且参数只能有一个类型为SPI借口</li>
+<li>在接口实现方法中要调用 SPI 接口引用对象的相应方法</li>
+<li>该类名称以 Wrapper 结尾</li>
+</ul>
+
+<p><strong>Wrapper功能实现分为两个部分</strong></p>
+
+<p>一个是加载Extension时会把Wrapper类放入缓存中；</p>
+
+<p>另一部分取得服务提供者实例时，将装配过的Wrapper类返回。</p>
+
+<p>第一部分是加载Wrapper类。维护一个线程安全的HashSet来存放Wrapper，尝试取得参数类型为SPI接口类型的构造函数，即判断该类是否是Wrapper类，如果不是会抛出异常；如果是，继续执行，并添加到cache中。上面定义的Wrapper类如果有构造，则表示是一个真正的Wrapper。</p>
+
+<p>第二部分则是组装Wrapper类，通过<strong>getExtension</strong>方法中调用了<strong>createExtension</strong>方法，createExtension会循环遍历，通过wrapperClass.getConstructor(type).newInstance(instance) 将wrapper构造注入。</p>
+
+<p><strong>例子</strong></p>
+
+<p>以 ProtocolFilterWrapper为例，在 dubbo-rpc/dubbo-rpc-api/src/main/resources/META-INF/dubbo/internal/org.apache.dubbo.rpc.Protocol</p>
+
+<pre><code>filter=com.alibaba.dubbo.rpc.protocol.ProtocolFilterWrapper
+listener=com.alibaba.dubbo.rpc.protocol.ProtocolListenerWrapper
+mock=com.alibaba.dubbo.rpc.support.MockProtocol
+</code></pre>
+
+<p>当服务提供者启动时，ServiceConfig开始执行onApplicationEvent方法，并开始执行服务导出</p>
+
+<pre><code>public class ServiceConfig&lt;T&gt; extends AbstractServiceConfig {    
+    private static final Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+
+    @SuppressWarnings({&quot;unchecked&quot;, &quot;rawtypes&quot;})
+    private void exportLocal(URL url) {
+        if (!Constants.LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
+            // 组装URL
+            URL local = URL.valueOf(url.toFullString())        // 常量值为injvm，在执行wrapper链时用到
+                    .setProtocol(Constants.LOCAL_PROTOCOL)
+                    .setHost(LOCALHOST)
+                    .setPort(0);
+            ServiceClassHolder.getInstance().pushServiceClass(getServiceClass(ref));
+            // protocol，Protocol$Adaptive
+            Exporter&lt;?&gt; exporter = protocol.export(
+                    proxyFactory.getInvoker(ref, (Class) interfaceClass, local));
+            exporters.add(exporter);
+            logger.info(&quot;Export dubbo service &quot; + interfaceClass.getName() + &quot; to local registry&quot;);
+        }
+    }
+    
+}
+</code></pre>
+
+<p>Protocol$Adaptive 类如下（简化版）</p>
+
+<pre><code>import com.alibaba.dubbo.common.extension.ExtensionLoader;
+public class Protocol$Adpative implements Protocol {
+    public void destroy() {
+        // throw Exception
+    }
+    public int getDefaultPort() {
+        // throw Exception
+    }
+    public Invoker refer(Class arg0, URL arg1) throws RpcException {
+        if (arg1 == null) 
+            throw new IllegalArgumentException(&quot;url == null&quot;);
+        URL url = arg1;
+        String extName = ( url.getProtocol() == null ? &quot;dubbo&quot; : url.getProtocol() );
+        if(extName == null) 
+            // throw Exception
+        Protocol extension = (Protocol)ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(extName);
+        return extension.refer(arg0, arg1);
+    }
+    public Exporter export(Invoker arg0) throws RpcException {
+        if (arg0 == null) 
+            // throw Exception
+        if (arg0.getUrl() == null) 
+            // throw Exception
+        URL url = arg0;
+        String extName = ( url.getProtocol() == null ? &quot;dubbo&quot; : url.getProtocol() );
+        if(extName == null) 
+            // throw Exception
+        Protocol extension = (Protocol)ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(extName);
+        return extension.export(arg0);
+    }
+}
+</code></pre>
+
+<p>通过如下两行代码</p>
+
+<pre><code>String extName = (url.getProtocol() == null ? &quot;dubbo&quot; : url.getProtocol());    // dubbo
+Protocol extension = (Protocol) ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(extName);
+</code></pre>
+
+<p>通过扩展名，我们可以在/META-INF/dubbo/internal/com.alibaba.dubbo.rpc.Protocol 文件分析出</p>
+
+<pre><code>registry=com.alibaba.dubbo.registry.integration.RegistryProtocol
+dubbo=com.alibaba.dubbo.rpc.protocol.dubbo.DubboProtocol
+filter=com.alibaba.dubbo.rpc.protocol.ProtocolFilterWrapper            # Wrapper
+listener=com.alibaba.dubbo.rpc.protocol.ProtocolListenerWrapper        # Wrapper
+mock=com.alibaba.dubbo.rpc.support.MockProtocol
+injvm=com.alibaba.dubbo.rpc.protocol.injvm.InjvmProtocol            # 在ServiceConfig 组装过这个协议名称
+rmi=com.alibaba.dubbo.rpc.protocol.rmi.RmiProtocol
+hessian=com.alibaba.dubbo.rpc.protocol.hessian.HessianProtocol
+com.alibaba.dubbo.rpc.protocol.http.HttpProtocol
+com.alibaba.dubbo.rpc.protocol.webservice.WebServiceProtocol
+thrift=com.alibaba.dubbo.rpc.protocol.thrift.ThriftProtocol
+memcached=com.alibaba.dubbo.rpc.protocol.memcached.MemcachedProtocol
+
+redis=com.alibaba.dubbo.rpc.protocol.redis.RedisProtocol
+</code></pre>
+
+<p>在没有Wrapper的情况下，得到的扩展类为com.alibaba.dubbo.rpc.protocol.dubbo.DubboProtocol</p>
+
+<p>在有Wrarpper的情况下，得到的是<strong>最后的一个</strong>Wrapper，即com.alibaba.dubbo.rpc.protocol.ProtocolListenerWrapper</p>
+
+<p>所以下面就调用ProtocolListenerWrapper中export方法</p>
+
+<pre><code>public class ProtocolListenerWrapper implements Protocol {    
+    public &lt;T&gt; Exporter&lt;T&gt; export(Invoker&lt;T&gt; invoker) throws RpcException {
+        if (Constants.REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
+            return protocol.export(invoker);
+        }
+        return new ListenerExporterWrapper&lt;T&gt;(protocol.export(invoker),
+                Collections.unmodifiableList(ExtensionLoader.getExtensionLoader(ExporterListener.class)
+                        .getActivateExtension(invoker.getUrl(), Constants.EXPORTER_LISTENER_KEY)));
+    }
+    
+}
+</code></pre>
+
+<p>根据Wrapper责任链模式的特点，接下来执行 ProtocolFilterWrapper</p>
+
+<pre><code>public class ProtocolFilterWrapper implements Protocol {    
+    public &lt;T&gt; Exporter&lt;T&gt; export(Invoker&lt;T&gt; invoker) throws RpcException {
+        if (Constants.REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
+            return protocol.export(invoker);
+        }
+        return protocol.export(buildInvokerChain(invoker, Constants.SERVICE_FILTER_KEY, Constants.PROVIDER));
+    }
+}
+</code></pre>
+
+<p>再接下来执行 injvm 对应的InjvmProtocol类中的export方法。</p>
+
+<h3 id="9-代码">9、代码</h3>
+
+<h4 id="一-服务暴露">一、服务暴露</h4>
+
+<h4 id="1-服务暴露的实现过程">1. 服务暴露的实现过程</h4>
+
+<p>从Dubbo的启动过程我们可以得知，Dubbo服务提供者，先进行本地暴露再进行远程暴露，在我们日常的使用场景中用的最多的是远程暴露。那么为什么还要进行本地暴露呢？
+很多使用Dubbo框架的应用，可能存在在<strong>同一个JVM暴露了远程服务，同时同一个JVM内部又引用了自身服务</strong>的情况，Dubbo<strong>默认</strong>会把远程服务用 injvm 协议再暴露一份， host 指定为本地 127.0.0.1和端口号为 0，这样消费方直接消费用一个JVM内部的服务，<strong>避免了跨网络</strong>进行远程通信。
+我们先来看一下启动Dubbo服务提供者时最开始输出的日志：</p>
+
+<pre><code class="language-cpp">NFO support.ClassPathXmlApplicationContext: Refreshing org.springframework.context.support.ClassPathXmlApplicationContext@3b192d32: startup date [Sun Aug 18 22:28:44 CST 2019]; root of context hierarchy
+[18/08/19 22:28:44:714 CST] main  INFO xml.XmlBeanDefinitionReader: Loading XML bean definitions from class path resource [spring/dubbo-provider.xml]
+[18/08/19 22:28:45:257 CST] main  INFO logger.LoggerFactory: using logger: org.apache.dubbo.common.logger.log4j.Log4jLoggerAdapter
+[18/08/19 22:28:47:550 CST] main  INFO config.AbstractConfig:  [DUBBO] The service ready on spring started. service: org.apache.dubbo.demo.DemoService, dubbo version: , current host: 192.168.0.102
+[18/08/19 22:28:48:151 CST] main  INFO utils.Compatibility: Running in ZooKeeper 3.4.x compatibility mode
+</code></pre>
+
+<p>可以根据日志看出启动的流程一下关键步骤：
+ 1.Loading XML bean definitions from class path resource [spring/dubbo-provider.xml] 加载配置文件</p>
+
+<p>2.The service ready on spring started. service: org.apache.dubbo.demo.DemoService, dubbo version: , current host: 192.168.0.102 Service可以启动</p>
+
+<p>那么我们根据这句日志输出做为一个切入点，来搜索下是哪里输出了 The service ready on spring started.  这句日志发现在ServiceBean类中出现
+<strong>ServiceBean</strong>--onApplicationEvent()方法(消费方是ReferenceBean的ReferenceConfig.export() )</p>
+
+<pre><code class="language-cpp">@Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        if (!isExported() &amp;&amp; !isUnexported()) {
+            if (logger.isInfoEnabled()) {
+                logger.info(&quot;The service ready on spring started. service: &quot; + getInterface());
+            }
+            export();	//ServiceConfig.export()
+        }
+    }
+</code></pre>
+
+<p>我们来具体看一下ServiceBean这个类，到底是怎么执行的。
+通过配置文件的加载过程我们可以知道，在服务启动时，Spring会解析dubbo服务的配置文件，并将配置文件中的参数转换成相应的Bean，当遇到 <a href="dubbo:service">dubbo:service</a> 时就会转换成ServiceBean。</p>
+
+<pre><code class="language-kotlin">public class ServiceBean&lt;T&gt; extends ServiceConfig&lt;T&gt; implements InitializingBean, DisposableBean,
+        ApplicationContextAware, ApplicationListener&lt;ContextRefreshedEvent&gt;, BeanNameAware,
+        ApplicationEventPublisherAware
+</code></pre>
+
+<p>以上为ServiceBean的定义，集成了<strong>ServiceConfig</strong>同时实现了InitializingBean、ApplicationListener等多个接口。在InitializingBean接口中有一个有个afterPropertiesSet方法，ServiceBean重写了该方法，在Bean的属性初始化时，Spring会默认调用该方法。
+同时实现了ApplicationListener接口，并且重写了onApplicationEvent()方法。</p>
+
+<p>ServiceBean在创建完对象之后，会调用afterPropertiesSet()方法，该方法完成beanClass属性值的设置；<strong>在IOC容器启动完成之后，Spring会自动回调onApplicationEvent()方法，该方法完成服务的暴露</strong>，也就是在该方法中，我们看到了日志中的
+The service ready on spring started.</p>
+
+<h4 id="2-服务暴露方法实现的解析">2. 服务暴露方法实现的解析</h4>
+
+<p>ServiceBean的 onApplicationEvent
+ServiceBean--onApplicationEvent()方法源码如下：</p>
+
+<pre><code class="language-bash">public void onApplicationEvent(ContextRefreshedEvent 
+event) {   
+/**如果是暴露的、并且没有暴露的则调用export方法，暴露服务*/
+if (!isExported() &amp;&amp; !isUnexported()) {       
+if (logger.isInfoEnabled()) {            logger.info(&quot;The service ready on spring 
+started. service: &quot; + getInterface());        
+        }       
+export();    
+    }
+}
+</code></pre>
+
+<p>该方法为服务暴露的入口，那么暴露逻辑的真正实现则是在export方法中，接下来对export方法进行解析。
+ServicebBean--export（）方法：</p>
+
+<pre><code class="language-dart">@Override
+    public void export() {
+        super.export();
+        // Publish ServiceBeanExportedEvent
+        publishExportEvent();
+    }
+</code></pre>
+
+<p>通过export方法的代码可知，在这里调用父类的export()方法，之后调用调用publishExportEvent()方法。</p>
+
+<p>下面看下 ServiceConfig的export()方法都实现了哪些逻辑。</p>
+
+<pre><code class="language-java"> public synchronized void export() {
+        //检测一些必要的属性和设置一些默认值
+        checkAndUpdateSubConfigs();
+        //判断是否已经导出
+        if (!shouldExport()) {
+            return;
+        }
+        //判断是否已经设置了延迟
+        if (shouldDelay()) {
+            DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
+        } else {
+        //执行导出动作
+            doExport();
+        }
+    }
+</code></pre>
+
+<p>该方法除了检测基本的配置，以及在没有配置的情况下为配置设置默认值之外，最关键的是执行 doExport()方法，进一步查看doExport方法都实现了什么逻辑。</p>
+
+<pre><code class="language-csharp">protected synchronized void doExport() {
+        if (unexported) {
+            throw new IllegalStateException(&quot;The service &quot; + interfaceClass.getName() + &quot; has already unexported!&quot;);
+        }
+        if (exported) {
+            return;
+        }
+        exported = true;
+
+        if (StringUtils.isEmpty(path)) {
+            path = interfaceName;
+        }
+        doExportUrls();
+    } 
+    
+    
+    
+    private void doExportUrls() {
+        List&lt;URL&gt; registryURLs = loadRegistries(true);
+        for (ProtocolConfig protocolConfig : protocols) {
+        //拼接pathKey：group/contextpath/interfacename:version
+            String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -&gt; p + &quot;/&quot; + path).orElse(path), group, version);
+        // ProviderModel 表示服务提供者模型，此对象中存储了与服务提供者相关的信息。
+        // 比如服务的配置信息，服务实例等。每个被导出的服务对应一个 ProviderModel。
+        // ApplicationModel 持有所有的 ProviderModel。
+ 
+            ProviderModel providerModel = new ProviderModel(pathKey, ref, interfaceClass);
+            ApplicationModel.initProviderModel(pathKey, providerModel);
+            doExportUrlsFor1Protocol(protocolConfig, registryURLs);
+        }
+    }
+</code></pre>
+
+<p>以上代码通过loadRegistries 加载注册中心链接，然后再遍历 ProtocolConfig 集合导出每个服务。并在暴露服务的过程中，将服务注册到注册中心。</p>
+
+<p>loadRegistries()方法：</p>
+
+<pre><code class="language-dart">protected List&lt;URL&gt; loadRegistries(boolean provider) {
+        // check &amp;&amp; override if necessary
+        List&lt;URL&gt; registryList = new ArrayList&lt;URL&gt;();
+        //判断注册配置是否为空，及配置文件中有没有&lt;dubbo:registry&gt;标签(配置注册中心的一些信息)
+        if (CollectionUtils.isNotEmpty(registries)) {
+            //由于可能配置多个注册中心地址，在这里遍历注册列表
+            for (RegistryConfig config : registries) {
+                String address = config.getAddress();
+                //判断配置的address是否为空，如果为空则配置为 0.0.0.0（由于在此步骤前已经对registry的地址做了非空校验，一般走不到这一步）
+                if (StringUtils.isEmpty(address)) {
+                    address = ANYHOST_VALUE;
+                }
+                if (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
+                    Map&lt;String, String&gt; map = new HashMap&lt;String, String&gt;();
+                    appendParameters(map, application);
+                    appendParameters(map, config);
+                    map.put(PATH_KEY, RegistryService.class.getName());
+                    appendRuntimeParameters(map);
+                    if (!map.containsKey(PROTOCOL_KEY)) {
+                        map.put(PROTOCOL_KEY, DUBBO_PROTOCOL);
+                    }
+                    List&lt;URL&gt; urls = UrlUtils.parseURLs(address, map);
+
+                    for (URL url : urls) {
+                        // 将 URL 协议头设置为 registry
+                        url = URLBuilder.from(url)
+                                .addParameter(REGISTRY_KEY, url.getProtocol())
+                                .setProtocol(REGISTRY_PROTOCOL)
+                                .build();
+                        //判断是否将地址增加到注册中心地址列表中
+                        if ((provider &amp;&amp; url.getParameter(REGISTER_KEY, true))
+                                || (!provider &amp;&amp; url.getParameter(SUBSCRIBE_KEY, true))) {
+                            registryList.add(url);
+                        }
+                    }
+                }
+            }
+        }
+        return registryList;
+    }
+</code></pre>
+
+<p>经过这一步骤之后，已经获取到了注册中心的地址，接下来就是调用<strong>doExportUrlsFor1Protocol()</strong>方法组装参数并且暴露Dubbo服务，<strong>将bean对象转化为URL格式，所有Bean属性转换成URL参数。这时候的URL就会传给协议扩展点。根据URL中protocol的值通过扩展点自适应机制进行不同协议的服务暴露或引用</strong>。</p>
+
+<p><strong>doExportUrlsFor1Protocol</strong>首先进行<strong>URL类的装配</strong>，这个URL默认是Dubbo服务的URL。这个URL表示它是一个dubbo协议(DubboProtocol)，地址是当前服务器的ip，端口是要暴露的服务的端口号，可以从dubbo:protocol配置，服务接口为dubbo:service配置发布的接口。</p>
+
+<p>后半段主要是判断scope变量来决定是否将服务导出远程或者本地，导出到本地实际上很简单只需要生成Invoker。当导出到远程就需要<strong>添加监视器monitor</strong>还要生成invoker。监视器能让Dubbo定时查看注册中心的状态，会抛出指定异常，而invoker通过<strong>protocol.export()</strong>使得服务消费方能够远程调用到服务，并且还会进行注册到注册中心。</p>
+
+<p><strong>服务导出(暴露)过程概述</strong></p>
+
+<p><strong>1. Spring容器启动时通过NameSpaceHandler来解析Dubbo服务的配置文件，并对配置文件中的参数进行初始化。</strong>
+ <strong>2.加载完配置文件之后，在ServiceBean的onApplicationEvent()方法受到Spring上下文刷新事件后会执行导出(export())方法。该方法为Dubbo服务导出的起点。</strong></p>
+
+<pre><code class="language-kotlin">        Export()方法逻辑分析：
+        1、进行参数配置的检查，检查该方法是否允许导出，另外检查该方法是否延迟导出。满足导出的条件之后，调用doExport()方法
+        备注：
+		* 检测 &lt;dubbo:service&gt; 标签的 interface 属性合法性，不合法则抛出异常   
+        * 检测 ProviderConfig、ApplicationConfig 等核心配置类对象是否为空，若为空，则尝试从其他配置类对象中获取相应的实例。
+        *检测并处理泛化服务和普通服务类
+        *检测本地存根配置，并进行相应的处理
+        *对 ApplicationConfig、RegistryConfig 等配置类进行检测，为空则尝试创建，若无法创建则抛出异常 
+        2、doExport（）在参数合法的情况下，调用doExportUrls()方法，该方法对多协议，多注册中心进行了支持。
+        3、doExportUrls() 方法调用  doExportUrlsFor1Protocol()方法，该方法实现了由具体服务到Invoker的转换和Invoker到Exporter的转换。
+        备注：
+        服务者invoker由ProxyFactory创建，Dubbo默认的ProxyFactory的实现类是JavassistProxyFactory。
+</code></pre>
+
+<h4 id="3-代理工厂类">3. 代理工厂类</h4>
+
+<pre><code class="language-undefined">stub=com.alibaba.dubbo.rpc.proxy.wrapper.StubProxyFactoryWrapper
+jdk=com.alibaba.dubbo.rpc.proxy.jdk.JdkProxyFactory
+javassist=com.alibaba.dubbo.rpc.proxy.javassist.JavassistProxyFactory
+</code></pre>
+
+<p>默认javassist，这是由于ProxyFactory类上的注解@SPI(&quot;javassist&quot;)决定的，SPI机制简单来说就是为某个接口寻找服务实现的机制，实现方式可参看spi约定。</p>
+
+<p><a href="http://dubbo.apache.org/zh-cn/blog/introduction-to-dubbo-spi.html">http://dubbo.apache.org/zh-cn/blog/introduction-to-dubbo-spi.html</a></p>
+
+<p>StubProxyFactoryWrapper 是 proxyFactory的 wrapper类，所以总是被执行，是存根（stub）的代理工厂，主要用于暴露服务提供者的本地服务给远端消费者来调用。远程服务后，远端消费者通常只剩下接口，而实现全在服务器端，但提供方有些时候想在远端消费者也执行部分逻辑，比如：做 ThreadLocal 缓存，提前验证参数，调用失败后伪造容错数据等等，此时就需要在 API 中带上 Stub，客户端生成 Proxy 实例，会把 Proxy 通过构造函数传给 Stub，然后把 Stub 暴露给用户，Stub 可以决定要不要去调 Proxy。</p>
+
+<p>可以通过proxy参数指定jdk还是javassist。</p>
+
+<p>提供者和消费者都能指定代理工厂类的类型。</p>
+
+<h4 id="4-invoker">4、Invoker</h4>
+
+<p><strong>服务方：</strong></p>
+
+<p><strong>Protocol</strong> 是服务域，它是 Invoker 暴露和引用的主功能入口，它负责 Invoker 的生命周期管理。</p>
+
+<p><strong>Invoker</strong> 是实体域，它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。</p>
+
+<p><strong>Invocation</strong> 是会话域，它持有调用过程中的变量，比如方法名，参数等。</p>
+
+<p>在服务提供方中的Invoker是由ProxyFactory创建而来的，Dubbo默认的ProxyFactory实现类为JavassistProxyFactory。</p>
+
+<p>JavassistProxyFactory创建了一个继承自AbstractProxyInvoker类的匿名对象，并覆写了抽象方法doInvoke。覆写后的 doInvoke 逻辑比较简单，仅是将调用请求转发给了Wrapper类的 invokeMethod 方法。以及生成 invokeMethod 方法代码和其他一些方法代码。代码生成完毕后，通过 Javassist 生成 Class 对象，最后再通过反射创建 Wrapper 实例。</p>
+
+<pre><code class="language-java">public &lt;T&gt; Invoker&lt;T&gt; getInvoker(T proxy, Class&lt;T&gt; type, URL url) {
+    // 为目标类创建 Wrapper
+    final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf(36) &lt; 0 ? proxy.getClass() : type);
+    // 创建匿名 Invoker 类对象，并实现 doInvoke 方法。
+    return new AbstractProxyInvoker&lt;T&gt;(proxy, type, url) {
+        @Override
+        protected Object doInvoke(T proxy, String methodName,
+                                  Class&lt;?&gt;[] parameterTypes,
+                                  Object[] arguments) throws Throwable {
+            // 调用 Wrapper 的 invokeMethod 方法，invokeMethod 最终会调用目标方法
+            return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
+        }
+    };
+}
+</code></pre>
+
+<p>Wapper是一个包装类（动态代理类）。主要用于“包裹”目标类，仅可以通过getWapper(Class)方法创建子类。在创建子类过程中，子类代码会对传进来的Class对象进行解析，拿到类方法，类成员变量等信息。而这个包装类持有实际的扩展点实现类。也可以把扩展点的公共逻辑全部移到包装类中，功能上就是作为AOP实现。</p>
+
+<p>Wapper的代码较长，同样注释也很多。大致说一下里面逻辑：</p>
+
+<ul>
+<li><strong>创建c1，c2，c3三个字符串，用于存储类型转换代码和异常捕捉代码，而后pts用于存储成员变量名和类型，ms用于存储方法描述信息（可理解为方法签名）及Method实例，mns为方法名列表，dmns用于存储“定义在当前类中的方法”的名称。</strong>在这里做完了一些初始工作</li>
+<li><strong>获取所有public字段，用c1存储条件判断及赋值语句，可以理解为通过c1能够为public字段赋值，而c2是条件判断及返回语句，同样的是得到public字段的值。再用pts存储&lt;字段名，字段类型&gt;。也就是现在能对目标类字段进行操作了，而要操作一些私有字段，是要访问set开头和get开头的方法，同样这些方法也都对应使用c1存set，c2存get，pts存储&lt;属性名，属性类型&gt;</strong></li>
+<li>现在<strong>到类中的方法，先检查方法中的参数，然后再检查是否有重载的方法。通过c3存储调用目标方法的语句以及方法中可能会抛出的异常，而后用mns集合进行存储方法名，对已经声明的方法存到ms中，未声明但是定义了的方法存在dmns中。</strong></li>
+<li>通过ClassGenerator为刚刚生成的代码构建Class类，并通过反射创建对象。ClassGenerator是Dubbo自己封装的，该类的核心是toClass()的重载方法 toClass(ClassLoader, ProtectionDomain)，该方法通过javassist构建Class。</li>
+</ul>
+
+<p>到这里Invoker就能实现调用服务提供类的方法了。也就是服务提供类的Invoker实体域创建完成。底层是通过javassist来构建对象的，invoke()通过调用doInvoker()中的Wrapper包装类（动态代理类）的wrapper.invokeMethod()调用方法。</p>
+
+<p><strong>消费方：</strong></p>
+
+<p>在服务消费方，Invoker用于执行远程调用。Invoker是由 Protocol实现类构建而来。Protocol实现类有很多但是最常用的两个，分别是RegistryProtocol和DubboProtocol。</p>
+
+<p><strong>DubboProtocol</strong>类中的<strong>refer</strong>方法的DubboInvoker&lt;T&gt; invoker = new DubboInvoker&lt;T&gt;(serviceType, url, getClients(url), invokers);<strong>获取DubboInvoker</strong>。 最重要的一个在于getClients。这个方法用于获取客户端实例，实例类型为ExchangeClient。ExchangeClient实际上并不具备通信能力，它需要基于更底层的客户端实例进行通信。比如NettyClient、MinaClient等，默认情况下，Dubbo使用NettyClient进行通信。每次创建好的Invoker都会添加到invokers这个集合里。也就是<strong>可以认为服务消费方的Invoker是一个具有通信能力的Netty客户端</strong>。</p>
+
+<ul>
+<li>通过refer方法进入DubboInvoker实例的创建，在这个实例中其实serviceType，url，以及invokers都已经是不用去关心的，invokers可以说是存储以及创建好的Invoker。而最关键的在于getClient方法。可以这么认为，<strong>现在的Invoker是一个Netty客户端。而在服务提供方的Invoker是一个Wapper动态代理类。</strong></li>
+<li>在getClient方法里面首先根据<strong>connections</strong>数量决定是获取<strong>共享客户端</strong>还是<strong>创建新的客户端</strong>实例，默认情况下是获取共享客户端，但是获取共享客户端中若缓存中拿不到对应客户端也会新建一个客户端。最终返回的是ExchangeClient，而当前的ExchangeClient也没有通信能力，需要更加底层的Netty客户端。</li>
+<li>initClient方法首先获取用户配置的客户端类型，默认为Netty，然后检测用户配置的客户端类型是否存在，不存在就要抛出异常，最后根据lazy配置决定创建什么类型的客户端。LazyConnectExchangeClient代码并不是很复杂，该类会在request方法被调用时通过Exchangers的connect方法创建 ExchangeClient客户端。</li>
+<li><strong>getExchanger会通过SPI加载HeaderExchangeClient实例。最后通过Transporter实现类以及调用Netty的API来创建Netty客户端。最后层层返回，就最后成为了底层为Netty上层为DubboInvoker实例的这样一个类。</strong></li>
+</ul>
+
+<p><strong>RegistryProtocol中的refer：</strong></p>
+
+<ul>
+<li>当前的Invoker底层依然是NettyClient，但是此时注册中心是集群搭建模式。所以需要将多个Invoker合并为一个，<strong>这里是逻辑合并的。实际上Invoker底层还是会有多个，只是通过一个集群模式来管理。所以暴露出来的就是一个集群模式的Invoker。</strong>于是进入Cluster.join方法。</li>
+<li>Cluster是一个通用代理类，会根据URL中的cluster参数值定位到实际的Cluster实现类也就是FailoverCluster。这里用到了@SPI注解，也就是需要ExtensionLoader扩展点加载机制，而该机制在实例化对象时，会在实例化后自动套上Wrapper。</li>
+<li><strong>但是是集群模式，所以需要Dubbo中另外一个核心机制——Mock。Mock可以在测试中模拟服务调用的各种异常情况，还可以实现服务降级。在MockerClusterInvoker中，Dubbo先检查URL中是否存在mock参数。（这个参数可以通过服务治理后台Consumer端的屏蔽和容错进行设置或者直接动态设置mock参数值）如果存在force开头，这不发起远程调用直接执行降级逻辑。如果存在fail开头，则在远程调用异常时才会执行降级逻辑。</strong></li>
+<li><strong>可以说注册中心为集群模式时，Invoker就会外面多包裹一层mock逻辑。是通过Wapper机制实现的。最终可以在调用或者重试时，每次都通过Dubbo内部的负载均衡机制选出多个Invoker中的一个进行调用</strong>。</li>
+</ul>
+
+<h4 id="5-exporter">5、Exporter</h4>
+
+<pre><code class="language-java">Exporter&lt;?&gt; exporter = protocol.export(wrapperInvoker);
+</code></pre>
+
+<p>我们看到是协议protocal进行暴露的，这个协议最终调用的是RegistryProtocol。</p>
+
+<pre><code class="language-dart">@SPI(&quot;dubbo&quot;)
+public interface Protocol {
+    /**
+     * 获取缺省端口，当用户没有配置端口时使用。
+     * 
+     * @return 缺省端口
+     */
+    int getDefaultPort();
+
+    /**
+     * 暴露远程服务：&lt;br&gt;
+     * 1. 协议在接收请求时，应记录请求来源方地址信息：RpcContext.getContext().setRemoteAddress();&lt;br&gt;
+     * 2. export()必须是幂等的，也就是暴露同一个URL的Invoker两次，和暴露一次没有区别。&lt;br&gt;
+     * 3. export()传入的Invoker由框架实现并传入，协议不需要关心。&lt;br&gt;
+     * 
+     * @param &lt;T&gt; 服务的类型
+     * @param invoker 服务的执行体
+     * @return exporter 暴露服务的引用，用于取消暴露
+     * @throws RpcException 当暴露服务出错时抛出，比如端口已占用
+     */
+    @Adaptive
+    &lt;T&gt; Exporter&lt;T&gt; export(Invoker&lt;T&gt; invoker) throws RpcException;
+
+    /**
+     * 引用远程服务：&lt;br&gt;
+     * 1. 当用户调用refer()所返回的Invoker对象的invoke()方法时，协议需相应执行同URL远端export()传入的Invoker对象的invoke()方法。&lt;br&gt;
+     * 2. refer()返回的Invoker由协议实现，协议通常需要在此Invoker中发送远程请求。&lt;br&gt;
+     * 3. 当url中有设置check=false时，连接失败不能抛出异常，并内部自动恢复。&lt;br&gt;
+     * 
+     * @param &lt;T&gt; 服务的类型
+     * @param type 服务的类型
+     * @param url 远程服务的URL地址
+     * @return invoker 服务的本地代理
+     * @throws RpcException 当连接服务提供方失败时抛出
+     */
+    @Adaptive
+    &lt;T&gt; Invoker&lt;T&gt; refer(Class&lt;T&gt; type, URL url) throws RpcException;
+
+    /**
+     * 释放协议：&lt;br&gt;
+     * 1. 取消该协议所有已经暴露和引用的服务。&lt;br&gt;
+     * 2. 释放协议所占用的所有资源，比如连接和端口。&lt;br&gt;
+     * 3. 协议在释放后，依然能暴露和引用新的服务。&lt;br&gt;
+     */
+    void destroy();
+
+}
+</code></pre>
+
+<p>在export方法上有<strong>@Adaptive</strong>注解，这个注解写在方法上，有个作用，可以根据传入的<strong>URL</strong>来指定需要的协议，上面的URL中指名了是<strong>Registry</strong>，所以他使用的应该是<strong>RegistryProtocol协议</strong>，DubboProtocol是在RegistryProtocal里面做的。 SPI的ExtensionLoader根据配置文件，这个Protocal是被<strong>ProtocolFilterWrapper</strong>、<strong>QosProtocolWrapper</strong>和<strong>ProtocolListenerWrapper</strong>引用，同时根据Dubbo协议引用了<strong>DubboProtocal</strong>，先执行ProtocolFilterWrapper、QosProtocolWrapper和ProtocolListenerWrapper。</p>
+
+<p>所有Protocol都会先调用ProtocolFilterWrapper、QosProtocolWrapper和ProtocolListenerWrapper，Wrapper中会先判断是否是RegistryProtocol，如果是则不做什么事，如果不是则加入过滤器和监听器。</p>
+
+<p>QoS，全称为Quality of Service, 是常见于网络设备中的一个术语 ，例如在路由器中，可以通过Qos动态的调整和控制某些端口的权重，从而优先的保障运行在这些端口上的服务质量。
+在Dubbo中，QoS这个概念被用于动态的对服务进行查询和控制。例如对获取当前提供和消费的所有服务，以及对服务进行动态的上下线，即从注册中心上进行注册和反注册操作。</p>
+
+<p>他们对registry协议基本没做啥，直接进入了RegistryProtocol的export。</p>
+
+<pre><code class="language-java">public &lt;T&gt; Exporter&lt;T&gt; export(final Invoker&lt;T&gt; originInvoker) throws RpcException {
+        //本地暴露，这个本地暴露只是通过DubboProtocol生成exporter注册到本地
+    	//SeviceConfig中的exportLocal()通过InjvmProtocol生成exporter暴露到本地，本地暴露比较简单，将 Invoker 直接封装在在 InjvmExporter 的 exporterMap 中
+        final ExporterChangeableWrapper&lt;T&gt; exporter = doLocalExport(originInvoker);
+        //获得注册中心
+        final Registry registry = getRegistry(originInvoker);
+        //获得要注册的链接，也就是真正的要暴露的服务
+        final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
+        //向注册中心注册
+        registry.register(registedProviderUrl);
+        // 订阅override数据
+        // FIXME 提供者订阅时，会影响同一JVM即暴露服务，又引用同一服务的的场景，因为subscribed以服务名为缓存的key，导致订阅信息覆盖。
+        final URL overrideSubscribeUrl = getSubscribedOverrideUrl(registedProviderUrl);
+        final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl);
+        overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
+        registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
+        //保证每次export都返回一个新的exporter实例
+        return new Exporter&lt;T&gt;() {
+            public Invoker&lt;T&gt; getInvoker() {
+                return exporter.getInvoker();
+            }
+            public void unexport() {
+                try {
+                    exporter.unexport();
+                } catch (Throwable t) {
+                    logger.warn(t.getMessage(), t);
+                }
+                try {
+                    registry.unregister(registedProviderUrl);
+                } catch (Throwable t) {
+                    logger.warn(t.getMessage(), t);
+                }
+                try {
+                    overrideListeners.remove(overrideSubscribeUrl);
+                    registry.unsubscribe(overrideSubscribeUrl, overrideSubscribeListener);
+                } catch (Throwable t) {
+                    logger.warn(t.getMessage(), t);
+                }
+            }
+        };
+    }
+</code></pre>
+
+<p>注册协议做的事情很简单先进行<strong>本地暴露</strong>，获取响应的注册中心，向注册中心注册要暴露的服务，设置订阅，注册中心信息发生改变后会通知服务，进行数据的更新。说起来很容易，但是其实里面封装了大量的内容。首先我们来看下本地暴露的方法doLocalExport。</p>
+
+<pre><code class="language-dart">private &lt;T&gt; ExporterChangeableWrapper&lt;T&gt;  doLocalExport(final Invoker&lt;T&gt; originInvoker){
+        String key = getCacheKey(originInvoker);
+        ExporterChangeableWrapper&lt;T&gt; exporter = (ExporterChangeableWrapper&lt;T&gt;) bounds.get(key);
+        if (exporter == null) {
+            synchronized (bounds) {
+                exporter = (ExporterChangeableWrapper&lt;T&gt;) bounds.get(key);
+                if (exporter == null) {
+                    final Invoker&lt;?&gt; invokerDelegete = new InvokerDelegete&lt;T&gt;(originInvoker, getProviderUrl(originInvoker));
+                    exporter = new ExporterChangeableWrapper&lt;T&gt;((Exporter&lt;T&gt;)protocol.export(invokerDelegete), originInvoker);
+                    bounds.put(key, exporter);
+                }
+            }
+        }
+        return (ExporterChangeableWrapper&lt;T&gt;) exporter;
+    }
+</code></pre>
+
+<p>延续了以往的Dubbo风格，使用了大量的本地缓存。根据传入的原始的invoker,获取到cacheKey,从本地缓存bounds中获取，获取不到，就开始了创建的过程。首先创建了一个包赚对象invokerDelegete，包含了原始的invoker和providerUrl,我们可以简单看下这个providerUrl.getProviderUrl(originInvoker)结果是</p>
+
+<pre><code class="language-bash">dubbo://192.168.1.102:20880/com.linyang.test.service.LogService?anyhost=true&amp;application=log&amp;default.proxy=javassist&amp;default.retries=0&amp;default.timeout=30000&amp;default.version=LATEST&amp;dubbo=2.5.3&amp;interface=com.linyang.test.service.LogService&amp;methods=modify,create&amp;pid=19026&amp;side=provider&amp;threads=100&amp;timestamp=1525594853055
+</code></pre>
+
+<p>看一下这个provider的链接提供的dubbo协议，所以，当我们本地暴露的时候(Exporter)protocol.export(invokerDelegete)会发生什么？会真正调用的是DubboProtocol，之前还会调用ProtocolFilterWrapper和ProtocolListenerWrapper。</p>
+
+<p><strong>ProtocolFilterWrapper</strong></p>
+
+<pre><code class="language-cpp">  public &lt;T&gt; Exporter&lt;T&gt; export(Invoker&lt;T&gt; invoker) throws RpcException {
+        if (Constants.REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
+            return protocol.export(invoker);
+        }
+        return protocol.export(buildInvokerChain(invoker, Constants.SERVICE_FILTER_KEY, Constants.PROVIDER));
+    }
+</code></pre>
+
+<p>这个filter处理的时候建立了一条调用链<code>InvokerChain</code></p>
+
+<pre><code class="language-java">private static &lt;T&gt; Invoker&lt;T&gt; buildInvokerChain(final Invoker&lt;T&gt; invoker, String key, String group) {
+        Invoker&lt;T&gt; last = invoker;
+        List&lt;Filter&gt; filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
+        if (filters.size() &gt; 0) {
+            for (int i = filters.size() - 1; i &gt;= 0; i --) {
+                final Filter filter = filters.get(i);
+                final Invoker&lt;T&gt; next = last;
+                last = new Invoker&lt;T&gt;() {
+
+                    public Class&lt;T&gt; getInterface() {
+                        return invoker.getInterface();
+                    }
+
+                    public URL getUrl() {
+                        return invoker.getUrl();
+                    }
+
+                    public boolean isAvailable() {
+                        return invoker.isAvailable();
+                    }
+
+                    public Result invoke(Invocation invocation) throws RpcException {
+                        return filter.invoke(next, invocation);
+                    }
+
+                    public void destroy() {
+                        invoker.destroy();
+                    }
+
+                    @Override
+                    public String toString() {
+                        return invoker.toString();
+                    }
+                };
+            }
+        }
+        return last;
+    }
+</code></pre>
+
+<p><strong>getActivateExtension()</strong>从SPI中获取激活的Filter类的实例，在@activite的那一节也讲过，他的主要用法是在Filter上，然后将他们变成链式结构，保证他们再调用的时候，一个接着一个，当然这是常用的filter的使用模式。</p>
+
+<p>Dubbo的Filter机制，是专门为服务提供方和服务消费方调用过程进行拦截设计的，每次远程方法执行，该拦截都会被执行。这样就为开发者提供了非常方便的扩展性，比如为dubbo接口实现ip白名单功能、监控功能等等。</p>
+
+<p>自定义FIlter实现方法很简单，分为3个步骤：
+ 1、自定义Filter，必须继承com.alibaba.dubbo.rpc.Filter接口
+ 2、在resources目录下添加纯文本文件META-INF/dubbo/com.alibaba.dubbo.rpc.Filter，内容写成 xxx=xxx.xxx.xxxFilter
+ 3、在dubbo配置xml中添加 <dubbo:provider filter="xxxFilter" /> 或者 <dubbo:consumer filter="xxxFilter" /> 使Filter生效。</p>
+
+<p>使用了<strong>Activate</strong>注解，dubbo就会<strong>把注释的Filter作为dubbo原生的Filter</strong>自动加载，而<strong>不需要显示的配置</strong>provider或者consumer的filter。</p>
+
+<p>@Activate的 group 是用来区分是 consumer 还是 provider 端生效，order 是用来控制 filter 的执行顺序的。</p>
+
+<p>如果不希望filter自动加载，可以使用<dubbo:consumer filter="-xxxFilter" /> ，也就是<strong>在filter前添加 “-” 来关闭</strong>filter的加载。</p>
+
+<p><strong>默认filter链，先执行原生filter，再依次执行自定义filter，继而回溯到原点。</strong></p>
+
+<p>那么根据上面的了解，尝试回答下面两个问题：</p>
+
+<p>1、注解@Activate是否是Dubbo Filter必须的，其上的group和order分别扮演什么样的角色?</p>
+
+<p>对于Dubbo<strong>原生</strong>自带的filter，注解<strong>@Activate是必须</strong>，其group用于provider/consumer的站队，而order值是filter顺序的依据，默认值是0。但是对于自定义filter而言，注解@Activate没被用到，其分组和顺序，完全由用户手工配置指定。如果自定义filter添加了@Activate注解，并指定了group了，则这些自定义filter将升级为原生filter组。</p>
+
+<p>2、Filter的顺序是否可以调整, 如何实现?</p>
+
+<p>可以调整，通过'-'符号可以去除某些filter，而default代表默认激活的原生filter子链，通过重排default和自定义filter的顺序，达到实现顺序控制的目的。</p>
+
+<p>让我们来构建几个case，来看看如何配置能满足。假定自定义filter的对象为filter1，filter2：
+ case 1: 其执行顺序为, 原生filter子链-&gt;filter1→filter2</p>
+
+<p><dubbo:reference filter="filter1,filter2"/></p>
+
+<p>case 2: 其执行顺序为, filter1-&gt;filter2-&gt;原生filter子链</p>
+
+<p><dubbo:reference filter="filter1,filter2,default"/></p>
+
+<p>case 3: 其执行顺序为, filter1-&gt;原生filter子链-&gt;filter2, 同时去掉原生的xxxFilter
+ <dubbo:service filter="filter1,default,filter2,-xxx"/></p>
+
+<p>常用Filter</p>
+
+<p><a href="https://www.jianshu.com/p/c5ebe3e08161">https://www.jianshu.com/p/c5ebe3e08161</a></p>
+
+<p>获取到所有的filter以后，在buildInvokerChain对其进行遍历，伪装成Invoker，并使用next链接下一个invoker，invoker的<strong>tail</strong>就是<strong>真实的执行类</strong>(比如DubboInvoker，封装调用细节)。
+在用户使用proxy进行远程调用时，链式结构的invoker会被串行执行。</p>
+
+<p><strong>ProtocolListenerWrapper</strong></p>
+
+<pre><code class="language-java">public &lt;T&gt; Exporter&lt;T&gt; export(Invoker&lt;T&gt; invoker) throws RpcException {
+        if (Constants.REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
+            return protocol.export(invoker);
+        }
+        return new ListenerExporterWrapper&lt;T&gt;(protocol.export(invoker), 
+                Collections.unmodifiableList(ExtensionLoader.getExtensionLoader(ExporterListener.class)
+                        .getActivateExtension(invoker.getUrl(), Constants.EXPORTER_LISTENER_KEY)));
+    }
+</code></pre>
+
+<p>他做的就是将Exporter包装成<strong>ListenerExporterWrapper</strong>的实例，他是原来的<strong>exporter</strong>和从SPI扩展点中获取的<strong>ExporterListener</strong>的实例组成，并通过装饰模式逐个调用ExporterListener.exported()方法，并返回<strong>ListenerExporterWrapper</strong>对象。</p>
+
+<p>DubboProtocal的export</p>
+
+<pre><code class="language-java">public &lt;T&gt; Exporter&lt;T&gt; export(Invoker&lt;T&gt; invoker) throws RpcException {
+        URL url = invoker.getUrl();
+        
+        // export service.
+        String key = serviceKey(url);
+        DubboExporter&lt;T&gt; exporter = new DubboExporter&lt;T&gt;(invoker, key, exporterMap);
+        exporterMap.put(key, exporter);
+        
+        //export an stub service for dispaching event
+        Boolean isStubSupportEvent = url.getParameter(Constants.STUB_EVENT_KEY,Constants.DEFAULT_STUB_EVENT);
+        Boolean isCallbackservice = url.getParameter(Constants.IS_CALLBACK_SERVICE, false);
+        if (isStubSupportEvent &amp;&amp; !isCallbackservice){
+            String stubServiceMethods = url.getParameter(Constants.STUB_EVENT_METHODS_KEY);
+            if (stubServiceMethods == null || stubServiceMethods.length() == 0 ){
+                if (logger.isWarnEnabled()){
+                    logger.warn(new IllegalStateException(&quot;consumer [&quot; +url.getParameter(Constants.INTERFACE_KEY) +
+                            &quot;], has set stubproxy support event ,but no stub methods founded.&quot;));
+                }
+            } else {
+                stubServiceMethodsMap.put(url.getServiceKey(), stubServiceMethods);
+            }
+        }
+
+        this.openServer(url);
+        this.optimizeSerialization(url);
+        return exporter;
+    }
+</code></pre>
+
+<p>每次创建的时候都创建一个新的DubboExporter，并将其返回上层使用。到目前为止，我们还没有提到本地起服务，因为你想让其他方调用到自己，肯定是要开一个socket，但是目前我们还没有看到，但是不用急，他的剩下的内容都包含在<code>openServer(url)</code>根据providerUrl进行开启一个server。</p>
+
+<pre><code class="language-csharp">    private void openServer(URL url) {
+        // find server.
+        String key = url.getAddress();
+        //client 也可以暴露一个只有server可以调用的服务。
+        boolean isServer = url.getParameter(Constants.IS_SERVER_KEY,true);
+        if (isServer) {
+            ExchangeServer server = serverMap.get(key);
+            if (server == null) {
+                serverMap.put(key, createServer(url));
+            } else {
+                //server支持reset,配合override功能使用
+                server.reset(url);
+            }
+        }
+    }
+</code></pre>
+
+<p>直击重点createServer(url)</p>
+
+<pre><code class="language-jsx">private ExchangeServer createServer(URL url) {
+        //默认开启server关闭时发送readonly事件
+        url = url.addParameterIfAbsent(Constants.CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString());
+        //默认开启heartbeat
+        url = url.addParameterIfAbsent(Constants.HEARTBEAT_KEY, String.valueOf(Constants.DEFAULT_HEARTBEAT));
+        String str = url.getParameter(Constants.SERVER_KEY, Constants.DEFAULT_REMOTING_SERVER);
+
+        if (str != null &amp;&amp; str.length() &gt; 0 &amp;&amp; ! ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str))
+            throw new RpcException(&quot;Unsupported server type: &quot; + str + &quot;, url: &quot; + url);
+
+        url = url.addParameter(Constants.CODEC_KEY, Version.isCompatibleVersion() ? COMPATIBLE_CODEC_NAME : DubboCodec.NAME);
+        ExchangeServer server;
+        try {
+            server = Exchangers.bind(url, requestHandler);
+        } catch (RemotingException e) {
+            throw new RpcException(&quot;Fail to start server(url: &quot; + url + &quot;) &quot; + e.getMessage(), e);
+        }
+        str = url.getParameter(Constants.CLIENT_KEY);
+        if (str != null &amp;&amp; str.length() &gt; 0) {
+            Set&lt;String&gt; supportedTypes = ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions();
+            if (!supportedTypes.contains(str)) {
+                throw new RpcException(&quot;Unsupported client type: &quot; + str);
+            }
+        }
+        return server;
+    }
+</code></pre>
+
+<p>我们看到了Exchangers.bind(url, requestHandler) Dubbo的<strong>Exchanger层</strong>，他具体的处理逻辑</p>
+
+<pre><code class="language-java">   public static ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
+        if (url == null) {
+            throw new IllegalArgumentException(&quot;url == null&quot;);
+        }
+        if (handler == null) {
+            throw new IllegalArgumentException(&quot;handler == null&quot;);
+        }
+        url = url.addParameterIfAbsent(Constants.CODEC_KEY, &quot;exchange&quot;);
+        return getExchanger(url).bind(url, handler);
+    }
+</code></pre>
+
+<p>Exchanger的具体实现类是HeaderExchanger，所以调用他的bind方法。</p>
+
+<pre><code class="language-java">  public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
+        return new HeaderExchangeServer(Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
+    }
+</code></pre>
+
+<p>出现了Dubbo的<strong>Transporter层</strong>，他的bind方法和exchange差不多，找具体的Transporter进行bind</p>
+
+<pre><code class="language-java">   public static Server bind(URL url, ChannelHandler... handlers) throws RemotingException {
+        if (url == null) {
+            throw new IllegalArgumentException(&quot;url == null&quot;);
+        }
+        if (handlers == null || handlers.length == 0) {
+            throw new IllegalArgumentException(&quot;handlers == null&quot;);
+        }
+        ChannelHandler handler;
+        if (handlers.length == 1) {
+            handler = handlers[0];
+        } else {
+            handler = new ChannelHandlerDispatcher(handlers);
+        }
+        return getTransporter().bind(url, handler);
+    }
+</code></pre>
+
+<p>最后发现使用的是NettyTransporter，Netty大家没有用过也应该听说过，他是现在最为流行的Nio网络框架。</p>
+
+<pre><code class="language-java">   public Server bind(URL url, ChannelHandler listener) throws RemotingException {
+        return new NettyServer(url, listener);
+    }
+</code></pre>
+
+<p>剩下的就是Netty的处理了，起一个Server，开启端口等着调用者连进来。</p>
+
+<p>openServer方法会根据key（ip+port）判断server是否存在，不存在则调用createServer(URL url)方法创建一个链接。</p>
+
+<p>Exchangers的bind方法getExchanger(url)得到的默认为HeaderExchanger，HeaderExchanger的bind方法又调用了Transporters中的bind方法，看getTransporter方法又碰到了熟悉的适配加载机制，Transporter类的注解为@SPI(&quot;netty&quot;)，默认会调用NettyTransporter的bind方法，NettyTransporter的bind方法直接new了一个NettyServer，NettyServer初始化的时候调用父类的构造方法，父类的构造方法中调用了NettyServer的doOpen方法，NettyServer的链接创建在doOpen方法中完成。</p>
+
+<p>在NettyServer的doOpen方法中可以看到这里绑定了netty的端口和链接。方法到这里<strong>本地的Server端口都已经暴露完毕</strong>。</p>
+
+<p>这是DubboProtocol的export的过程。我们回到上面RegisterProtocol的部分。</p>
+
+<pre><code class="language-cpp">exporter = new ExporterChangeableWrapper&lt;T&gt;((Exporter&lt;T&gt;)protocol.export(invokerDelegete), originInvoker);
+</code></pre>
+
+<p>经过DubboProtocol暴露后得到一个具体的Exporter，将这个<strong>exporter</strong>和<strong>原始invoker</strong>封装到了<strong>ExporterChangeableWrapper</strong>里面，进行返回。</p>
+
+<p>回到RegistryProtocol中，来看下<strong>在zk中暴露服务</strong>。首先先获取zk的配置信息，然后获取需要暴露的url，然后调用registry.register()方法将url注册到zookeeper上去。</p>
+
+<p>这里的registry对象为ZookeeperRegistry，ZookeeperRegistry继承了FailbackRegistry，默认调用父类的register方法，然后调用ZookeeperRegistry的doRegister方法，这里就比较简单了。直接调用zkClient在zookeeper上创建一个节点信息，这样就把服务暴露到zk上去了。</p>
+
+<p>暴露完服务之后，还会调用registry的subscribe方法，这里主要是加了注册订阅Listener，在创建出其他节点之后会调用notify方法。notify方法会做两件事，1. 会将url改动更新到缓存的配置文件中。2. 会通知listener变动，此通知为全量通知。</p>
+
+<h4 id="二-服务调用">二、服务调用</h4>
+
+<p>Dubbo核心调用流程，Dubbo使用的协议以及线程模型</p>
+
+<pre><code class="language-java">@Bean
+    public ReferenceBean&lt;LogService&gt; logService(){
+        ReferenceBean&lt;LogService&gt; referenceBean=new ReferenceBean&lt;&gt;();
+        referenceBean.setInterface(LogService.class);
+        return referenceBean;
+    }
+</code></pre>
+
+<p>在使用的地方，声明了一个<strong>ReferenceBean</strong>，然后指明了要引用的类型。ReferenceBean也是一个InitializingBean，所以看他的声明周期方法是afterPropertiesSet，基本上和ServiceBean是一致的，同时他也是FactoryBean类的实例，所以他的getObject()方法也是在生命周期过程中被主动调用到的，他里面引用的是get()方法。</p>
+
+<pre><code class="language-csharp">public synchronized T get() {
+        if (destroyed){
+            throw new IllegalStateException(&quot;Already destroyed!&quot;);
+        }
+        if (ref == null) {
+            init();
+        }
+        return ref;
+    }
+</code></pre>
+
+<p>最核心的是init()，他里面做的就是装配Dubbo所依赖的属性，着眼于</p>
+
+<pre><code class="language-cpp">ref = createProxy(map);
+</code></pre>
+
+<p>基于上面提供的<strong>属性放到map</strong>中，根据这个map创建一个代理对象作为ref。</p>
+
+<pre><code class="language-csharp">private T createProxy(Map&lt;String, String&gt; map) {
+        URL tmpUrl = new URL(&quot;temp&quot;, &quot;localhost&quot;, 0, map);
+        final boolean isJvmRefer;
+        if (isInjvm() == null) {
+            if (url != null &amp;&amp; url.length() &gt; 0) { //指定URL的情况下，不做本地引用
+                isJvmRefer = false;
+            } else if (InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl)) {
+                //默认情况下如果本地有服务暴露，则引用本地服务.
+                isJvmRefer = true;
+            } else {
+                isJvmRefer = false;
+            }
+        } else {
+            isJvmRefer = isInjvm().booleanValue();
+        }
+        
+        if (isJvmRefer) {
+            URL url = new URL(Constants.LOCAL_PROTOCOL, NetUtils.LOCALHOST, 0, interfaceClass.getName()).addParameters(map);
+            invoker = refprotocol.refer(interfaceClass, url);
+            if (logger.isInfoEnabled()) {
+                logger.info(&quot;Using injvm service &quot; + interfaceClass.getName());
+            }
+        } else {
+            if (url != null &amp;&amp; url.length() &gt; 0) { // 用户指定URL，指定的URL可能是对点对直连地址，也可能是注册中心URL
+                String[] us = Constants.SEMICOLON_SPLIT_PATTERN.split(url);
+                if (us != null &amp;&amp; us.length &gt; 0) {
+                    for (String u : us) {
+                        URL url = URL.valueOf(u);
+                        if (url.getPath() == null || url.getPath().length() == 0) {
+                            url = url.setPath(interfaceName);
+                        }
+                        if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {
+                            urls.add(url.addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map)));
+                        } else {
+                            urls.add(ClusterUtils.mergeUrl(url, map));
+                        }
+                    }
+                }
+            } else { // 通过注册中心配置拼装URL
+                List&lt;URL&gt; us = loadRegistries(false);
+                if (us != null &amp;&amp; us.size() &gt; 0) {
+                    for (URL u : us) {
+                        URL monitorUrl = loadMonitor(u);
+                        if (monitorUrl != null) {
+                            map.put(Constants.MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
+                        }
+                        urls.add(u.addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map)));
+                    }
+                }
+                if (urls == null || urls.size() == 0) {
+                    throw new IllegalStateException(&quot;No such any registry to reference &quot; + interfaceName  + &quot; on the consumer &quot; + NetUtils.getLocalHost() + &quot; use dubbo version &quot; + Version.getVersion() + &quot;, please config &lt;dubbo:registry address=\&quot;...\&quot; /&gt; to your spring config.&quot;);
+                }
+            }
+
+            if (urls.size() == 1) {
+                invoker = refprotocol.refer(interfaceClass, urls.get(0));
+            } else {
+                List&lt;Invoker&lt;?&gt;&gt; invokers = new ArrayList&lt;Invoker&lt;?&gt;&gt;();
+                URL registryURL = null;
+                for (URL url : urls) {
+                    invokers.add(refprotocol.refer(interfaceClass, url));
+                    if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {
+                        registryURL = url; // 用了最后一个registry url
+                    }
+                }
+                if (registryURL != null) { // 有注册中心协议的URL
+                    // 对有注册中心的Cluster 只用 AvailableCluster
+                    URL u = registryURL.addParameter(Constants.CLUSTER_KEY, AvailableCluster.NAME); 
+                    invoker = cluster.join(new StaticDirectory(u, invokers));
+                }  else { // 不是 注册中心的URL
+                    invoker = cluster.join(new StaticDirectory(invokers));
+                }
+            }
+        }
+
+        Boolean c = check;
+        if (c == null &amp;&amp; consumer != null) {
+            c = consumer.isCheck();
+        }
+        if (c == null) {
+            c = true; // default true
+        }
+        if (c &amp;&amp; ! invoker.isAvailable()) {
+            throw new IllegalStateException(&quot;Failed to check the status of the service &quot; + interfaceName + &quot;. No provider available for the service &quot; + (group == null ? &quot;&quot; : group + &quot;/&quot;) + interfaceName + (version == null ? &quot;&quot; : &quot;:&quot; + version) + &quot; from the url &quot; + invoker.getUrl() + &quot; to the consumer &quot; + NetUtils.getLocalHost() + &quot; use dubbo version &quot; + Version.getVersion());
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info(&quot;Refer dubbo service &quot; + interfaceClass.getName() + &quot; from url &quot; + invoker.getUrl());
+        }
+        // 创建服务代理
+        return (T) proxyFactory.getProxy(invoker);
+    }
+</code></pre>
+
+<p>map保存comsumer的XML中的引用信息。</p>
+
+<p>首先判断是否有本地暴露服务InjvmProtocol。</p>
+
+<p>再判断用户是否指定URL。</p>
+
+<p>都不是则通过注册中心装配URL。</p>
+
+<p>List&lt;URL&gt; us = loadRegistries(false)  从注册中心<strong>获取</strong>注册的URL。</p>
+
+<p>URL拼装完成后，<strong>refprotocol.refer(interfaceClass, url)</strong>开始自己的引用逻辑。</p>
+
+<p>refprotocol的处理是经过了ProtocolFilterWrapper，ProtocolListenerWrapper，这两个类里的处理，和export是相同的，见到registry直接忽略，最后进入了RegistryProtocol中， RegistryProtocol中的refer方法 。</p>
+
+<pre><code class="language-java">    public &lt;T&gt; Invoker&lt;T&gt; refer(Class&lt;T&gt; type, URL url) throws RpcException {
+        url = url.setProtocol(url.getParameter(&quot;registry&quot;, &quot;dubbo&quot;)).removeParameter(&quot;registry&quot;);
+        Registry registry = this.registryFactory.getRegistry(url);
+        if (RegistryService.class.equals(type)) {
+            return this.proxyFactory.getInvoker(registry, type, url);
+        } else {
+            Map&lt;String, String&gt; qs = StringUtils.parseQueryString(url.getParameterAndDecoded(&quot;refer&quot;));
+            String group = (String)qs.get(&quot;group&quot;);
+            return group == null || group.length() &lt;= 0 || Constants.COMMA_SPLIT_PATTERN.split(group).length &lt;= 1 &amp;&amp; !&quot;*&quot;.equals(group) ? this.doRefer(this.cluster, registry, type, url) : this.doRefer(this.getMergeableCluster(), registry, type, url);
+        }
+    }
+</code></pre>
+
+<p>url.setProtocol(url.getParameter(Constants.REGISTRY_KEY, Constants.DEFAULT_REGISTRY)).removeParameter(Constants.REGISTRY_KEY)
+第一件事就是<strong>替换协议</strong>，过来的时候的协议是registry协议，我们重新设置协议，变成注册中心的协议，例如我们例子中使用的zookeeper。替换协议后，删除了key为registry的内容。替换协议的目的是为了下一步，从registryFactory挑选合适的注册器，我们使用的是zk的协议，那么注册器就是zk的注册器。我们需要的数据都有了，我们就可以进行真正的引用逻辑了doRefer了。</p>
+
+<pre><code class="language-java">private &lt;T&gt; Invoker&lt;T&gt; doRefer(Cluster cluster, Registry registry, Class&lt;T&gt; type, URL url) {
+        RegistryDirectory&lt;T&gt; directory = new RegistryDirectory&lt;T&gt;(type, url);
+        directory.setRegistry(registry);
+        directory.setProtocol(protocol);	//为RegistryDirectory设置注册中心、协议
+        URL subscribeUrl = new URL(Constants.CONSUMER_PROTOCOL, NetUtils.getLocalHost(), 0, type.getName(), directory.getUrl().getParameters()); //获取服务消费者的配置属性
+        if (! Constants.ANY_VALUE.equals(url.getServiceInterface())
+                &amp;&amp; url.getParameter(Constants.REGISTER_KEY, true)) {
+            registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY,
+                    Constants.CHECK_KEY, String.valueOf(false)));
+        }	//向注册中心注册消费者，有变化时notify
+        directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY, 
+                Constants.PROVIDERS_CATEGORY 
+                + &quot;,&quot; + Constants.CONFIGURATORS_CATEGORY 
+                + &quot;,&quot; + Constants.ROUTERS_CATEGORY));	//订阅provider
+        return cluster.join(directory);	//根据Directory，利用集群策略返回集群Invoker
+    }
+</code></pre>
+
+<p>看下subscribeUrl长啥样。<code>consumer://172.16.197.200/com.linyang.test.service.LogService?application=user&amp;category=providers,configurators,routers&amp;default.check=false&amp;default.retries=0&amp;default.timeout=30000&amp;default.version=LATEST&amp;dubbo=2.5.3&amp;interface=com.linyang.test.service.LogService&amp;methods=modify,create&amp;pid=2836&amp;revision=1.0-SNAPSHOT&amp;side=consumer&amp;timestamp=1525835306361</code>。随后进行了订阅directory.subscribe(url, this);首先这个URL的内容就是上面那个，这里this就是指<strong>RegistryDirectory</strong>的实例，也就是说他也是<strong>NotifyListener</strong>的实例。</p>
+
+<p><strong>RegistryDirectory</strong>：基于注册中心<strong>动态发现</strong>服务提供者（服务提供者新增或减少，实现了<strong>NotifyListener</strong>）。</p>
+
+<p><a href="https://blog.csdn.net/prestigeding/article/details/80727275">https://blog.csdn.net/prestigeding/article/details/80727275</a></p>
+
+<p>RegistryDirectory类图</p>
+
+<p><img src="https://img-blog.csdn.net/20180618223543475?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3ByZXN0aWdlZGluZw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="这里写图片描述" /></p>
+
+<p>private static final Cluster cluster = ExtensionLoader.getExtensionLoader(Cluster.class).getAdaptiveExtension();
+<strong>集群策略</strong>，默认为failover。
+private static final RouterFactory routerFactory = ExtensionLoader.getExtensionLoader (RouterFactory.class).getAdaptiveExtension()<strong>路由工厂</strong>，可以通过监控中心或治理中心配置。
+private static final ConfiguratorFactory configuratorFactory = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class).getAdaptiveExtension();配置实现工厂类。
+private final String serviceKey; 服务key，默认为服务接口名。com.alibaba.dubbo.registry.RegistryService，注册中心在Dubbo中也是使用服务暴露。
+private final Class&lt; T &gt; serviceType;服务提供者接口类，例如interface com.alibaba.dubbo.demo.DemoService
+private final Map&lt; String, String&gt; queryMap：服务消费者URL中的所有属性。
+private final URL directoryUrl;注册中心URL，只保留消息消费者URL查询属性，也就是queryMap。
+private final String[] serviceMethods：引用服务提供者方法数组。
+private final boolean multiGroup：是否引用多个服务组。
+private Protocol protocol：协议。
+private Registry registry：注册中心实现者。
+private volatile List&lt; Configurator&gt; configurators;配置信息。
+private volatile Map&lt; String, Invoker&lt; T&gt;&gt; urlInvokerMap; 服务URL对应的Invoker(服务提供者调用器)。
+private volatile Map&lt; String, List&lt; Invoker&lt; T&gt;&gt;&gt; methodInvokerMap; methodName : List&lt; Invoker&lt; T &gt;&gt;，
+dubbo:method 对应的Invoker缓存表。
+private volatile Set&lt; URL &gt; cachedInvokerUrls; 当前缓存的所有URL提供者URL。</p>
+
+<p>我们知道这里的registry是ZookeeperRegistry，所以他的subscribe方法。</p>
+
+<pre><code class="language-java">@Override
+    public void subscribe(URL url, NotifyListener listener) {//listener是RegistryDirectory
+        super.subscribe(url, listener);
+        removeFailedSubscribed(url, listener);
+        try {
+            // 向服务器端发送订阅请求
+            doSubscribe(url, listener);
+        } catch (Exception e) {
+            Throwable t = e;
+
+            List&lt;URL&gt; urls = getCacheUrls(url);
+            if (urls != null &amp;&amp; urls.size() &gt; 0) {
+                notify(url, listener, urls);
+                logger.error(&quot;Failed to subscribe &quot; + url + &quot;, Using cached list: &quot; + urls + &quot; from cache file: &quot; + getUrl().getParameter(Constants.FILE_KEY, System.getProperty(&quot;user.home&quot;) + &quot;/dubbo-registry-&quot; + url.getHost() + &quot;.cache&quot;) + &quot;, cause: &quot; + t.getMessage(), t);
+            } else {
+                // 如果开启了启动时检测，则直接抛出异常
+                boolean check = getUrl().getParameter(Constants.CHECK_KEY, true)
+                        &amp;&amp; url.getParameter(Constants.CHECK_KEY, true);
+                boolean skipFailback = t instanceof SkipFailbackWrapperException;
+                if (check || skipFailback) {
+                    if(skipFailback) {
+                        t = t.getCause();
+                    }
+                    throw new IllegalStateException(&quot;Failed to subscribe &quot; + url + &quot;, cause: &quot; + t.getMessage(), t);
+                } else {
+                    logger.error(&quot;Failed to subscribe &quot; + url + &quot;, waiting for retry, cause: &quot; + t.getMessage(), t);
+                }
+            }
+
+            // 将失败的订阅请求记录到失败列表，定时重试
+            addFailedSubscribed(url, listener);
+        }
+    }
+</code></pre>
+
+<p><code>super.subscribe(url, listener);</code><strong>往本地存储映射关系</strong>，key是url，value是一个Set&lt;Listener&gt;。最关键的无疑是<code>doSubscribe(url, listener);</code>,下面是ZookeeperRegistry的doSubscribe的部分实现。</p>
+
+<pre><code class="language-dart">                List&lt;URL&gt; urls = new ArrayList&lt;URL&gt;();
+                for (String path : toCategoriesPath(url)) {
+                    ConcurrentMap&lt;NotifyListener, ChildListener&gt; listeners = zkListeners.get(url);
+                    if (listeners == null) {
+                        zkListeners.putIfAbsent(url, new ConcurrentHashMap&lt;NotifyListener, ChildListener&gt;());
+                        listeners = zkListeners.get(url);
+                    }
+                    ChildListener zkListener = listeners.get(listener);
+                    if (zkListener == null) {
+                        listeners.putIfAbsent(listener, new ChildListener() {
+                            public void childChanged(String parentPath, List&lt;String&gt; currentChilds) {
+                                ZookeeperRegistry.this.notify(url, listener, toUrlsWithEmpty(url, parentPath, currentChilds));
+                            }
+                        });
+                        zkListener = listeners.get(listener);
+                    }
+                    zkClient.create(path, false);
+                    List&lt;String&gt; children = zkClient.addChildListener(path, zkListener);
+                    if (children != null) {
+                        urls.addAll(toUrlsWithEmpty(url, path, children));
+                    }
+                }
+                notify(url, listener, urls);
+</code></pre>
+
+<p>ChildListener是对关注的路径有他下一级的节点的增减，就会触发的监听器。所以我们看到<code>listeners.putIfAbsent</code>里放置的是一个匿名类，他里面的实现就是notify。也就是说<strong>当关注的路径下增减节点，就会触发回调，然后通过notify方法，进行业务数据的变更逻辑</strong>。当我们都注册好了之后，自己触发了notify，他的具体的逻辑在doNotify里面。</p>
+
+<pre><code class="language-dart">protected void notify(URL url, NotifyListener listener, List&lt;URL&gt; urls) {
+        if (url == null) {
+            throw new IllegalArgumentException(&quot;notify url == null&quot;);
+        }
+        if (listener == null) {
+            throw new IllegalArgumentException(&quot;notify listener == null&quot;);
+        }
+        if ((urls == null || urls.size() == 0) 
+                &amp;&amp; ! Constants.ANY_VALUE.equals(url.getServiceInterface())) {
+            logger.warn(&quot;Ignore empty notify urls for subscribe url &quot; + url);
+            return;
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info(&quot;Notify urls for subscribe url &quot; + url + &quot;, urls: &quot; + urls);
+        }
+        Map&lt;String, List&lt;URL&gt;&gt; result = new HashMap&lt;String, List&lt;URL&gt;&gt;();
+        for (URL u : urls) {
+            if (UrlUtils.isMatch(url, u)) {
+                String category = u.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY);
+                List&lt;URL&gt; categoryList = result.get(category);
+                if (categoryList == null) {
+                    categoryList = new ArrayList&lt;URL&gt;();
+                    result.put(category, categoryList);
+                }
+                categoryList.add(u);
+            }
+        }
+        if (result.size() == 0) {
+            return;
+        }
+        Map&lt;String, List&lt;URL&gt;&gt; categoryNotified = notified.get(url);
+        if (categoryNotified == null) {
+            notified.putIfAbsent(url, new ConcurrentHashMap&lt;String, List&lt;URL&gt;&gt;());
+            categoryNotified = notified.get(url);
+        }
+        for (Map.Entry&lt;String, List&lt;URL&gt;&gt; entry : result.entrySet()) {
+            String category = entry.getKey();
+            List&lt;URL&gt; categoryList = entry.getValue();
+            categoryNotified.put(category, categoryList);
+            saveProperties(url);
+            listener.notify(categoryList);
+        }
+    }
+</code></pre>
+
+<p>主干就是listener.notify。这里的<strong>listener</strong>就是我们之前在接口中传入的<strong>RegistryDirectory的实例对象</strong>，所以调用的就是他的notify方法。</p>
+
+<pre><code class="language-csharp">public synchronized void notify(List&lt;URL&gt; urls) {
+        List&lt;URL&gt; invokerUrls = new ArrayList&lt;URL&gt;();
+        List&lt;URL&gt; routerUrls = new ArrayList&lt;URL&gt;();
+        List&lt;URL&gt; configuratorUrls = new ArrayList&lt;URL&gt;();
+        for (URL url : urls) {
+            String protocol = url.getProtocol();
+            String category = url.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY);
+            if (Constants.ROUTERS_CATEGORY.equals(category) 
+                    || Constants.ROUTE_PROTOCOL.equals(protocol)) {
+                routerUrls.add(url);
+            } else if (Constants.CONFIGURATORS_CATEGORY.equals(category) 
+                    || Constants.OVERRIDE_PROTOCOL.equals(protocol)) {
+                configuratorUrls.add(url);
+            } else if (Constants.PROVIDERS_CATEGORY.equals(category)) {
+                invokerUrls.add(url);
+            } else {
+                logger.warn(&quot;Unsupported category &quot; + category + &quot; in notified url: &quot; + url + &quot; from registry &quot; + getUrl().getAddress() + &quot; to consumer &quot; + NetUtils.getLocalHost());
+            }
+        }
+        // configurators 
+        if (configuratorUrls != null &amp;&amp; configuratorUrls.size() &gt;0 ){
+            this.configurators = toConfigurators(configuratorUrls);
+        }
+        // routers
+        if (routerUrls != null &amp;&amp; routerUrls.size() &gt;0 ){
+            List&lt;Router&gt; routers = toRouters(routerUrls);
+            if(routers != null){ // null - do nothing
+                setRouters(routers);
+            }
+        }
+        List&lt;Configurator&gt; localConfigurators = this.configurators; // local reference
+        // 合并override参数
+        this.overrideDirectoryUrl = directoryUrl;
+        if (localConfigurators != null &amp;&amp; localConfigurators.size() &gt; 0) {
+            for (Configurator configurator : localConfigurators) {
+                this.overrideDirectoryUrl = configurator.configure(overrideDirectoryUrl);
+            }
+        }
+        // providers
+        refreshInvoker(invokerUrls);
+    }
+</code></pre>
+
+<p>这里面的操作就是根据传入的url进行创建或者更新invoker。重点放在 <code>refreshInvoker(invokerUrls)</code>,我们看一下传入的url<code>dubbo://172.16.197.200:20880/com.linyang.test.service.LogService?anyhost=true&amp;application=log&amp;default.proxy=javassist&amp;default.retries=0&amp;default.timeout=30000&amp;default.version=LATEST&amp;dubbo=2.5.3&amp;interface=com.linyang.test.service.LogService&amp;methods=modify,create&amp;pid=2747&amp;side=provider&amp;threads=100&amp;timestamp=1525835283678</code>这个就是provider的信息，后面会根据这个provider的url创建出来一个代理，给consumer端的项目使用。下面我们看看<strong>refreshInvoker</strong>。</p>
+
+<pre><code class="language-kotlin"> private void refreshInvoker(List&lt;URL&gt; invokerUrls){
+        if (invokerUrls != null &amp;&amp; invokerUrls.size() == 1 &amp;&amp; invokerUrls.get(0) != null
+                &amp;&amp; Constants.EMPTY_PROTOCOL.equals(invokerUrls.get(0).getProtocol())) {
+            this.forbidden = true; // 禁止访问
+            this.methodInvokerMap = null; // 置空列表
+            destroyAllInvokers(); // 关闭所有Invoker
+        } else {
+            this.forbidden = false; // 允许访问
+            Map&lt;String, Invoker&lt;T&gt;&gt; oldUrlInvokerMap = this.urlInvokerMap; // local reference
+            if (invokerUrls.size() == 0 &amp;&amp; this.cachedInvokerUrls != null){
+                invokerUrls.addAll(this.cachedInvokerUrls);
+            } else {
+                this.cachedInvokerUrls = new HashSet&lt;URL&gt;();
+                this.cachedInvokerUrls.addAll(invokerUrls);//缓存invokerUrls列表，便于交叉对比
+            }
+            if (invokerUrls.size() ==0 ){
+                return;
+            }
+            Map&lt;String, Invoker&lt;T&gt;&gt; newUrlInvokerMap = toInvokers(invokerUrls) ;// 将URL列表转成Invoker列表
+            Map&lt;String, List&lt;Invoker&lt;T&gt;&gt;&gt; newMethodInvokerMap = toMethodInvokers(newUrlInvokerMap); // 换方法名映射Invoker列表
+            // state change
+            //如果计算错误，则不进行处理.
+            if (newUrlInvokerMap == null || newUrlInvokerMap.size() == 0 ){
+                logger.error(new IllegalStateException(&quot;urls to invokers error .invokerUrls.size :&quot;+invokerUrls.size() + &quot;, invoker.size :0. urls :&quot;+invokerUrls.toString()));
+                return ;
+            }
+            this.methodInvokerMap = multiGroup ? toMergeMethodInvokerMap(newMethodInvokerMap) : newMethodInvokerMap;
+            this.urlInvokerMap = newUrlInvokerMap;
+            try{
+                destroyUnusedInvokers(oldUrlInvokerMap,newUrlInvokerMap); // 关闭未使用的Invoker
+            }catch (Exception e) {
+                logger.warn(&quot;destroyUnusedInvokers error. &quot;, e);
+            }
+        }
+    }
+</code></pre>
+
+<p>其中有一个toInvokers的方法，就是将传入的invokerUrls转成具体的invoker，也就是providerurl转成invoker的过程。</p>
+
+<pre><code class="language-dart"> private Map&lt;String, Invoker&lt;T&gt;&gt; toInvokers(List&lt;URL&gt; urls) {
+        Map&lt;String, Invoker&lt;T&gt;&gt; newUrlInvokerMap = new HashMap&lt;String, Invoker&lt;T&gt;&gt;();
+        if(urls == null || urls.size() == 0){
+            return newUrlInvokerMap;
+        }
+        Set&lt;String&gt; keys = new HashSet&lt;String&gt;();
+        String queryProtocols = this.queryMap.get(Constants.PROTOCOL_KEY);
+        for (URL providerUrl : urls) {
+            //如果reference端配置了protocol，则只选择匹配的protocol
+            if (queryProtocols != null &amp;&amp; queryProtocols.length() &gt;0) {
+                boolean accept = false;
+                String[] acceptProtocols = queryProtocols.split(&quot;,&quot;);
+                for (String acceptProtocol : acceptProtocols) {
+                    if (providerUrl.getProtocol().equals(acceptProtocol)) {
+                        accept = true;
+                        break;
+                    }
+                }
+                if (!accept) {
+                    continue;
+                }
+            }
+            if (Constants.EMPTY_PROTOCOL.equals(providerUrl.getProtocol())) {
+                continue;
+            }
+            if (! ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(providerUrl.getProtocol())) {
+                logger.error(new IllegalStateException(&quot;Unsupported protocol &quot; + providerUrl.getProtocol() + &quot; in notified url: &quot; + providerUrl + &quot; from registry &quot; + getUrl().getAddress() + &quot; to consumer &quot; + NetUtils.getLocalHost() 
+                        + &quot;, supported protocol: &quot;+ExtensionLoader.getExtensionLoader(Protocol.class).getSupportedExtensions()));
+                continue;
+            }
+            URL url = mergeUrl(providerUrl);
+            
+            String key = url.toFullString(); // URL参数是排序的
+            if (keys.contains(key)) { // 重复URL
+                continue;
+            }
+            keys.add(key);
+            // 缓存key为没有合并消费端参数的URL，不管消费端如何合并参数，如果服务端URL发生变化，则重新refer
+            Map&lt;String, Invoker&lt;T&gt;&gt; localUrlInvokerMap = this.urlInvokerMap; // local reference
+            Invoker&lt;T&gt; invoker = localUrlInvokerMap == null ? null : localUrlInvokerMap.get(key);
+            if (invoker == null) { // 缓存中没有，重新refer
+                try {
+                    boolean enabled = true;
+                    if (url.hasParameter(Constants.DISABLED_KEY)) {
+                        enabled = ! url.getParameter(Constants.DISABLED_KEY, false);
+                    } else {
+                        enabled = url.getParameter(Constants.ENABLED_KEY, true);
+                    }
+                    if (enabled) {
+                        invoker = new InvokerDelegete&lt;T&gt;(protocol.refer(serviceType, url), url, providerUrl);
+                    }
+                } catch (Throwable t) {
+                    logger.error(&quot;Failed to refer invoker for interface:&quot;+serviceType+&quot;,url:(&quot;+url+&quot;)&quot; + t.getMessage(), t);
+                }
+                if (invoker != null) { // 将新的引用放入缓存
+                    newUrlInvokerMap.put(key, invoker);
+                }
+            }else {
+                newUrlInvokerMap.put(key, invoker);
+            }
+        }
+        keys.clear();
+        return newUrlInvokerMap;
+    }
+</code></pre>
+
+<p>划重点！<code>protocol.refer(serviceType, url)</code>因为我们传过来的协议是dubbo，所以使用的最后处理的就是DubboProtocol，当然少不了的是<strong>warpper类的包裹，</strong>这个和export是一致的。下面是DubboProtocl的refer。</p>
+
+<pre><code class="language-csharp">public &lt;T&gt; Invoker&lt;T&gt; refer(Class&lt;T&gt; serviceType, URL url) throws RpcException {
+        // create rpc invoker.
+        DubboInvoker&lt;T&gt; invoker = new DubboInvoker&lt;T&gt;(serviceType, url, getClients(url), invokers);
+        invokers.add(invoker);
+        return invoker;
+    }
+</code></pre>
+
+<p>会根据url来获得一个<strong>clients</strong></p>
+
+<pre><code class="language-csharp"> private ExchangeClient[] getClients(URL url){
+        //是否共享连接
+        boolean service_share_connect = false;
+        int connections = url.getParameter(Constants.CONNECTIONS_KEY, 0);
+        //如果connections不配置，则共享连接，否则每服务每连接
+        if (connections == 0){
+            service_share_connect = true;
+            connections = 1;
+        }
+        
+        ExchangeClient[] clients = new ExchangeClient[connections];
+        for (int i = 0; i &lt; clients.length; i++) {
+            if (service_share_connect){
+                clients[i] = getSharedClient(url);
+            } else {
+                clients[i] = initClient(url);
+            }
+        }
+        return clients;
+    }
+</code></pre>
+
+<p>不管是<code>getSharedClient(url)</code>还是<code>initClient(url)</code>最终都会调用<code>initClient(url)</code>，所以我们看看他是怎么初始化的。</p>
+
+<pre><code class="language-dart">private ExchangeClient initClient(URL url) {
+        
+        // client type setting.
+        String str = url.getParameter(Constants.CLIENT_KEY, url.getParameter(Constants.SERVER_KEY, Constants.DEFAULT_REMOTING_CLIENT));
+
+        String version = url.getParameter(Constants.DUBBO_VERSION_KEY);
+        boolean compatible = (version != null &amp;&amp; version.startsWith(&quot;1.0.&quot;));
+        url = url.addParameter(Constants.CODEC_KEY, Version.isCompatibleVersion() &amp;&amp; compatible ? COMPATIBLE_CODEC_NAME : DubboCodec.NAME);
+        //默认开启heartbeat
+        url = url.addParameterIfAbsent(Constants.HEARTBEAT_KEY, String.valueOf(Constants.DEFAULT_HEARTBEAT));
+        
+        // BIO存在严重性能问题，暂时不允许使用
+        if (str != null &amp;&amp; str.length() &gt; 0 &amp;&amp; ! ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
+            throw new RpcException(&quot;Unsupported client type: &quot; + str + &quot;,&quot; +
+                    &quot; supported client type is &quot; + StringUtils.join(ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions(), &quot; &quot;));
+        }
+        
+        ExchangeClient client ;
+        try {
+            //设置连接应该是lazy的 
+            if (url.getParameter(Constants.LAZY_CONNECT_KEY, false)){
+                client = new LazyConnectExchangeClient(url ,requestHandler);
+            } else {
+                client = Exchangers.connect(url ,requestHandler);
+            }
+        } catch (RemotingException e) {
+            throw new RpcException(&quot;Fail to create remoting client for service(&quot; + url
+                    + &quot;): &quot; + e.getMessage(), e);
+        }
+        return client;
+    }
+</code></pre>
+
+<p>出现了我们的<strong>Exchanges</strong>层<code>client = Exchangers.connect(url ,requestHandler)</code>也就是说对于网络的封装都是通过Exchangers作为入口，剩下的代码基本就和export端的代码相同了，只不过，consumer端的操作一直就是连接上服务端的ip，端口，发送消息罢了。后面就是<code>getExchanger(url).connect(url, handler)</code>getExchanger(url)获得的是HeaderExchanger，调用他的connect方法，他的内部是通过Transporters来连接的。</p>
+
+<pre><code class="language-java"> public ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
+        return new HeaderExchangeClient(Transporters.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
+    }
+</code></pre>
+
+<p>那么他的操作也和exchange是相同的<code>getTransporter().connect(url, handler);</code>
+getTransporter默认使用的是NettyTransporter，所以调用的NettyTransporter的connect方法进行的具体的链接，他的内部创建了一个NettyClient。</p>
+
+<pre><code class="language-java">public Client connect(URL url, ChannelHandler listener) throws RemotingException {
+        return new NettyClient(url, listener);
+    }
+</code></pre>
+
+<p>返回DubboProtocol的refer方法，将创建的NettyClient封装成DubboInvoker返回。</p>
+
+<p><strong>toInvokers</strong>是将URL列表<strong>转成</strong>url和对应的invoker的映射关系，就是一个map。（使用了DubboProtocol）</p>
+
+<p><strong>toMethodInvokers</strong>是将toInvokers的返回值map作为入参，返回<strong>方法名</strong>称作为key，value是<strong>可以被执行的invoker的列表</strong>，这里说的可以被执行，不是指全部，而是指经过<strong>route</strong>过滤后的。</p>
+
+<p>toMethodInvokers：</p>
+
+<pre><code class="language-dart">private Map&lt;String, List&lt;Invoker&lt;T&gt;&gt;&gt; toMethodInvokers(Map&lt;String, Invoker&lt;T&gt;&gt; invokersMap) {
+        Map&lt;String, List&lt;Invoker&lt;T&gt;&gt;&gt; newMethodInvokerMap = new HashMap&lt;String, List&lt;Invoker&lt;T&gt;&gt;&gt;();
+        // 按提供者URL所声明的methods分类，兼容注册中心执行路由过滤掉的methods
+        List&lt;Invoker&lt;T&gt;&gt; invokersList = new ArrayList&lt;Invoker&lt;T&gt;&gt;();
+        if (invokersMap != null &amp;&amp; invokersMap.size() &gt; 0) {
+            for (Invoker&lt;T&gt; invoker : invokersMap.values()) {
+                String parameter = invoker.getUrl().getParameter(Constants.METHODS_KEY);
+                if (parameter != null &amp;&amp; parameter.length() &gt; 0) {
+                    String[] methods = Constants.COMMA_SPLIT_PATTERN.split(parameter);
+                    if (methods != null &amp;&amp; methods.length &gt; 0) {
+                        for (String method : methods) {
+                            if (method != null &amp;&amp; method.length() &gt; 0 
+                                    &amp;&amp; ! Constants.ANY_VALUE.equals(method)) {
+                                List&lt;Invoker&lt;T&gt;&gt; methodInvokers = newMethodInvokerMap.get(method);
+                                if (methodInvokers == null) {
+                                    methodInvokers = new ArrayList&lt;Invoker&lt;T&gt;&gt;();
+                                    newMethodInvokerMap.put(method, methodInvokers);
+                                }
+                                methodInvokers.add(invoker);
+                            }
+                        }
+                    }
+                }
+                invokersList.add(invoker);
+            }
+        }
+        newMethodInvokerMap.put(Constants.ANY_VALUE, invokersList);
+        if (serviceMethods != null &amp;&amp; serviceMethods.length &gt; 0) {
+            for (String method : serviceMethods) {
+                List&lt;Invoker&lt;T&gt;&gt; methodInvokers = newMethodInvokerMap.get(method);
+                if (methodInvokers == null || methodInvokers.size() == 0) {
+                    methodInvokers = invokersList;
+                }
+                newMethodInvokerMap.put(method, route(methodInvokers, method));
+            }
+        }
+        // sort and unmodifiable
+        for (String method : new HashSet&lt;String&gt;(newMethodInvokerMap.keySet())) {
+            List&lt;Invoker&lt;T&gt;&gt; methodInvokers = newMethodInvokerMap.get(method);
+            Collections.sort(methodInvokers, InvokerComparator.getComparator());
+            newMethodInvokerMap.put(method, Collections.unmodifiableList(methodInvokers));
+        }
+        return Collections.unmodifiableMap(newMethodInvokerMap);
+    }
+</code></pre>
+
+<p>从invoker中的url获取到provider提供的方法，根据<strong>方法名称</strong>作为<strong>key</strong>，可以为此方法提供远程调用的<strong>invoker</strong>的列表作为<strong>value</strong>，将上面的映射放入到methodInvokers，然后有一个<strong>invokersList</strong>是一个调用者的列表，可以看做是传入的invokersMap中的values，他也是newMethodInvokerMap中的value，key就是<code>*</code>。填充完整个map后，目前为止是<strong>全量的数据</strong>，过滤请看这一行<code>newMethodInvokerMap.put(method, route(methodInvokers, method));</code>
+里面的这个<strong>route方法就是所谓的过滤</strong>。</p>
+
+<pre><code class="language-dart">private List&lt;Invoker&lt;T&gt;&gt; route(List&lt;Invoker&lt;T&gt;&gt; invokers, String method) {
+        Invocation invocation = new RpcInvocation(method, new Class&lt;?&gt;[0], new Object[0]);
+        List&lt;Router&gt; routers = getRouters(); 
+        if (routers != null) {
+            for (Router router : routers) {
+                if (router.getUrl() != null &amp;&amp; ! router.getUrl().getParameter(Constants.RUNTIME_KEY, true)) {
+                    invokers = router.route(invokers, getConsumerUrl(), invocation);
+                }
+            }
+        }
+        return invokers;
+    }
+</code></pre>
+
+<p><code>getRouters</code>可以看做<strong>寻找所有的invoker的过滤器</strong>，随后<strong>遍历</strong>这些过滤器，将传入的所有的invokers进行过滤<code>router.route</code>，过滤完了在返回过滤后的invokers.Router分为两种，一种是条件ConditionRouter，表示满足某种条件才是我们需要的Router,另外一种是ScriptRouter，通过具体的表达式判断，应用不广泛。</p>
+
+<p>到目前为止Registry.doRefer中的directory.subscribe已经执行完了，后面就是<code>cluster.join(directory)</code><strong>返回一个invoker</strong>。回到最初的地方ReferenceConfig中的createProxy中<code>refprotocol.refer(interfaceClass, url)</code>创建的invokers，可以暴露成一个invoker给上层调用，凭借的就是<code>invoker = cluster.join(new StaticDirectory(invokers))</code>。</p>
+
+<p>这里的invoker是一个集成Invoker，<strong>MockClusterInvoker</strong>，提供了mock功能，是对于invoker和directory的封装，内部invoker默认是FailoverClusterInvoker，包括<strong>LoadBalance</strong>功能。</p>
+
+<p>随后将这个<strong>集成的invoker</strong>进行<strong>代理</strong>，生成代理对象<code>proxyFactory.getProxy(invoker)</code>，这个代理对象就是ref，也就是我们需要使用的接口的代理对象。</p>
+
+<p>Dubbo Cluster介绍：<a href="https://www.jianshu.com/p/5feacd639dcb">https://www.jianshu.com/p/5feacd639dcb</a></p>
+
+<p>到目前为止，服务引用，基本上就说完了。我们再花少量的时间，说一下具体使用这个代理对象，发起远程调用的过程。现在我们有了一个动态代理产生的对象。</p>
+
+<p>JDK的动态代理，创建代理的时候</p>
+
+<pre><code class="language-php"> public &lt;T&gt; T getProxy(Invoker&lt;T&gt; invoker, Class&lt;?&gt;[] interfaces) {
+        return (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, new InvokerInvocationHandler(invoker));
+    }
+</code></pre>
+
+<p>Handler是InvokerInvocationHandler的实例，并且他的构造函数需要传入invoker。所以当应用被代理的类的接口的时候，实际上回走到InvokerInvocationHandler.invoke，这个invoker是<strong>MockClusterInvoker</strong>的实例，他里面做了真正的<strong>invoker和directory的封装</strong>，从directory中获取到url，从里面搜索要调用的方法是否是<strong>mock</strong>的类型，如果不是，就直接发起调用，如果是的话，就进行mock，这个设计主要是为了<strong>熔断</strong>。当被调用的服务已经不堪重负了，再调用也处理不过来，就不调用了，使用策略进行mock。当然，这不是我们关注的重点。真正的invoker是<strong>FailoverClusterInvoker</strong>的实例，所以看下他的invoke方法。</p>
+
+<pre><code class="language-java">    public Result invoke(final Invocation invocation) throws RpcException {
+
+        checkWheatherDestoried();
+
+        LoadBalance loadbalance;
+        
+        List&lt;Invoker&lt;T&gt;&gt; invokers = list(invocation);
+        if (invokers != null &amp;&amp; invokers.size() &gt; 0) {
+            loadbalance = ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(invokers.get(0).getUrl()
+                    .getMethodParameter(invocation.getMethodName(),Constants.LOADBALANCE_KEY, Constants.DEFAULT_LOADBALANCE));
+        } else {
+            loadbalance = ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(Constants.DEFAULT_LOADBALANCE);
+        }
+        RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+        return doInvoke(invocation, invokers, loadbalance);
+    }
+</code></pre>
+
+<p>首先我们看下<code>list(invocation)</code>做了什么：</p>
+
+<pre><code class="language-php">protected  List&lt;Invoker&lt;T&gt;&gt; list(Invocation invocation) throws RpcException {
+        List&lt;Invoker&lt;T&gt;&gt; invokers = directory.list(invocation);
+        return invokers;
+    }
+</code></pre>
+
+<p>将这个地址簿中所有可以提供调用的invoker都列出来了。不管我们有多少个invoker，最后我们使用的肯定只有一个，我们通过负载均衡<strong>LoadBalance</strong>选出。如果是多个，我们通过URL中的信息得到具体的负载均衡器，否则使用默认的，<strong>默认的是random</strong>，也就是随机。我们所有的组件都有了，我们看下下一个方法<code>doInvoke(invocation, invokers, loadbalance)</code></p>
+
+<pre><code class="language-dart">public Result doInvoke(Invocation invocation, final List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance) throws RpcException {
+        List&lt;Invoker&lt;T&gt;&gt; copyinvokers = invokers;
+        checkInvokers(copyinvokers, invocation);
+        int len = getUrl().getMethodParameter(invocation.getMethodName(), Constants.RETRIES_KEY, Constants.DEFAULT_RETRIES) + 1;
+        if (len &lt;= 0) {
+            len = 1;
+        }
+        // retry loop.
+        RpcException le = null; // last exception.
+        List&lt;Invoker&lt;T&gt;&gt; invoked = new ArrayList&lt;Invoker&lt;T&gt;&gt;(copyinvokers.size()); // invoked invokers.
+        Set&lt;String&gt; providers = new HashSet&lt;String&gt;(len);
+        for (int i = 0; i &lt; len; i++) {
+            //重试时，进行重新选择，避免重试时invoker列表已发生变化.
+            //注意：如果列表发生了变化，那么invoked判断会失效，因为invoker示例已经改变
+            if (i &gt; 0) {
+                checkWheatherDestoried();
+                copyinvokers = list(invocation);
+                //重新检查一下
+                checkInvokers(copyinvokers, invocation);
+            }
+            Invoker&lt;T&gt; invoker = select(loadbalance, invocation, copyinvokers, invoked);
+            invoked.add(invoker);
+            RpcContext.getContext().setInvokers((List)invoked);
+            try {
+                Result result = invoker.invoke(invocation);
+                if (le != null &amp;&amp; logger.isWarnEnabled()) {
+                    logger.warn(&quot;Although retry the method &quot; + invocation.getMethodName()
+                            + &quot; in the service &quot; + getInterface().getName()
+                            + &quot; was successful by the provider &quot; + invoker.getUrl().getAddress()
+                            + &quot;, but there have been failed providers &quot; + providers 
+                            + &quot; (&quot; + providers.size() + &quot;/&quot; + copyinvokers.size()
+                            + &quot;) from the registry &quot; + directory.getUrl().getAddress()
+                            + &quot; on the consumer &quot; + NetUtils.getLocalHost()
+                            + &quot; using the dubbo version &quot; + Version.getVersion() + &quot;. Last error is: &quot;
+                            + le.getMessage(), le);
+                }
+                return result;
+            } catch (RpcException e) {
+                if (e.isBiz()) { // biz exception.
+                    throw e;
+                }
+                le = e;
+            } catch (Throwable e) {
+                le = new RpcException(e.getMessage(), e);
+            } finally {
+                providers.add(invoker.getUrl().getAddress());
+            }
+        }
+        throw new RpcException(le != null ? le.getCode() : 0, &quot;Failed to invoke the method &quot;
+                + invocation.getMethodName() + &quot; in the service &quot; + getInterface().getName() 
+                + &quot;. Tried &quot; + len + &quot; times of the providers &quot; + providers 
+                + &quot; (&quot; + providers.size() + &quot;/&quot; + copyinvokers.size() 
+                + &quot;) from the registry &quot; + directory.getUrl().getAddress()
+                + &quot; on the consumer &quot; + NetUtils.getLocalHost() + &quot; using the dubbo version &quot;
+                + Version.getVersion() + &quot;. Last error is: &quot;
+                + (le != null ? le.getMessage() : &quot;&quot;), le != null &amp;&amp; le.getCause() != null ? le.getCause() : le);
+    }
+</code></pre>
+
+<p>我们最为关注的就是<code>Invoker invoker = select(loadbalance, invocation, copyinvokers, invoked);</code>看看选择出一个具体的invoker来进行后面的流程的。</p>
+
+<pre><code class="language-dart">/**
+     * 使用loadbalance选择invoker.&lt;/br&gt;
+     * a)先lb选择，如果在selected列表中 或者 不可用且做检验时，进入下一步(重选),否则直接返回&lt;/br&gt;
+     * b)重选验证规则：selected &gt; available .保证重选出的结果尽量不在select中，并且是可用的 
+     * 
+     * @param availablecheck 如果设置true，在选择的时候先选invoker.available == true
+     * @param selected 已选过的invoker.注意：输入保证不重复
+     * 
+     */
+    protected Invoker&lt;T&gt; select(LoadBalance loadbalance, Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, List&lt;Invoker&lt;T&gt;&gt; selected) throws RpcException {
+        if (invokers == null || invokers.size() == 0)
+            return null;
+        String methodName = invocation == null ? &quot;&quot; : invocation.getMethodName();
+        
+        boolean sticky = invokers.get(0).getUrl().getMethodParameter(methodName,Constants.CLUSTER_STICKY_KEY, Constants.DEFAULT_CLUSTER_STICKY) ;
+        {
+            //ignore overloaded method
+            if ( stickyInvoker != null &amp;&amp; !invokers.contains(stickyInvoker) ){
+                stickyInvoker = null;
+            }
+            //ignore cucurrent problem
+            if (sticky &amp;&amp; stickyInvoker != null &amp;&amp; (selected == null || !selected.contains(stickyInvoker))){
+                if (availablecheck &amp;&amp; stickyInvoker.isAvailable()){
+                    return stickyInvoker;
+                }
+            }
+        }
+        Invoker&lt;T&gt; invoker = doselect(loadbalance, invocation, invokers, selected);
+        
+        if (sticky){
+            stickyInvoker = invoker;
+        }
+        return invoker;
+    }
+</code></pre>
+
+<p>这个方法的主体就是<code>Invoker invoker = doselect(loadbalance, invocation, invokers, selected);</code></p>
+
+<pre><code class="language-kotlin">private Invoker&lt;T&gt; doselect(LoadBalance loadbalance, Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, List&lt;Invoker&lt;T&gt;&gt; selected) throws RpcException {
+        if (invokers == null || invokers.size() == 0)
+            return null;
+        if (invokers.size() == 1)
+            return invokers.get(0);
+        // 如果只有两个invoker，退化成轮循
+        if (invokers.size() == 2 &amp;&amp; selected != null &amp;&amp; selected.size() &gt; 0) {
+            return selected.get(0) == invokers.get(0) ? invokers.get(1) : invokers.get(0);
+        }
+        Invoker&lt;T&gt; invoker = loadbalance.select(invokers, getUrl(), invocation);
+        
+        //如果 selected中包含（优先判断） 或者 不可用&amp;&amp;availablecheck=true 则重试.
+        if( (selected != null &amp;&amp; selected.contains(invoker))
+                ||(!invoker.isAvailable() &amp;&amp; getUrl()!=null &amp;&amp; availablecheck)){
+            try{
+                Invoker&lt;T&gt; rinvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);
+                if(rinvoker != null){
+                    invoker =  rinvoker;
+                }else{
+                    //看下第一次选的位置，如果不是最后，选+1位置.
+                    int index = invokers.indexOf(invoker);
+                    try{
+                        //最后在避免碰撞
+                        invoker = index &lt;invokers.size()-1?invokers.get(index+1) :invoker;
+                    }catch (Exception e) {
+                        logger.warn(e.getMessage()+&quot; may because invokers list dynamic change, ignore.&quot;,e);
+                    }
+                }
+            }catch (Throwable t){
+                logger.error(&quot;clustor relselect fail reason is :&quot;+t.getMessage() +&quot; if can not slove ,you can set cluster.availablecheck=false in url&quot;,t);
+            }
+        }
+        return invoker;
+    } 
+</code></pre>
+
+<p>这个方法中的关键点是<code>Invoker invoker = loadbalance.select(invokers, getUrl(), invocation);</code>通过具体的负载均衡的算法得到一个invoker，最后调用invoker.invoke(invocation)发起远程请求。</p>
+</div>
+        <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://jixinhe111.github.io/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a>
+                
+              </span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://jixnhe111.tk">Finished by jxh,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>真奇怪</span>
+  </div>
+</footer>
+
+
+
+<script src="https://jixinhe111.github.io/js/jquery-3.3.1.min.js"></script>
+<script src="https://jixinhe111.github.io/js/zozo.js"></script>
+<script src="https://jixinhe111.github.io/js/highlight.pack.js"></script>
+<link  href="https://jixinhe111.github.io/css/fancybox.min.css" rel="stylesheet">
+<script src="https://jixinhe111.github.io/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>

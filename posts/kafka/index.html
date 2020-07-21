@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="jxh"/>
+
+  
+  <meta name="description" content="Kafka 1、Kafka 是什么？主要应用场景有哪些？ Kafka 是一个分布式流式处理平台。 流平台具有三个关键功能： 消息队列：发布和订阅消息流，这个功能类似于消息队列，这也是 Kafka 也被归类为消息队列的原因。 容错的持久方式存储"/>
+  
+
+  
+  
+  <meta name="keywords" content="Hugo, theme, zozo"/>
+  
+
+  
+  <link rel="canonical" href="https://jixinhe111.github.io/posts/kafka/"/>
+
+  
+
+  <title>Kafka &middot; 两只老虎 --from jxh</title>
+
+  <link rel="shortcut icon" href="https://jixinhe111.github.io/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/zozo.css"/>
+  <link rel="stylesheet" href="https://jixinhe111.github.io/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://jixinhe111.github.io/">
+          <span>两只老虎 --from jxh</span>
+          <img src="https://jixinhe111.github.io/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title">一只没有眼睛，一只没有耳朵</p>
+      <div class="my_socials">
+        
+        
+        <a href="%20" title="facebook" target="_blank"><i class="remixicon-facebook-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="instagram" target="_blank"><i class="remixicon-instagram-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="twitter" target="_blank"><i class="remixicon-twitter-fill"></i></a>
+        
+        
+        
+        <a href="%20" title="weibo" target="_blank"><i class="remixicon-weibo-fill"></i></a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/kafka/'>Kafka</a></h2>
+          <span class="date">2020.06.20</span>
+        </div>
+        <div class="post_content markdown">
+
+<h3 id="kafka">Kafka</h3>
+
+<h4 id="1-kafka-是什么-主要应用场景有哪些">1、Kafka 是什么？主要应用场景有哪些？</h4>
+
+<p>Kafka 是一个<strong>分布式流式处理平台</strong>。</p>
+
+<p>流平台具有三个关键功能：</p>
+
+<ol>
+<li><strong>消息队列</strong>：发布和订阅消息流，这个功能类似于消息队列，这也是 Kafka 也被归类为消息队列的原因。</li>
+<li><strong>容错的持久方式存储记录消息流</strong>： Kafka 会把消息持久化到磁盘，有效避免了消息丢失的风险·。</li>
+<li><strong>流式处理平台：</strong> 在消息发布的时候进行处理，Kafka 提供了一个完整的流式处理类库。</li>
+</ol>
+
+<p>Kafka 主要有两大应用场景：</p>
+
+<ol>
+<li><strong>消息队列</strong> ：建立实时流数据管道，以可靠地在系统或应用程序之间获取数据。</li>
+<li><strong>数据处理：</strong> 构建实时的流数据处理程序来转换或处理数据流。</li>
+</ol>
+
+<h4 id="2-和其他消息队列相比-kafka的优势在哪里">2、和其他消息队列相比,Kafka的优势在哪里？</h4>
+
+<p>Kafka 相比其他消息队列主要的优势如下：</p>
+
+<ol>
+<li><strong>极致的性能</strong> ：基于 Scala 和 Java 语言开发，设计中大量使用了批量处理和异步的思想，最高可以每秒处理千万级别的消息。</li>
+<li><strong>生态系统兼容性无可匹敌</strong> ：Kafka 与周边生态系统的兼容性是最好的没有之一，尤其在大数据和流计算领域。</li>
+</ol>
+
+<h4 id="3-队列模型了解吗-kafka-的消息模型知道吗">3、队列模型了解吗？Kafka 的消息模型知道吗？</h4>
+
+<p><strong>发布-订阅模型:Kafka 消息模型</strong></p>
+
+<p>发布-订阅模型主要是为了解决队列模型存在的问题。</p>
+
+<p>发布订阅模型（Pub-Sub）使用<strong>主题（Topic）</strong> 作为消息通信载体，类似于<strong>广播模式</strong>；发布者发布一条消息，该消息通过主题传递给所有的订阅者，<strong>在一条消息广播之后才订阅的用户则是收不到该条消息的</strong>。</p>
+
+<p>在发布 - 订阅模型中，如果只有一个订阅者，那它和队列模型就基本是一样的了。所以说，发布 - 订阅模型在功能层面上是可以兼容队列模型的。</p>
+
+<p><strong>Kafka 采用的就是发布 - 订阅模型。</strong></p>
+
+<blockquote>
+<p><strong>RocketMQ 的消息模型和 Kafka 基本是完全一样的。唯一的区别是 Kafka 中没有队列这个概念，与之对应的是 Partition（分区）。</strong></p>
+</blockquote>
+
+<h4 id="4-什么是producer-consumer-broker-topic-partition">4、什么是Producer、Consumer、Broker、Topic、Partition？</h4>
+
+<p>Kafka 将生产者发布的消息发送到 <strong>Topic（主题）</strong> 中，需要这些消息的消费者可以订阅这些 <strong>Topic（主题）</strong>。</p>
+
+<p>上面这张图也为我们引出了，Kafka 比较重要的几个概念：</p>
+
+<ol>
+<li><strong>Producer（生产者）</strong> : 产生消息的一方。</li>
+<li><strong>Consumer（消费者）</strong> : 消费消息的一方。</li>
+<li><strong>Broker（代理）</strong> : 可以看作是一个独立的 Kafka 实例。多个 Kafka Broker 组成一个 Kafka Cluster。</li>
+</ol>
+
+<p>同时，你一定也注意到每个 Broker 中又包含了 Topic 以及 Partition 这两个重要的概念：</p>
+
+<ul>
+<li><strong>Topic（主题）</strong> : Producer 将消息发送到特定的主题，Consumer 通过订阅特定的 Topic(主题) 来消费消息。</li>
+<li><strong>Partition（分区）</strong> : Partition 属于 Topic 的一部分。一个 Topic 可以有多个 Partition ，并且<strong>同一 Topic 下的 Partition 可以分布在不同的 Broker</strong> 上，这也就表明一个 Topic 可以横跨多个 Broker 。</li>
+</ul>
+
+<h4 id="5-kafka-的多副本机制了解吗-带来了什么好处">5、Kafka 的多副本机制了解吗？带来了什么好处？</h4>
+
+<p>分区（Partition）中的多个副本之间会有一个叫做 leader 的家伙，其他副本称为 follower。我们发送的消息会被发送到 leader 副本，然后 follower 副本才能从 leader 副本中拉取消息进行同步。</p>
+
+<blockquote>
+<p>生产者和消费者只与 leader 副本交互。你可以理解为其他副本只是 leader 副本的拷贝，它们的存在只是为了保证消息存储的安全性。当 leader 副本发生故障时会从 follower 中选举出一个 leader，但是 follower 中如果有和 leader 同步程度达不到要求的参加不了 leader 的竞选。</p>
+</blockquote>
+
+<p><strong>Kafka 的多分区（Partition）以及多副本（Replica）机制有什么好处呢？</strong></p>
+
+<ol>
+<li>Kafka 通过给特定 Topic 指定多个 Partition, 而各个 Partition 可以分布在不同的 Broker 上, 这样便能提供比较好的并发能力（负载均衡）。</li>
+<li>Partition 可以指定对应的 Replica 数, 这也极大地提高了消息存储的安全性, 提高了容灾能力，不过也相应的增加了所需要的存储空间。</li>
+</ol>
+
+<p>Kafka 分配 Replica 的算法如下：</p>
+
+<ol>
+<li>将所有 Broker（假设共 n 个 Broker）和待分配的 Partition 排序</li>
+<li>将第 i 个 Partition 分配到第（i mod n）个 Broker 上</li>
+<li>将第 i 个 Partition 的第 j 个 Replica 分配到第（(i + j) mode n）个 Broker 上</li>
+</ol>
+
+<h4 id="6-zookeeper-在-kafka-中的作用知道吗">6、Zookeeper 在 Kafka 中的作用知道吗？</h4>
+
+<p><img src="https://img2018.cnblogs.com/blog/957248/201908/957248-20190813225151865-2120947196.png" alt="img" /></p>
+
+<p><img src="https://images2018.cnblogs.com/blog/957248/201809/957248-20180913162924952-697722340.png" alt="img" /></p>
+
+<p>如上图所示，Kafka集群的 <strong>broker</strong>，和 <strong>Consumer</strong> 都需要连接 Zookeeper。
+<strong>Producer直接连接 Broker</strong>。</p>
+
+<p>Producer 把数据上传到 Broker，Producer可以指定数据有几个分区、几个备份。上面的图中，数据有两个分区 0、1，每个分区都有自己的副本：0'、 1'。</p>
+
+<p>黄色的分区为 leader，白色的为 follower。</p>
+
+<p>leader 处理 partition 的所有读写请求，与此同时，follower会被动定期地去复制leader上的数据。 如下图所示，红色的为 leader，绿色的为 follower，leader复制自己到其他 Broker 中：</p>
+
+<p><img src="https:////upload-images.jianshu.io/upload_images/3149801-dae3a4836701dc12.png?imageMogr2/auto-orient/strip|imageView2/2/w/1104/format/webp" alt="img" /></p>
+
+<p>如果leader发生故障或挂掉，一个新leader被选举并接收客户端的消息。Kafka确保从同步副本列表中选举一个副本为 leader。</p>
+
+<p>慢副本：在一定周期时间内follower不能追赶上leader。最常见的原因之一是I / O瓶颈导致follower追加复制消息速度慢于从leader拉取速度。
+卡住副本：在一定周期时间内follower停止从leader拉取请求。follower replica卡住了是由于GC暂停或follower失效或死亡。</p>
+
+<p><strong>replica.lag.max.messages</strong></p>
+
+<p>follower落后leader不超过n就不会从同步副本ISR列表中移除。</p>
+
+<p><strong>replica.lag.time.max</strong></p>
+
+<p>follower向leader发送请求时间间隔不超过n ms，就不会被标记为死亡,不会从同步副本列ISR中移除。</p>
+
+<p>推荐设置replica.lag.time.max。</p>
+
+<p>笔者认为真正重要的事情是检测卡或慢副本,这段时间follower replica是“out-of-sync”落后于leader。在服务端现在只有一个参数需要配置replica.lag.time.max.ms。这个参数解释replicas响应partition leader的最长等待时间。检测卡住或失败副本的探测——如果一个replica失败导致发送拉取请求时间间隔超过replica.lag.time.max.ms。Kafka会认为此replica已经死亡会从同步副本列表从移除。检测慢副本机制发生了变化——如果一个replica开始落后leader超过replica.lag.time.max.ms。Kafka会认为太缓慢并且会从同步副本列表中移除。除非replica请求leader时间间隔大于replica.lag.time.max.ms，因此即使leader使流量激增和大批量写消息。Kafka也不会从同步副本列表从移除该副本。</p>
+
+<p>Topic 分区Partition被放在不同的 Broker 中，保证 Producer 和 Consumer 错开访问Broker，避免访问单个Broker造成过度的IO压力，使得<strong>负载均衡</strong>。</p>
+
+<p><strong>1、Broker</strong></p>
+
+<p><strong>/brokers/ids</strong></p>
+
+<p>每个Broker在启动时，都会到Zookeeper上进行注册，即到/brokers/ids下创建属于自己的节点，如/brokers/ids/[0...N]。</p>
+
+<p>Kafka使用了全局唯一的数字来指代每个Broker服务器，不同的Broker必须使用不同的Broker ID进行注册，创建完节点后，<strong>每个Broker就会将自己的IP地址和端口信息记录</strong>到该节点中去。其中，Broker创建的节点类型是<strong>临时节点</strong>，一旦Broker宕机，则对应的临时节点也会被自动删除。</p>
+
+<p><strong>2、Topic</strong></p>
+
+<p>/borkers/topics</p>
+
+<p>Kafka中每个Topic都会以/brokers/topics/[topic]的形式被记录，如/brokers/topics/login和/brokers/topics/search等。Broker服务器启动后，会到对应Topic节点（/brokers/topics）上注册自己的Broker ID并写入针对该Topic的分区总数，如/brokers/topics/login/3-&gt;2，这个节点表示Broker ID为3的一个Broker服务器，对于&quot;login&quot;这个Topic的消息，提供了2个分区进行消息存储，同样，这个分区节点也是临时节点。</p>
+
+<p><strong>3、Consumer Group</strong></p>
+
+<p>每个消息分区只能被同组的一个消费者进行消费。</p>
+
+<p>每个消费者一旦确定了对一个消息分区的消费权力，需要将其Consumer ID写入到 Zookeeper 对应消息分区的临时节点上，例如：</p>
+
+<p>/consumers/[group_id]/<strong>owners</strong>/[topic]/[broker_id-partition_id]</p>
+
+<p>其中，[broker_id-partition_id]就是一个消息分区的标识，<strong>节点内容</strong>就是该消息分区上消费者的Consumer ID。</p>
+
+<p><strong>4、消费进度Offset 记录</strong></p>
+
+<p>在消费者对指定消息分区进行消息消费的过程中，<strong>需要定时地将分区消息的消费进度Offset记录到Zookeeper上</strong>，以便在该消费者进行重启或者其他消费者重新接管该消息分区的消息消费后，能够从之前的进度开始继续进行消息消费。Offset在Zookeeper中由一个专门节点进行记录，其节点路径为:</p>
+
+<p>/consumers/[group_id]/<strong>offsets</strong>/[topic]/[broker_id-partition_id]</p>
+
+<p>节点内容就是Offset的值。</p>
+
+<p><strong>5、消费者</strong></p>
+
+<p>注册到消费者分组。每个消费者服务器启动时，都会到Zookeeper的指定节点下创建一个属于自己的消费者节点，例如/consumers/[group_id]/<strong>ids</strong>/[consumer_id]，完成节点创建后，消费者就会将自己订阅的<strong>Topic信息</strong>写入该临时节点。</p>
+
+<p><strong>对 消费者分组 中的 消费者 的变化注册监听</strong>。每个 消费者 都需要关注所属 消费者分组 中其他消费者服务器的变化情况，即对/consumers/[group_id]/ids节点注册子节点变化的Watcher监听，一旦发现消费者新增或减少，就触发消费者的<strong>负载均衡</strong>。</p>
+
+<p><strong>对Broker服务器变化注册监听</strong>。消费者需要对/broker/ids/[0-N]中的节点进行监听，如果发现Broker服务器列表发生变化，那么就根据具体情况来决定是否需要进行消费者负载均衡。</p>
+
+<p><strong>进行消费者负载均衡</strong>。为了让同一个Topic下不同分区的消息尽量均衡地被多个 消费者 消费而进行 消费者 与 消息 分区分配的过程，通常，对于一个消费者分组，如果组内的消费者服务器发生变更或Broker服务器发生变更，会发出消费者负载均衡。</p>
+
+<p><strong>负载均衡</strong></p>
+
+<p><strong>生产者</strong></p>
+
+<p><strong>消费者</strong> Rebalance</p>
+
+<h4 id="7-kafka-如何保证消息的消费顺序">7、Kafka 如何保证消息的消费顺序？</h4>
+
+<p>我们知道 Kafka 中 Partition(分区)是真正保存消息的地方，我们发送的消息都被放在了这里。而我们的 Partition(分区) 又存在于 Topic(主题) 这个概念中，并且我们可以给特定 Topic 指定多个 Partition。</p>
+
+<p>每次添加消息到 Partition(分区) 的时候都会采用尾加法。Kafka 只能为我们保证 Partition(分区) 中的消息有序，而不能保证 Topic(主题) 中的 Partition(分区) 的有序。</p>
+
+<blockquote>
+<p>消息在被追加到 Partition(分区)的时候都会分配一个特定的偏移量（offset）。Kafka 通过偏移量（offset）来保证消息在分区内的顺序性。</p>
+</blockquote>
+
+<p>所以，我们就有一种很简单的保证消息消费顺序的方法：<strong>1 个 Topic 只对应一个 Partition</strong>。这样当然可以解决问题，但是破坏了 Kafka 的设计初衷。</p>
+
+<p>Kafka 中发送 1 条消息的时候，可以指定 <strong>topic, partition, key,data</strong>（数据） 4 个参数。如果你发送消息的时候指定了 Partition 的话，所有消息都会被发送到指定的 Partition。并且，同一个 key 的消息可以保证只发送到同一个 partition，这个我们可以采用表/对象的 id 来作为 key 。</p>
+
+<p>总结一下，对于如何保证 Kafka 中消息消费的顺序，有了下面两种方法：</p>
+
+<ol>
+<li>1 个 Topic 只对应一个 Partition。</li>
+<li>（推荐）发送消息的时候指定 key/Partition。</li>
+</ol>
+
+<p>当然不仅仅只有上面两种方法，上面两种方法是我觉得比较好理解的。</p>
+
+<h4 id="8-kafka-如何保证消息不丢失">8、Kafka 如何保证消息不丢失</h4>
+
+<p><strong>生产者丢失消息的情况</strong></p>
+
+<p>生产者(Producer) 调用<code>send</code>方法发送消息之后，消息可能因为网络问题并没有发送过去。</p>
+
+<p>所以，我们不能默认在调用<code>send</code>方法发送消息之后消息消息发送成功了。为了确定消息是发送成功，我们要判断消息发送的结果。但是要注意的是 Kafka 生产者(Producer) 使用 <code>send</code> 方法发送消息实际上是<strong>异步</strong>的操作，我们可以通过 <code>get()</code>方法获取调用结果，但是这样也让它变为了同步操作，示例代码如下：</p>
+
+<pre><code>SendResult&lt;String, Object&gt; sendResult = kafkaTemplate.send(topic, o).get();
+if (sendResult.getRecordMetadata() != null) {
+  logger.info(&quot;生产者成功发送消息到&quot; + sendResult.getProducerRecord().topic() + &quot;-&gt; &quot; + sendRe
+              sult.getProducerRecord().value().toString());
+}
+</code></pre>
+
+<p>但是一般不推荐这么做！可以采用为其添加回调函数的形式，示例代码如下：</p>
+
+<pre><code>        ListenableFuture&lt;SendResult&lt;String, Object&gt;&gt; future = kafkaTemplate.send(topic, o);
+        future.addCallback(result -&gt; logger.info(&quot;生产者成功发送消息到topic:{} partition:{}的消息&quot;, result.getRecordMetadata().topic(), result.getRecordMetadata().partition()),
+                ex -&gt; logger.error(&quot;生产者发送消失败，原因：{}&quot;, ex.getMessage()));
+</code></pre>
+
+<p>如果消息发送失败的话，我们检查失败的原因之后重新发送即可！</p>
+
+<p>另外这里推荐为 Producer 的<code>retries</code>（<strong>重试次数</strong>）设置一个比较合理的值，一般是 3 ，但是为了保证消息不丢失的话一般会设置比较大一点。设置完成之后，当出现网络问题之后能够自动重试消息发送，避免消息丢失。另外，建议还要设置<strong>重试间隔</strong>，因为间隔太小的话重试的效果就不明显了，网络波动一次你3次一下子就重试完了。</p>
+
+<p><strong>消费者丢失消息的情况</strong></p>
+
+<p>我们知道消息在被追加到 Partition(分区)的时候都会分配一个特定的偏移量（offset）。偏移量（offset)表示 Consumer 当前消费到的 Partition(分区)的所在的位置。Kafka 通过偏移量（offset）可以保证消息在分区内的顺序性。</p>
+
+<p><strong>解决办法也比较粗暴，我们手动关闭闭自动提交 offset，每次在真正消费完消息之后之后再自己手动提交 offset 。</strong> 但是，细心的朋友一定会发现，这样会带来消息被重新消费的问题。比如你刚刚消费完消息之后，还没提交 offset，结果自己挂掉了，那么这个消息理论上就会被消费两次。</p>
+
+<p><strong>Kafka 弄丢了消息</strong></p>
+
+<p><strong>试想一种情况：假如 leader 副本所在的 broker 突然挂掉，那么就要从 follower 副本重新选出一个 leader ，但是 leader 的数据还有一些没有被 follower 副本的同步的话，就会造成消息丢失。</strong></p>
+
+<p><strong>设置 acks = all</strong></p>
+
+<p>解决办法就是我们设置 <strong>acks = all</strong>。acks 是 Kafka 生产者(Producer) 很重要的一个参数。</p>
+
+<p>acks=0: producer 不等待 broker 的 acks。发送的消息可能丢失，但永远不会重发。</p>
+
+<p>acks 的默认值即为1，代表我们的消息被<strong>leader</strong>副本接收之后就算被成功发送。</p>
+
+<p>当我们配置 <strong>acks = all</strong> 代表则<strong>所有副本</strong>都要接收到该消息之后该消息才算真正成功被发送。(acks = -1)</p>
+
+<p><strong>设置 replication.factor &gt;= 3</strong></p>
+
+<p>为了保证 leader 副本能有 follower 副本能同步消息，我们一般会为 topic 设置 <strong>replication.factor &gt;= 3</strong>。这样就可以保证每个分区(partition) 至少有 3 个副本。虽然造成了数据冗余，但是带来了数据的安全性。</p>
+
+<p><strong>设置 min.insync.replicas &gt; 1</strong></p>
+
+<p>一般情况下我们还需要设置 <strong>min.insync.replicas&gt; 1</strong> ，这样配置代表消息至少要被写入到 2 个副本才算是被成功发送。<strong>min.insync.replicas</strong> 的默认值为 1 ，在实际生产中应尽量避免默认值 1。</p>
+
+<p>但是，为了保证整个 Kafka 服务的高可用性，你需要确保 <strong>replication.factor &gt; min.insync.replicas</strong> 。为什么呢？设想一下假如两者相等的话，只要是有一个副本挂掉，整个分区就无法正常工作了。这明显违反高可用性！一般推荐设置成 <strong>replication.factor = min.insync.replicas + 1</strong>。</p>
+
+<p><strong>设置 unclean.leader.election.enable = false</strong></p>
+
+<p>当 leader 副本发生故障时就不会从 follower 副本中和 leader 同步程度达不到要求的副本中选择出 leader ，这样降低了消息丢失的可能性。</p>
+
+<p><strong>可靠性</strong>：</p>
+
+<p>HW、LeaderEpoch      <a href="https://blog.csdn.net/varyall/article/details/88784537">https://blog.csdn.net/varyall/article/details/88784537</a></p>
+
+<h4 id="9-kafka-如何保证消息不重复消费">9、Kafka 如何保证消息不重复消费</h4>
+
+<p>Exactly once：</p>
+
+<ol>
+<li>Idempotent Producer：Exactly-once，in-order，delivery per partition；    //单分区</li>
+<li>Transactions：Atomic writes across partitions；    //事务</li>
+<li>Exactly-Once stream processing across read-process-write tasks；   //</li>
+</ol>
+
+<p>幂等性</p>
+
+<p><strong>生产者</strong></p>
+
+<p>每个分区只有一个生产者写入消息（分区和生产者是多对一的关系），当出现异常或超时的情况时，生产者查询此分区最后一个消息，用来决定要消息重传还是继续发送后面的消息。</p>
+
+<p>为每个消息添加一个全局唯一主键，生产者不做处理，让消费者对消息去重，实现“Exactly once”语义。
+ 如果业务数据产生的消息可以找到合适的字段作为主键，或有一个全局的ID，应该优先考虑第二个方案。</p>
+
+<p><strong>消费者</strong></p>
+
+<p>消费者将关闭自动提交offset的功能且不在手动提交offset,这样就不使用Offsets Topic这个内部Topic记录其offset，而是消费者自己保存offset。这里利用事务的原子性来实现“Exactly once”语义，我们将offset和消息处理放在一个事务中，事务执行成功则认为此消息被消费，否则事务回滚需要重新消费。当出现消费者宕机重启或Rebalance操作时，消费者可以从<strong>关系数据库</strong>中找到对应的offset，然后调用KafkaConsumer.seek()方法手动设置消费位置，从此offset处开始继续消费。</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/14/NStYng.png" alt="NStYng.png" /></p>
+
+<ul>
+<li>onPartitionRevoked()方法：调用时机是Consumer停止拉取数据之后，Rebalance开始之前，我们可以在此方法中实现手动提交offset，这就避免了Rebalance导致的重复消费的情况。</li>
+<li>onPartitionAssigned()方法：调用时机是Rebalance完成后，Consumer开始拉取数据之前，我们可以在此方法中调整或定义offset的值。
+ConsumerRebalanceListener和seek()方法，我们就可以实现从<strong>关系数据库</strong>获取offset并手动设置的功能了。</li>
+</ul>
+
+<h4 id="10-分区机制和文件存储机制">10、分区机制和文件存储机制</h4>
+
+<p>kafka中的消息是以topic进行分类的，生产者通过topic向kafka broker发送消息，消费者通过topic读取消息。然而topic在物理层面上又能够以partition进行分组，同一个topic下有多个不同的partition，<strong>每个partiton在物理上对应一个目录（文件夹）</strong>，以topic名称+有序序号的形式命名（序号从0开始计，最大为partition数-1）。partition是实际物理上的概念，而topic是逻辑上的概念。Patition 的设计使得Kafka的吞吐率可以水平扩展。</p>
+
+<p><img src="https://upload-images.jianshu.io/upload_images/2281730-2d46c80e56d9dda9.png?imageMogr2/auto-orient/strip|imageView2/2/w/329/format/webp" alt="img" /></p>
+
+<p>每个分区文件夹下存储这个分区的所有消息(.log)和索引文件(.index)。“.index”索引文件存储大量的元数据，“.log”数据文件存储大量的消息，索引文件中的元数据指向对应数据文件中message的物理偏移地址。其中以“.index”索引文件中的元数据[3, 348]为例，在“.log”数据文件表示第3个消息，即在全局partition中表示170410+3=170413个消息，该消息的物理偏移地址为348。</p>
+
+<p><img src="https://upload-images.jianshu.io/upload_images/2281730-553dcbd1f8a43760.png?imageMogr2/auto-orient/strip|imageView2/2/w/490/format/webp" alt="img" /></p>
+
+<p>注意该 index 文件并不是从0开始，也不是每次递增1的，这是因为 Kafka 采取<strong>稀疏索引</strong>存储的方式，每隔一定字节的数据建立一条索引，它减少了索引文件大小，使得能够把 index 映射到内存，降低了查询时的磁盘 IO 开销，同时也并没有给查询带来太多的时间消耗。</p>
+
+<p>那么如何从partition中通过offset查找message呢?以上图为例，读取offset=170418的消息，首先查找segment文件，其中 00000000000000000000.index为最开始的文件，第二个文件为00000000000000170410.index(起始偏移为170410+1=170411)，而第三个文件为00000000000000239430.index(起始偏移为239430+1=239431)，所以这个offset=170418就落到了第二个文件之中。其他后续文件可以依次类推，以其实偏移量命名并排列这些文件，然后根据<strong>二分查找法</strong>就可以快速定位到具体文件位置。其次根据 00000000000000170410.index文件中的[8,1325]定位到00000000000000170410.log文件中的1325的位置进行读取。</p>
+
+<p>Kafka中topic的每个partition有一个预写式的日志文件，虽然partition可以继续细分为若干个segment文件，但是对于上层应用来说可以将 partition看成最小的存储单元(一个有多个segment文件拼接的“巨型”文件)，每个partition都由一些列有序的、不可变的消息组成，这些消息被连续的追加到partition中。</p>
+
+<h4 id="11-高可用">11、高可用</h4>
+
+<p><strong>leader机制</strong></p>
+
+<p>为了提高消息的可靠性，Kafka每个topic的partition有N个副本(replicas)，其中N(大于等于1)是topic的复制因子(replica fator)的个数。这个时候每个 partition下面就有可能有多个 replica（replication机制，相当于是partition的副本但是有可能存储在其他的broker上）,但是这多个replica并不一定分布在一个broker上，而这时候为了更好的在replica之间复制数据，此时会选出一个leader，这个时候 producer会push消息到这个leader（leader机制），consumer也会从这个leader pull 消息，其他的 replica只是作为follower从leader复制数据，leader负责所有的读写。</p>
+
+<p><strong>如何将所有Replica均匀分布到整个集群</strong></p>
+
+<p>为了实现更高的可用性，推荐在部署kafka的时候，能够保证一个topic的partition数量大于broker的数量，而且还需要把follower均匀的分布在所有的broker上，而不是只分布在一个 broker上。zookeeper 会对partition的leader follower等进行管理。
+ Kafka分配Replica的算法如下：</p>
+
+<p>将所有Broker（假设共n个Broker）和待分配的Partition排序
+将第i个Partition分配到第（i mod n）个Broker上
+将第i个Partition的第j个Replica分配到第（(i + j) mod n）个Broke</p>
+
+<p><strong>leader election</strong></p>
+
+<p>当Leader宕机了，怎样在Follower中选举出新的Leader？
+ 一种非常常用的Leader Election的方式是“Majority Vote”（“少数服从多数”），但Kafka并未采用这种方式。
+ Kafka在Zookeeper中动态维护了一个ISR（in-sync replicas），这个ISR里的所有Replica都跟上了leader，只有ISR里的成员才有被选为Leader的可能。</p>
+
+<p>那么如何选取出leader：
+最简单最直观的方案是（谁写进去谁就是leader），所有Follower都在Zookeeper上设置一个Watch，一旦Leader宕机，其对应的ephemeral znode会自动删除，此时所有Follower都尝试创建该节点，而创建成功者（<strong>Zookeeper保证</strong>只有一个能创建成功）即是新的Leader，其它Replica即为Follower。</p>
+
+<p><strong>Data Replication</strong></p>
+
+<p>一条消息只有被ISR里的所有Follower都从Leader复制过去才会被认为已提交。这样就避免了部分数据被写进了Leader，还没来得及被任何Follower复制就宕机了，而造成数据丢失（Consumer无法消费这些数据）。而对于Producer而言，它可以选择是否等待消息commit，这可以通过request.required.acks来设置。</p>
+
+<blockquote>
+<p>0---表示不进行消息接收是否成功的确认；
+1---表示当Leader接收成功时确认；
+-1---表示Leader和Follower都接收成功时确认；</p>
+</blockquote>
+
+<p><strong>持久性</strong></p>
+
+<p>kafka使用文件存储消息,这就直接决定kafka在性能上严重依赖文件系统的本身特性。且无论任何 OS 下,对文件系统本身的优化几乎没有可能。文件缓存/直接内存映射等是常用的手段。 因为 kafka 是对日志文件进行 <strong>append</strong> 操作,因此磁盘检索的开支是较小的;同时为了减少磁盘写入的次数,broker会将消息暂时<strong>buffer</strong>起来,当消息的个数(或尺寸)达到一定阀值时,再flush到磁盘,这样减少了磁盘IO调用的次数。</p>
+
+<h4 id="12-producer">12、producer</h4>
+
+<p>整体结构</p>
+
+<p><img src="https://img-blog.csdnimg.cn/20200123094122342.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0xJTkJFX2JsYXplcnM=,size_16,color_FFFFFF,t_70" alt="img" /></p>
+
+<p>整个生产者客户端由两个线程协调运行，这两个线程分别为<strong>主线程</strong>和<strong>Sender线程</strong>（发送线程）。在主线程中由KafkaProducer创建消息，然后通过可能的拦截器、序列化器和分区器的作用之后缓存到消息累加器（RecordAccumulator，也称为消息收集器）中。Sender线程负责从RecordAccumulator中获取消息并将其发送到Kafka中。</p>
+
+<p>RecordAccumulator主要用来缓存消息以便Sender线程可以批量发送，进而减少网络传输的资源消耗提升性能。RecordAccumulator缓存的大小可以通过生产者客户端参数buffer.memory的配置，默认值为32MB。如果生产者发送消息的速度超过发送到服务器的速度，则会导致生产者空间不足，这个时候KafkaProducer的send()方法调用要么被阻塞，要么抛出异常，这个取决于参数max.block.ms的配置，此参数的默认值为60000，即60秒。</p>
+
+<p>主线程中发送过来的消息都会被追回到RecordAccumulator的某个双端队列（Deque）中，在RecordAccumulator的内部为每个分区都维护了一个双端队列，队列中的内容就是ProducerBatch,即Deque&lt;ProducerBatch&gt;。</p>
+
+<p>使用了一个线程安全的ConcurrentMap来维护着<strong>每个</strong>主题分区的消息队列。消息写入缓存时，追回到双端队列的尾部；Sender读取消息时，从双端队列的头部读取。</p>
+
+<p><img src="https://github.com/Snailclimb/JavaGuide/raw/master/media/pictures/kafka/%E7%94%9F%E4%BA%A7%E8%80%85%E8%AE%BE%E8%AE%A1%E6%A6%82%E8%A6%81.png" alt="生产者设计概要" /></p>
+
+<p>流程如下：</p>
+
+<ol>
+<li>首先，我们需要创建一个ProducerRecord，这个对象需要包含消息的主题（topic）和值（value），可以选择性指定一个键值（key）或者分区（partition）。</li>
+<li>发送消息时，生产者会对键值和值序列化成字节数组，然后发送到分配器（partitioner）。</li>
+<li>如果我们指定了分区，那么分配器返回该分区即可；否则，分配器将会基于键值来选择一个分区并返回。</li>
+<li>选择完分区后，生产者知道了消息所属的主题和分区，它将这条记录添加到相同主题和分区的批量消息中，另一个线程负责发送这些批量消息到对应的Kafka broker。</li>
+<li>当broker接收到消息后，如果成功写入则返回一个包含消息的主题、分区及位移的RecordMetadata对象，否则返回异常。</li>
+<li>生产者接收到结果后，对于异常可能会进行重试。</li>
+<li><img src="https://upload-images.jianshu.io/upload_images/5928323-bea99861b770a2ed.png?imageMogr2/auto-orient/strip|imageView2/2/w/885/format/webp" alt="img" /></li>
+</ol>
+
+<p>步骤：
+ 1.ProducerInterceptors对消息进行拦截，类似于过滤器，也可以对ack提前处理。
+ 2.Serializer对消息的key和value进行序列化。
+ 3.Partitioner为消息选择合适的Partition。
+ 4.RecordAccumulator收集消息，实现批量发送。
+ 5.Sender从RecordAccumulator获取消息。
+ 6.构造ClientRequest。
+ 7.将ClientRequest交给NetworkClient,准备发送。
+ 8.NetworkClient将请求送入KafkaChannel的缓存。
+ 9.执行网络I/O,发送请求。
+ 10.收到响应，调用ClientRequest的回调函数。
+ 11.调用RecordBatch的回调函数，最终调用每个消息上注册的回调函数。</p>
+
+<p>Kafka<strong>Producer</strong>维护了Kafka集群的元数据<strong>metadata</strong>：包括某个topic中有哪几个分区，每个分区的Leader副本分配哪个节点上，Follower副本分配在哪些节点上，哪些副本在ISR集合中以及这些节点的网络地址，端口。<strong>不用连Zookeeper</strong>。
+在KafkaProducer中，使用Node,TopicPartition,PartitionInfo这三个类封装了Kafka集群的相关数据。</p>
+
+<p>KafkaProducer的send()方法的调用流程：</p>
+
+<p><img src="https:////upload-images.jianshu.io/upload_images/5928323-031b5c47794b1af1.jpg?imageMogr2/auto-orient/strip|imageView2/2/w/1148/format/webp" alt="img" /></p>
+
+<ul>
+<li>调用ProducerInterceptors.onSend()方法，通过ProducerInterceptor对消息进行拦截或修改。</li>
+<li>调用waitOnMetadata()方法获取Kafka集群的信息，底层会唤醒Send线程更新Metadata中保存的Kafka集群元数据。</li>
+<li>调用Serializer.serialize()方法序列化消息的key和value。</li>
+<li>调用partition()为消息选择合适的分区。</li>
+<li>调用RecordAccumulator.append()方法，将消息追加到RecordAccumulator中。</li>
+<li>唤醒Sender线程，由Sender线程将RecordAccumulator中缓存的消息发出去。</li>
+</ul>
+
+<p><strong>metadata更新：</strong></p>
+
+<p>requestUpdate()和awaitUpdate()。requestUpdate()方法将needUpdate字段修改为true,这样当<strong>Sender</strong>线程运行时调用update()去服务端拉取Cluster信息，更新Metadata记录的集群元数据，然后返回version字段的值。awaitUpdate()是通过version来判断元数据是否更新完成，更新未完成则阻塞等待。</p>
+
+<p><strong>异步发送</strong></p>
+
+<p>producer.type的默认值是sync，即同步的方式。这个参数指定了在后台线程中消息的发送方式是同步的还是异步的。如果设置成异步的模式，可以运行生产者以<strong>batch</strong>的形式push数据，这样会极大的提高broker的性能，但是这样会增加丢失数据的风险。</p>
+
+<p>对于异步模式，还有4个配套的参数，如下：</p>
+
+<ul>
+<li>queue.buffering.max.ms    5000    启用异步模式时，producer<strong>缓存消息的时间</strong>。比如我们设置成1000时，它会缓存1s的数据再一次发送出去，这样可以极大的增加broker吞吐量，但也会造成时效性的降低。</li>
+<li>queue.buffering.max.messages  10000   启用异步模式时，producer缓存队列里<strong>最大缓存的消息数量</strong>，如果超过这个值，producer就会阻塞或者丢掉消息。</li>
+<li>queue.enqueue.timeout.ms  -1  当达到上面参数时producer会阻塞等待的时间。如果设置为0，buffer队列满时producer不会阻塞，消息直接被丢掉；若设置为-1，producer会被阻塞，不会丢消息。</li>
+<li>batch.num.messages    200 启用异步模式时，一个<strong>batch缓存的消息数量</strong>。达到这个数值时，producer才会发送消息。（每次批量发送的数量）</li>
+</ul>
+
+<p><strong>以batch的方式推送数据可以极大的提高处理效率</strong>，kafka producer可以将消息在内存中累计到一定数量后作为一个batch发送请求。batch的数量大小可以通过producer的参数（batch.num.messages）控制。通过增加batch的大小，可以减少网络请求和磁盘IO的次数，当然具体参数设置需要在效率和时效性方面做一个权衡。在比较新的版本中还有batch.size这个参数。</p>
+
+<p><strong>消息堆积</strong></p>
+
+<p>消息堆积是消费滞后(Lag)的一种表现形式，消息中间件服务端中所留存的消息与消费掉的消息之间的差值即为消息堆积量，也称之为消费滞后(Lag)量。对于Kafka而言，消息被发送至Topic中，而Topic又分成了多个分区(Partition)，每一个Partition都有一个预写式的日志文件，虽然Partition可以继续细分为若干个段文件(Segment)，但是对于上层应用来说可以将Partition看成最小的存储单元(一个由多个Segment文件拼接的“巨型文件”)。每个Partition都由一系列有序的、不可变的消息组成，这些消息被连续的追加到Partition中。</p>
+
+<p><img src="https://s1.ax1x.com/2020/06/09/t5VBLD.png" alt="t5VBLD.png" /></p>
+
+<p>1.LogStartOffset：表示一个Partition的起始位移，初始为0，虽然消息的增加以及日志清除策略的影响，这个值会阶段性的增大。
+2.ConsumerOffset：消费位移，表示Partition的某个消费者消费到的位移位置。
+3.HighWatermark：简称HW，代表消费端所能“观察”到的Partition的最高日志位移，HW大于等于ConsumerOffset的值。
+4.LogEndOffset：简称LEO, 代表Partition的最高日志位移，其值对消费者不可见。比如在ISR（In-Sync-Replicas）副本数等于3的情况下（如下图所示），消息发送到Leader A之后会更新LEO的值，Follower B和Follower C也会实时拉取Leader A中的消息来更新自己，HW就表示A、B、C三者同时达到的日志位移，也就是A、B、C三者中LEO最小的那个值。由于B、C拉取A消息之间延时问题（这就涉及到发送可靠性问题，见下文），所以HW必然不会一直与Leader的LEO相等，即LEO&gt;=HW。 所以，实际可能是这样的：</p>
+
+<p><img src="https://img2018.cnblogs.com/i-beta/957248/202001/957248-20200111204543246-1917846054.png" alt="img" /></p>
+
+<p>要计算Kafka中某个消费者的滞后量很简单，首先看看其消费了几个Topic，然后针对每个Topic来计算其中每个Partition的Lag，每个Partition的Lag计算就显得非常的简单了，参考下图：</p>
+
+<p><img src="https://img2018.cnblogs.com/i-beta/957248/202001/957248-20200111204301893-21994179.png" alt="img" /></p>
+
+<p>由图可知消费Lag=HW - ConsumerOffset。</p>
+
+<p><strong>LEO和HW都是指最后一条的下一条的位置而不是指最后一条的位置</strong>。</p>
+
+<p>LSO特指LastStableOffset，与Kafka的事务有关，如果设置为“read_committed”，那么消费者就会忽略事务未提交的消息，即只能消费到 LSO(LastStableOffset)的位置，默认情况下为 “read_uncommitted”，即可以消费到 HW(High Watermark)处的位置。</p>
+
+<p>read_uncommitted：Lag 等于 HW – ConsumerOffset</p>
+
+<p>read_committed：Lag 等于 LSO – ConsumerOffset</p>
+
+<p>整体结构</p>
+
+<h4 id="13-consumer">13、consumer</h4>
+
+<ul>
+<li>consumer 采用pull的方式 从broker拉取数据。采用pull方式的优点有consumer端可以根据自己的消费能力适时的去fetch消息并处理,且可以控制消息消费的进度(offset);此外,消费者可以良好的控制消息消费的数量,batch fetch.</li>
+<li>consumer端向broker发送fetch请求,并告知其获取消息的<strong>offset</strong>;此后consumer将会获得一定条数的消息;consumer端也可以重置offset来重新消费消息。</li>
+
+<li><p>kafka和JMS（Java Message Service）实现(activeMQ)不同的是:即使消息被消费,消息仍然不会被立即删除.日志文件将会根据broker中的配置要求,保留一定的时间之后删除;比如log文件保留2天,那么两天后,文件会被清除,无论其中的消息是否被消费.kafka通过这种简单的手段,来释放磁盘空间,以及减少消息消费之后对文件内容改动的磁盘IO开支。
+对于consumer而言,它需要保存消费消息的offset,对于offset的保存和使用,有consumer来控制;当consumer正常消费消息时,offset将会&quot;线性&quot;的向前驱动,即消息将依次顺序被消费.事实上consumer可以使用任意顺序消费消息,它只需要将offset重置为任意值。
+kafka集群几乎不需要维护任何consumer和producer状态信息,这些信息有zookeeper保存;因此producer和consumer的客户端实现非常轻量级,它们可以随意离开,而不会对集群造成额外的影响。</p></li>
+
+<li><p>at most once: 消费者fetch消息,然后保存offset,然后处理消息;当client保存offset之后,但是在消息处理过程中出现了异常,导致部分消息未能继续处理.那么此后&quot;未处理&quot;的消息将不能被fetch到,这就是&quot;at most once&quot;.</p></li>
+
+<li><p>at least once: 消费者fetch消息,然后处理消息,然后保存offset.如果消息处理成功之后,但是在保存offset阶段zookeeper异常导致保存操作未能执行成功,这就导致接下来再次fetch时可能获得上次已经处理过的消息,这就是&quot;at least once&quot;，原因offset没有及时的提交给zookeeper，zookeeper恢复正常还是之前offset状态。</p></li>
+
+<li><p>kafka 0.8.x使用zk存储每个consumer-group在每个topic的每个partition中的点位（每个消息都有一个offset，且在分区内单调递增），0.9版本开始存储在专门的topic中，该topic名为&quot;__consumer_offset&quot;，这样consumer-group+topic就确定了点位，便于随时可恢复运行，采用日志压缩存储，也就是仅存储每个key的最新值，而非所有。</p>
+
+<pre><code class="language-jsx">brew install kafka
+
+//安装的配置文件位置
+/usr/local/etc/kafka/server.properties
+/usr/local/etc/kafka/zookeeper.properties
+
+//启动zookeeper -daemon 守护模式
+zookeeper-server-start  /usr/local/etc/kafka/zookeeper.properties &amp;
+
+//启动kafka
+kafka-server-start /usr/local/etc/kafka/server.properties &amp;
+
+//创建topic  创建单分区单副本的 topic test：
+kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+
+//查看创建的topic
+kafka-topics --list --zookeeper localhost:2181
+
+//发送消息客户端
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test 
+
+//消费消息
+kafka-console-consumer --bootstrap-server localhost:9092 --topic test --from-beginning
+</code></pre></li>
+</ul>
+
+<h4 id="14-kafka自身整体架构">14、kafka自身整体架构</h4>
+
+<p>这里要提及的是controller，Zookeeper 负责从 Broker 中选举出一个机器作为 Controller, 并确保其唯一性，其中一个broker会被作为controller，controller主要负责处理kafka集群范围内的事件，包括<strong>leader选举、topic变化、paritions副本数跟踪、broker的变化</strong>等，主要和zk通信，这跟zk的主节点还不同，更像是Hadoop的nameserver，只负责元数据的全局管理。</p>
+
+<p>　　kafka controller架构如下：</p>
+
+<p><img src="https://img2018.cnblogs.com/blog/957248/201908/957248-20190810215023304-2074400141.png" alt="img" /></p>
+
+<p>具体来说Controller目前主要提供多达10种的Kafka服务功能的实现，它们分别是：</p>
+
+<ul>
+<li>UpdateMetadataRequest：更新元数据请求。topic分区状态经常会发生变更(比如leader重新选举了或副本集合变化了等)。由于当前clients只能与分区的leader broker进行交互，那么一旦发生变更，controller会将最新的元数据广播给所有存活的broker。具体方式就是给所有broker发送UpdateMetadataRequest请求</li>
+<li>CreateTopics: 创建topic请求。当前不管是通过API方式、脚本方式抑或是CreateTopics请求方式来创建topic，做法几乎都是在Zookeeper的/brokers/topics下创建znode来触发创建逻辑，而controller会监听该path下的变更来执行真正的“创建topic”逻辑</li>
+<li>DeleteTopics：删除topic请求。和CreateTopics类似，也是通过创建Zookeeper下的/admin/delete_topics/&lt;topic&gt;节点来触发删除topic，controller执行真正的逻辑</li>
+<li>分区重分配：即kafka-reassign-partitions脚本做的事情。同样是与Zookeeper结合使用，脚本写入/admin/reassign_partitions节点来触发，controller负责按照方案分配分区</li>
+<li>Preferred leader分配：preferred leader选举当前有两种触发方式：1. 自动触发(auto.leader.rebalance.enable = true)；2. kafka-preferred-replica-election脚本触发。两者“玩法”相同，向Zookeeper的/admin/preferred_replica_election写数据，controller提取数据执行preferred leader分配</li>
+<li>分区扩展：即增加topic分区数。标准做法也是通过kafka-reassign-partitions脚本完成，不过用户可直接往Zookeeper中写数据来实现，比如直接把新增分区的副本集合写入到/brokers/topics/&lt;topic&gt;下，然后controller会为你自动地选出leader并增加分区</li>
+<li>集群扩展：新增broker时Zookeeper中/brokers/ids下会新增znode，controller自动完成服务发现的工作</li>
+<li>broker崩溃：同样地，controller通过Zookeeper可实时侦测broker状态。一旦有broker挂掉了，controller可立即感知并为受影响分区选举新的leader</li>
+<li>ControlledShutdown：broker除了崩溃，还能“优雅”地退出。broker一旦自行终止，controller会接收到一个ControlledShudownRequest请求，然后controller会妥善处理该请求并执行各种收尾工作</li>
+<li>Controller leader选举：controller必然要提供自己的leader选举以防这个全局唯一的组件崩溃宕机导致服务中断。这个功能也是通过Zookeeper的帮助实现的</li>
+</ul>
+
+<p><strong>Controller当前设计</strong></p>
+
+<p>　　当前controller启动时会为集群中所有broker创建一个各自的连接。这么说吧，假设你的集群中有100台broker，那么controller启动时会创建100个Socket连接(也包括与它自己的连接！)。当前新版本的Kafka统一使用了NetworkClient类来建模底层的网络连接(有兴趣研究源码的可以去看下这个类，它主要依赖于Java NIO的Selector)。Controller会为每个连接都创建一个对应的请求发送线程，专门负责给对应的broker发送请求。也就是说，如果还是那100台broker，那么controller启动时还会创建100个RequestSendThread线程。当前的设计中Controller只能给broker发送三类请求，它们是：</p>
+
+<ul>
+<li>UpdateMetadataRequest：更新元数据</li>
+<li>LeaderAndIsrRequest：创建分区、副本以及完成必要的leader和/或follower角色的工作</li>
+<li>StopReplicaRequest：停止副本请求，还可能删除分区副本</li>
+</ul>
+
+<p>　　Controller通常都是发送请求给broker的，只有上面谈到的controller 10大功能中的ControlledShutdownRequest请求是例外：这个请求是待关闭的broker通过RPC发送给controller的，即它的方向是反的。另外这个请求还有一个特别之处就是其他所有功能或是请求都是通过Zookeeper间接与controller交互的，只有它是直接与controller进行交互的。</p>
+
+<h4 id="15-leader选举">15、Leader选举</h4>
+
+<p>因为 Follower 可能落后许多或者 crash 了，所以必须确保选择“最新”的 Follower 作为新的 Leader。一个基本的原则就是，如果 Leader 不在了，新的 Leader 必须拥有原来的 Leader commit 过的所有消息。这就需要作一个折衷，如果 Leader 在标明一条消息被 commit 前等待更多的 Follower 确认，那在它宕机之后就有更多的 Follower 可以作为新的 Leader，但这也会造成吞吐率的下降。</p>
+
+<p>一种非常常用的选举 leader 的方式是“Majority Vote”（“少数服从多数”），但 Kafka 并未采用这种方式。这种模式下，如果我们有 2f+1 个 Replica（包含 Leader 和 Follower），那在 commit 之前必须保证有 f+1 个 Replica 复制完消息，为了保证正确选出新的 Leader，fail 的 Replica 不能超过 f 个。因为在剩下的任意 f+1 个 Replica 里，至少有一个 Replica 包含有最新的所有消息。这种方式有个很大的优势，系统的 latency 只取决于最快的几个 Broker，而非最慢那个。Majority Vote 也有一些劣势，为了保证 Leader Election 的正常进行，它所能容忍的 fail 的 follower 个数比较少。如果要容忍 1 个 follower 挂掉，必须要有 3 个以上的 Replica，如果要容忍 2 个 Follower 挂掉，必须要有 5 个以上的 Replica。也就是说，在生产环境下为了保证较高的容错程度，必须要有大量的 Replica，而大量的 Replica 又会在大数据量下导致性能的急剧下降。这就是这种算法更多用在<a href="http://zookeeper.apache.org/"> ZooKeeper </a>这种共享集群配置的系统中而很少在需要存储大量数据的系统中使用的原因。</p>
+
+<p><strong>如何选举 Leader</strong></p>
+
+<p>在所有 broker 中选出一个 controller，所有 Partition 的 Leader 选举都<strong>由 controller 决定</strong>。controller 会将 Leader 的改变直接通过 <strong>RPC</strong> 的方式（比 ZooKeeper Queue 的方式更高效）通知需为此作为响应的 Broker。同时 controller 也负责增删 Topic 以及 Replica 的重新分配。</p>
+
+<h4 id="16-rebalance机制">16、Rebalance机制</h4>
+
+<p>Rebalance 本质上是一种协议，规定了一个 Consumer Group 下的所有 consumer 如何达成一致，来分配订阅 Topic 的每个分区。</p>
+
+<p>例如：某 Group 下有 20 个 consumer 实例，它订阅了一个具有 100 个 partition 的 Topic 。正常情况下，kafka 会为每个 Consumer 平均的分配 5 个分区。这个分配的过程就是 Rebalance。</p>
+
+<p><strong>触发Rebalance的时机</strong></p>
+
+<p>Rebalance 的触发条件有3个。</p>
+
+<ul>
+<li>组成员个数发生变化。例如有新的 consumer 实例加入该消费组或者离开组。</li>
+<li>订阅的 Topic 个数发生变化。</li>
+<li>订阅 Topic 的分区数发生变化。</li>
+</ul>
+
+<p>如果HeartbeatResponse中带有IllegalGeneration异常，说明GroupCoordinator发起了Rebalance操作 。</p>
+
+<p>Rebalance 发生时，Group 下所有 consumer 实例都会协调在一起共同参与，kafka 能够保证尽量达到最公平的分配。但是 Rebalance 过程对 consumer group 会造成比较严重的影响。在 Rebalance 的过程中 consumer group 下的所有消费者实例都会<strong>停止工作</strong>，等待 Rebalance 过程完成。</p>
+
+<p><strong>Rebalance过程分析</strong></p>
+
+<p>Rebalance 过程分为两步：Join 和 Sync。</p>
+
+<ol>
+<li>Join 顾名思义就是加入组。这一步中，所有成员都向<strong>coordinator</strong>发送JoinGroup请求，请求加入消费组。一旦所有成员都发送了JoinGroup请求，coordinator会从中选择一个consumer担任leader的角色，并把组成员信息以及订阅信息发给leader——注意leader和coordinator不是一个概念。leader负责消费分配方案的制定。</li>
+</ol>
+
+<p><a href="https://upload-images.jianshu.io/upload_images/3951014-30b27a129a67480a.png?imageMogr2/auto-orient/strip|imageView2/2/w/870/format/webp"><img src="https://upload-images.jianshu.io/upload_images/3951014-30b27a129a67480a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/870/format/webp" alt="img" /></a></p>
+
+<ol>
+<li>Sync，这一步leader开始分配消费方案，即哪个consumer负责消费哪些topic的哪些partition。kafka 提供三种分配策略 <strong>range</strong>、<strong>roundrobin</strong>和<strong>Sticky</strong>，由参数partition.assignment.strategy指定，默认是range策略。<strong>range</strong>按照阶段平均分配，<strong>roundrobin</strong>是轮询分配。一旦完成分配，leader会将这个方案封装进SyncGroup请求中发给coordinator，非leader也会发SyncGroup请求，只是内容为空。coordinator接收到分配方案之后会把方案塞进SyncGroup的response中发给各个consumer。这样组内的所有成员就都知道自己应该消费哪些分区了。</li>
+</ol>
+
+<p><strong>Sticky</strong></p>
+
+<p>“sticky”这个单词可以翻译为“粘性的”，Kafka从0.11.x版本开始引入这种分配策略，它主要有两个目的：</p>
+
+<p>1、分区的分配要尽可能的均匀；
+   2、分区的分配尽可能的与上次分配的保持相同。
+   当两者发生冲突时，第一个目标优先于第二个目标。</p>
+
+<p>如果发生分区重分配，那么对于同一个分区而言有可能之前的消费者和新指派的消费者不是同一个，对于之前消费者进行到一半的处理还要在新指派的消费者中再次复现一遍，这显然很浪费系统资源。StickyAssignor策略如同其名称中的“sticky”一样，让分配策略具备一定的“粘性”，尽可能地让前后两次分配相同，进而减少系统资源的损耗以及其它异常情况的发生。</p>
+
+<p><a href="https://upload-images.jianshu.io/upload_images/3951014-63f8fcfbf894e17e.png?imageMogr2/auto-orient/strip|imageView2/2/w/885/format/webp"><img src="https://upload-images.jianshu.io/upload_images/3951014-63f8fcfbf894e17e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/885/format/webp" alt="img" /></a></p>
+
+<p><strong>如何避免不必要的Rebalance</strong></p>
+
+<p>要避免 Rebalance，还是要从 Rebalance 发生的时机入手。我们在前面说过，Rebalance 发生的时机有三个：</p>
+
+<ul>
+<li>组成员数量发生变化</li>
+<li>订阅主题数量发生变化</li>
+<li>订阅主题的分区数发生变化</li>
+</ul>
+
+<p>后两个我们大可以人为的避免，发生rebalance<strong>最常见</strong>的原因是<strong>消费组成员</strong>的变化。</p>
+
+<p>消费者成员正常的添加和停掉导致rebalance，这种情况无法避免，但是在某些情况下，Consumer 实例会被 Coordinator 错误地认为 “已停止” 从而被“踢出”Group。从而导致rebalance。</p>
+
+<p>当 Consumer Group 完成 Rebalance 之后，每个 Consumer 实例都会定期地向 Coordinator 发送心跳请求，表明它还存活着。如果某个 Consumer 实例不能及时地发送这些心跳请求，Coordinator 就会认为该 Consumer 已经 “死” 了，从而将其从 Group 中移除，然后开启新一轮 Rebalance。这个时间可以通过Consumer 端的参数 <strong>session.timeout.ms</strong>进行配置。默认值是 10 秒。</p>
+
+<p>除了这个参数，Consumer 还提供了一个控制发送心跳请求频率的参数，就是 <strong>heartbeat.interval.ms</strong>。这个值设置得越小，Consumer 实例发送心跳请求的频率就越高。频繁地发送心跳请求会额外消耗带宽资源，但好处是能够更加快速地知晓当前是否开启 Rebalance，因为，目前 Coordinator 通知各个 Consumer 实例开启 Rebalance 的方法，就是将 REBALANCE_NEEDED 标志封装进心跳请求的响应体中。</p>
+
+<p>除了以上两个参数，Consumer 端还有一个参数，用于控制 Consumer 实际消费能力对 Rebalance 的影响，即 max.poll.interval.ms 参数。它限定了 Consumer 端应用程序两次调用 poll 方法的最大时间间隔。它的默认值是 5 分钟，表示你的 Consumer 程序如果在 5 分钟之内无法消费完 poll 方法返回的消息，那么 Consumer 会<strong>主动</strong>发起 “离开组” 的请求，Coordinator 也会开启新一轮 Rebalance。</p>
+
+<p>通过上面的分析，我们可以看一下那些rebalance是可以避免的：</p>
+
+<p><strong>第一类非必要 Rebalance 是因为未能及时发送心跳，导致 Consumer 被 “踢出”Group 而引发的</strong>。这种情况下我们可以设置 <strong>session.timeout.ms 和 heartbeat.interval.ms</strong> 的值，来尽量避免rebalance的出现。（<strong>以下的配置是在网上找到的最佳实践，暂时还没测试过</strong>）</p>
+
+<ul>
+<li>设置 session.timeout.ms = 6s。</li>
+<li>设置 heartbeat.interval.ms = 2s。</li>
+<li>要保证 Consumer 实例在被判定为 “dead” 之前，能够发送至少 3 轮的心跳请求，即 session.timeout.ms &gt;= 3 * heartbeat.interval.ms。</li>
+</ul>
+
+<p>将 session.timeout.ms 设置成 6s 主要是为了让 Coordinator 能够更快地定位已经挂掉的 Consumer，早日把它们踢出 Group。</p>
+
+<p><strong>第二类非必要 Rebalance 是 Consumer 消费时间过长导致的</strong>。此时，<strong>max.poll.interval.ms</strong> 参数值的设置显得尤为关键。如果要避免非预期的 Rebalance，你最好将该参数值设置得大一点，比你的下游最大处理时间稍长一点。</p>
+
+<p>总之，要为业务处理逻辑留下充足的时间。这样，Consumer 就不会因为处理这些消息的时间太长而引发 Rebalance 。</p>
+
+<h4 id="17-group-coordinator-消费者组">17、Group Coordinator（消费者组）</h4>
+
+<p>Group Coordinator是一个服务，<strong>每个</strong>Broker在启动的时候都会启动一个该服务。Group Coordinator的作用是用来存储Group的相关Meta信息，并将对应Partition的Offset信息记录到Kafka内置Topic(__consumer_offsets)中。Kafka在0.9之前是基于Zookeeper来存储Partition的Offset信息(consumers/{group}/offsets/{topic}/{partition})，因为ZK并不适用于频繁的写操作，所以在0.9之后通过内置Topic的方式来记录对应Partition的Offset。</p>
+
+<p><strong>每个Group都会选择一个Coordinator</strong>来完成自己组内各Partition的Offset信息，选择的规则如下：</p>
+
+<ul>
+<li>1，计算Group对应在__consumer_offsets上的Partition</li>
+<li>2，根据对应的Partition寻找该Partition的leader所对应的Broker，该Broker上的Group Coordinator即就是该Group的Coordinator</li>
+</ul>
+
+<p>Partition计算规则：</p>
+
+<pre><code>partition-Id(__consumer_offsets) = Math.abs(groupId.hashCode() % groupMetadataTopicPartitionCount)
+</code></pre>
+
+<p>其中groupMetadataTopicPartitionCount对应offsets.topic.num.partitions参数值，代表__consumer_offsets这个topic的partition的数量，默认值是50个分区。</p>
+
+<p>GroupCoordinator在Zookeeper上添加Watcher。</p>
+
+<h4 id="18-controller-server">18、Controller（server）</h4>
+
+<p>kafka使用zk在broker中选出一个controller，用于partition分配和leader选举。</p>
+
+<p>controller会在Zookeeper的/brokers/ids节点上注册Watch，一旦有broker宕机，它就能知道。当broker宕机后，controller就会给受到影响的partition选出新leader。controller从zk的/brokers/topics/[topic]/partitions/[partition]/state中，读取对应partition的ISR（in-sync replica已同步的副本）列表，选一个出来做leader。</p>
+
+<p>选出leader后，更新zk，然后发送LeaderAndISRRequest给受影响的broker，让它们改变知道这事。为什么这里不是使用zk通知，而是直接给broker发送rpc请求，我的理解可能是这样做zk有性能问题吧。</p>
+
+<p>如果ISR列表是空，那么会根据配置，随便选一个replica做leader，或者干脆这个partition就是歇菜。如果ISR列表的有机器，但是也歇菜了，那么还可以等ISR的机器活过来。</p>
+
+<p><strong>partition的分配</strong></p>
+
+<ol>
+<li>将所有Broker（假设共n个Broker）和待分配的Partition排序</li>
+<li>将第i个Partition分配到第（i mod n）个Broker上 （这个就是leader）</li>
+<li>将第i个Partition的第j个Replica分配到第（(i + j) mode n）个Broker上</li>
+</ol>
+
+<h4 id="19-事务-仅producer保证事务">19、事务（仅Producer保证事务）</h4>
+
+<p>单会话幂等性：</p>
+
+<p>为每个producer分配一个pid，作为该producer的唯一标识。producer会为每一个<topic,partition>维护一个单调递增的seq。类似的，broker也会为每个<pid,topic,partition>记录下最新的seq。当req_seq == broker_seq+1时，broker才会接受该消息。因为：</p>
+
+<ol>
+<li>当seq &gt; broker_seq + 1时，说明中间有数据还没写入，即乱序了。</li>
+<li>当seq &lt; broker_seq + 1时，那么说明该消息已被保存。</li>
+</ol>
+
+<p>因为 Idempotent Producer 不提供<strong>跨多个 Partition 和跨会话场景下的保证</strong>，因此，我们是需要一种更强的事务保证，<strong>能够原子处理多个 Partition 的写入操作</strong>，数据要么全部写入成功，要么全部失败，不期望出现中间状态。</p>
+
+<p><a href="https://blog.csdn.net/muyimo/article/details/91439222">https://blog.csdn.net/muyimo/article/details/91439222</a></p>
+
+<p>当用户使用 Kafka 的事务性时，Kafka 可以做到的保证：</p>
+
+<ol>
+<li>跨会话的幂等性写入：即使中间故障，恢复后依然可以保持幂等性；</li>
+<li>跨会话的事务恢复：如果一个应用实例挂了，启动的下一个实例依然可以保证上一个事务完成（commit 或者 abort）；</li>
+<li>跨多个 Topic-Partition 的幂等性写入，Kafka 可以保证跨多个 Topic-Partition 的数据要么全部写入成功，要么全部失败，不会出现中间状态。</li>
+</ol>
+
+<p><strong>生产者事务</strong></p>
+
+<p>1、为每个producer分配一个pid，作为该producer的唯一标识。producer会为每一个<topic,partition>维护一个单调递增的seq。类似的，broker也会为每个<pid,topic,partition>记录下最新的seq。当req_seq == broker_seq+1时，broker才会接受该消息。因为：</p>
+
+<ol>
+<li>当seq &gt; broker_seq + 1时，说明中间有数据还没写入，即乱序了。</li>
+<li>当seq &lt; broker_seq + 1时，那么说明该消息已被保存。</li>
+</ol>
+
+<p>2、场景是这样的：</p>
+
+<ol>
+<li>先从多个源topic中获取数据。</li>
+<li>做业务处理，写到下游的<strong>多个</strong>目的topic。</li>
+<li>更新多个源topic的offset。</li>
+</ol>
+
+<p>其中第2、3点作为一个事务，要么全成功，要么全失败。这里得益与offset实际上是用<strong>特殊的topic</strong>去保存，这两点都归一为写多个topic的事务性处理。</p>
+
+<p>基本思路是这样的：
+引入tid（<strong>transaction id</strong>），和pid不同，这个id是<strong>应用程序提供</strong>的（用户显示设置），用于标识事务，和producer是谁并没关系。就是任何producer都可以使用这个tid去做事务，同一时间仅有一个producer执行事务，这样进行到一半就死掉的事务，可以由另一个producer去恢复。</p>
+
+<p>同时为了记录事务的状态，类似对offset的处理，引入transaction coordinator用于记录transaction log（__transaction_state这个内部 topic）。在集群中会有多个transaction coordinator，每个tid对应唯一一个transaction coordinator。
+ 注：transaction log删除策略是compact，已完成的事务会标记成null，compact后不保留。</p>
+
+<p>做事务时，先标记开启事务，写入数据，全部成功就在transaction log中记录为prepare commit状态，否则写入prepare abort的状态。之后再去给<strong>每个相关的partition</strong>写入一条marker（commit或者abort）消息，标记这个事务的message可以被读取或已经废弃。成功后在transaction log记录下commit/abort状态，至此事务结束。</p>
+
+<ol>
+<li>首先使用tid请求任意一个broker（代码中写的是负载最小的broker），找到对应的transaction coordinator。</li>
+
+<li><p>请求transaction coordinator获取到对应的<strong>pid</strong>，和<strong>pid对应的epoch</strong>，这个epoch用于防止僵死进程复活导致消息错乱，当消息的epoch比当前维护的epoch小时，拒绝掉。tid和pid有一一对应的关系，这样对于同一个tid会返回相同的pid。</p></li>
+
+<li><p>client先请求transaction coordinator记录<topic,partition>的事务状态，初始状态是BEGIN，如果是该事务中第一个到达的<topic,partition>，同时会对事务进行计时；client输出数据到相关的partition中；<strong>client再请求transaction coordinator记录offset的<topic,partition>事务状态；client发送offset commit到对应offset partition（这里的offset partition 是 transaction coordinator 的 partition）</strong>。</p></li>
+
+<li><p>client发送commit请求，transaction coordinator记录prepare commit/abort，然后发送marker给相关的partition。全部成功后，记录commit/abort的状态，最后这个记录不需要等待其他replica的ack，因为prepare不丢就能保证最终的正确性了。</p></li>
+</ol>
+
+<p>这里prepare的状态主要是用于事务恢复，例如给相关的partition发送控制消息，没发完就宕机了，备机起来后，producer发送请求获取pid时，会把未完成的事务接着完成。</p>
+
+<p>当partition中写入commit的marker后，相关的消息就可被读取。所以kafka事务在prepare commit到commit这个时间段内，消息是逐渐可见的，而不是同一时刻可见。</p>
+
+<p><strong>消费事务</strong></p>
+
+<p>消费时，partition中会存在一些消息处于未commit状态，即业务方应该看不到的消息，需要过滤这些消息不让业务看到，kafka选择在消费者进程中进行过来，而不是在broker中过滤，主要考虑的还是性能。</p>
+
+<p>Kafka 根据 LSO ， offset 小于 LSO 的数据，全都是已经确定的数据，这个主要是对于事务操作而言，在这个 offset 之前的事务操作都是已经完成的事务（已经 commit 或 abort），如果这个 Partition 没有涉及到事务数据，那么 LSO 就是其 HW（水位）。</p>
+
+<p>kafka高性能的一个关键点是zero copy，如果需要在broker中过滤，那么势必需要读取消息内容到内存，就会失去zero copy的特性。</p>
+
+<p>处理 abort 消息：</p>
+
+<p>Broker 会追踪每个 Partition 涉及到的 abort transactions ，发送给 Comsumer ，Comsumer 根据信息过滤 Abort 消息。</p>
+
+<p>故障恢复：</p>
+
+<ol>
+<li>Producer 在发送 <code>beginTransaction()</code> 时，如果出现 timeout 或者错误：Producer 只需要重试即可；</li>
+<li>Producer 在发送数据时出现错误：Producer 应该 abort 这个事务，如果 Produce 没有 abort（比如设置了重试无限次，并且 batch 超时设置得非常大），TransactionCoordinator 将会在这个事务超时之后 abort 这个事务操作；</li>
+<li>Producer 发送 <code>commitTransaction()</code> 时出现 timeout 或者错误：Producer 应该重试这个请求；</li>
+<li>Coordinator Failure：如果 Transaction Coordinator 发生切换（事务 topic leader 切换），Coordinator 可以从日志中恢复。如果发送事务有处于 PREPARE_COMMIT 或 PREPARE_ABORT 状态，那么直接执行 commit 或者 abort 操作，如果是一个正在进行的事务，Coordinator 的失败并不需要 abort 事务，producer 只需要向新的 Coordinator 发送请求即可。</li>
+</ol>
+
+<h4 id="20-删除策略">20、删除策略</h4>
+
+<p>定期删除</p>
+
+<pre><code>log.cleanup.policy=delete启用删除策略
+直接删除，删除后的消息不可恢复。可配置以下两个策略：
+清理超过指定时间清理： 
+log.retention.hours=16
+超过指定大小后，删除旧的消息：
+log.retention.bytes=1073741824
+# 按大小清理这里也要注意，Kafka在定时任务中尝试比较当前日志量总大小是否超过阈值至少一个日志段的大小。如果超过但是没超过一个日志段，那么就不会删除。
+</code></pre>
+
+<p>compact压缩策略</p>
+
+<p>将数据压缩，只保留每个key最后一个版本的数据。首先在broker的配置中设置log.cleaner.enable=true启用cleaner，这个默认是关闭的。在Topic的配置中设置log.cleanup.policy=compact启用压缩策略。</p>
+
+<h4 id="21-分区器-序列化器-拦截器之间的处理顺序">21、分区器、序列化器、拦截器之间的处理顺序</h4>
+
+<p>拦截器、序列化器、分区器</p>
+</div>
+        <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://jixinhe111.github.io/tags/mq/">MQ</a>
+                
+              </span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://jixnhe111.tk">Finished by jxh,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>真奇怪</span>
+  </div>
+</footer>
+
+
+
+<script src="https://jixinhe111.github.io/js/jquery-3.3.1.min.js"></script>
+<script src="https://jixinhe111.github.io/js/zozo.js"></script>
+<script src="https://jixinhe111.github.io/js/highlight.pack.js"></script>
+<link  href="https://jixinhe111.github.io/css/fancybox.min.css" rel="stylesheet">
+<script src="https://jixinhe111.github.io/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>
